@@ -1,55 +1,13 @@
 module Bidir where
 
-data Bool : Set where
-  true : Bool
-  false : Bool
-
-not : Bool → Bool
-not true = false
-not false = true
-
-data ℕ : Set where
-  zero : ℕ
-  suc : ℕ → ℕ
-
-equal? : ℕ -> ℕ -> Bool
-equal? zero    zero    = true
-equal? (suc n) (suc m) = equal? n m
-equal? _       _       = false
-
-data Maybe (A : Set) : Set where
-  nothing : Maybe A
-  just : A → Maybe A
-
-maybeToBool : {A : Set} → Maybe A → Bool
-maybeToBool nothing  = false
-maybeToBool (just _) = true
-
-maybe′ : {A B : Set} → (A → Maybe B) → Maybe B → Maybe A → Maybe B
-maybe′ y _ (just a) = y a
-maybe′ _ n nothing  = n
-
-data _×_ (A B : Set) : Set where
-  _,_ : A → B → A × B
-
-data List (A : Set) : Set where
-  [] : List A
-  _∷_ : A → List A → List A
-
-_++_ : {A : Set} → List A → List A → List A
-_++_ []        ys = ys
-_++_ (x ∷ xs) ys = x ∷ (xs ++ ys)
-
-map : {A B : Set} → (A → B) → List A → List B
-map f []        = []
-map f (x ∷ xs) = f x ∷ map f xs
-
-zip : {A B : Set} → List A → List B → List (A × B)
-zip (a ∷ as) (b ∷ bs) = (a , b) ∷ zip as bs
-zip _         _         = []
-
-data _==_ {A : Set}(x : A) : A → Set where
-  refl : x == x
+open import Data.Bool hiding (_≟_)
+open import Data.Nat
+open import Data.Maybe
+open import Data.List hiding (replicate)
+open import Data.Product hiding (zip ; map)
+open import Function
+open import Relation.Nullary
+open import Relation.Binary.Core
 
 module NatMap where
 
@@ -58,9 +16,9 @@ module NatMap where
 
   lookup : {A : Set} → ℕ → NatMap A → Maybe A
   lookup n []       = nothing
-  lookup n ((m , a) ∷ xs) with equal? n m
-  lookup n ((m , a) ∷ xs) | true = just a
-  lookup n ((m , a) ∷ xs) | false        = lookup n xs
+  lookup n ((m , a) ∷ xs) with n ≟ m
+  lookup n ((.n , a) ∷ xs) | yes refl = just a
+  lookup n ((m , a) ∷ xs)  | no ¬p    = lookup n xs
 
   notMember : {A : Set} → ℕ → NatMap A → Bool
   notMember n m = not (maybeToBool (lookup n m))
@@ -82,14 +40,14 @@ module NatMap where
 
 open NatMap
 
-checkInsert : {A : Set} → (A → A → Bool) → ℕ → A → NatMap A → Maybe (NatMap A)
+checkInsert : {A : Set} → ((x y : A) → Dec (x ≡ y)) → ℕ → A → NatMap A → Maybe (NatMap A)
 checkInsert eq i b m with lookup i m
 checkInsert eq i b m | just c with eq b c
-checkInsert eq i b m | just c | true = just m
-checkInsert eq i b m | just c | false = nothing
+checkInsert eq i b m | just .b | yes refl = just m
+checkInsert eq i b m | just c  | no ¬p    = nothing
 checkInsert eq i b m | nothing = just (insert i b m)
 
-assoc : {A : Set} → (A → A → Bool) → List ℕ → List A → Maybe (NatMap A)
+assoc : {A : Set} → ((x y : A) → Dec (x ≡ y)) → List ℕ → List A → Maybe (NatMap A)
 assoc _  []       []       = just empty
 assoc eq (i ∷ is) (b ∷ bs) = maybe′ (checkInsert eq i b) nothing (assoc eq is bs)
 assoc _  _        _        = nothing
@@ -103,6 +61,6 @@ generate f []       = empty
 generate f (n ∷ ns) = insert n (f n) (generate f ns)
 
 -- this lemma is probably wrong, because two different NatMaps may represent the same semantic value.
-lemma-1 : {τ : Set} → (eq : τ → τ → Bool) → (f : ℕ → τ) → (is : List ℕ) → assoc eq is (map f is) == just (generate f is)
+lemma-1 : {τ : Set} → (eq : (x y : τ) → Dec (x ≡ y)) → (f : ℕ → τ) → (is : List ℕ) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
 lemma-1 eq f (i ∷ is′) = {!!}
