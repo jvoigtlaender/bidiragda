@@ -52,10 +52,6 @@ assoc _  []       []       = just empty
 assoc eq (i ∷ is) (b ∷ bs) = maybe′ (checkInsert eq i b) nothing (assoc eq is bs)
 assoc _  _        _        = nothing
 
---data Equal? where
---  same ...
---  different ...
-
 generate : {A : Set} → (ℕ → A) → List ℕ → NatMap A
 generate f []       = empty
 generate f (n ∷ ns) = insert n (f n) (generate f ns)
@@ -64,3 +60,14 @@ generate f (n ∷ ns) = insert n (f n) (generate f ns)
 lemma-1 : {τ : Set} → (eq : (x y : τ) → Dec (x ≡ y)) → (f : ℕ → τ) → (is : List ℕ) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
 lemma-1 eq f (i ∷ is′) = {!!}
+
+idrange : ℕ → List ℕ
+idrange zero = []
+idrange (suc n) = zero ∷ (map suc (idrange n))
+
+bff : ({A : Set} → List A → List A) → ({B : Set} → ((x y : B) → Dec (x ≡ y)) → List B → List B → Maybe (List B))
+bff get eq s v = let s′ = idrange (length s)
+                     g  = fromAscList (zip s′ s)
+                     h  = assoc eq (get s′) v
+                     h′ = maybe′ (λ jh → just (union jh g)) nothing h
+                 in maybe′ (λ jh′ → just (map {!!} s′)) nothing h′
