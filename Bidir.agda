@@ -25,6 +25,10 @@ module FinMap where
   empty : {A : Set} {n : ℕ} → FinMapMaybe n A
   empty = replicate nothing
 
+  fromAscList : {A : Set} {n : ℕ} → List (Fin n × A) → FinMapMaybe n A
+  fromAscList []             = empty
+  fromAscList ((f , a) ∷ xs) = insert f a (fromAscList xs)
+
   FinMap : ℕ → Set → Set
   FinMap n A = Vec A n
 
@@ -52,8 +56,7 @@ assoc eq (i ∷ is) (b ∷ bs) = maybe′ (checkInsert eq i b) nothing (assoc eq
 assoc _  _        _        = nothing
 
 generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
-generate f []       = empty
-generate f (n ∷ ns) = insert n (f n) (generate f ns)
+generate f is = fromAscList (zip is (map f is))
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : (x y : τ) → Dec (x ≡ y)) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
