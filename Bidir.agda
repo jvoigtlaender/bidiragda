@@ -80,6 +80,9 @@ lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x with eq (f i) x
 lemma-1 eq f (i ∷ is′) | just m | .m | refl | just .(f i) | yes refl = cong just (lemma-insert-same m i {!!})
 lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x | no ¬p = {!!}
 
+lemma-2 : {τ : Set} {n : ℕ} → (eq : (x y : τ) → Dec (x ≡ y)) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → just h ≡ assoc eq is v → map (flip lookup h) is ≡ map just v
+lemma-2 eq is v h p = {!!}
+
 idrange : (n : ℕ) → List (Fin n)
 idrange n = toList (tabulate id)
 
