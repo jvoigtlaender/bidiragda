@@ -10,6 +10,7 @@ open import Data.Product hiding (zip ; map)
 open import Function
 open import Relation.Nullary
 open import Relation.Binary.Core
+open import Relation.Binary.PropositionalEquality
 
 module FinMap where
 
@@ -58,9 +59,26 @@ assoc _  _        _        = nothing
 generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 generate f is = fromAscList (zip is (map f is))
 
+data Is-Just {A : Set} : (Maybe A) → Set where
+  is-just : (x : A) → Is-Just (just x) 
+
+the : {A : Set} {t : Maybe A} → Is-Just t → A
+the (is-just x) = x
+
+lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a? : Is-Just (lookup f m)) → m ≡ insert f (the a?) m
+lemma-insert-same [] () a?
+lemma-insert-same (.(just x) ∷ xs) zero (is-just x) = refl
+lemma-insert-same (x ∷ xs) (suc f′) a? = cong (_∷_ x) (lemma-insert-same xs f′ a?)
+
 lemma-1 : {τ : Set} {n : ℕ} → (eq : (x y : τ) → Dec (x ≡ y)) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
-lemma-1 eq f (i ∷ is′) = {!!}
+lemma-1 eq f (i ∷ is′) with assoc eq is′ (map f is′) | generate f is′ | lemma-1 eq f is′
+lemma-1 eq f (i ∷ is′) | nothing | _ | ()
+lemma-1 eq f (i ∷ is′) | just m | .m | refl with lookup i m
+lemma-1 eq f (i ∷ is′) | just m | .m | refl | nothing = refl
+lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x with eq (f i) x
+lemma-1 eq f (i ∷ is′) | just m | .m | refl | just .(f i) | yes refl = cong just (lemma-insert-same m i {!!})
+lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x | no ¬p = {!!}
 
 idrange : (n : ℕ) → List (Fin n)
 idrange n = toList (tabulate id)
