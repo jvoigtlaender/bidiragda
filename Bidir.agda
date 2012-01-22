@@ -15,6 +15,9 @@ open import Relation.Binary.PropositionalEquality
 _>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
 _>>=_ = flip (flip maybe′ nothing)
 
+fmap : {A B : Set} → (A → B) → Maybe A → Maybe B
+fmap f = maybe′ (λ a → just (f a)) nothing
+
 module FinMap where
 
   FinMapMaybe : ℕ → Set → Set
@@ -96,8 +99,8 @@ bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B �
 bff get eq s v = let s′ = idrange (length s)
                      g  = fromFunc (λ f → lookupVec f (fromList s))
                      h  = assoc eq (get s′) v
-                     h′ = h >>= (λ jh → just (union jh g))
-                 in h′ >>= (λ jh′ → just (map (flip lookup jh′) s′))
+                     h′ = fmap (flip union g) h
+                 in fmap (flip map s′ ∘ flip lookup) h′
 
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = {!!}
