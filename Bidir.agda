@@ -92,3 +92,6 @@ bff get eq s v = let s′ = idrange (length s)
                      h  = assoc eq (get s′) v
                      h′ = maybe′ (λ jh → just (union jh g)) nothing h
                  in maybe′ (λ jh′ → just (map (flip lookup jh′) s′)) nothing h′
+
+theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : (x y : τ) → Dec (x ≡ y)) → (s : List τ) → bff get eq s (get s) ≡ just s
+theorem-1 get eq s = {!!}
