@@ -5,12 +5,15 @@ open import Data.Nat
 open import Data.Fin
 open import Data.Maybe
 open import Data.List hiding (replicate)
-open import Data.Vec hiding (map ; zip) renaming (lookup to lookupVec)
+open import Data.Vec hiding (map ; zip ; _>>=_) renaming (lookup to lookupVec)
 open import Data.Product hiding (zip ; map)
 open import Function
 open import Relation.Nullary
 open import Relation.Binary.Core
 open import Relation.Binary.PropositionalEquality
+
+_>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
+_>>=_ = flip (flip maybe′ nothing)
 
 module FinMap where
 
@@ -56,7 +59,7 @@ checkInsert eq i b m | nothing = just (insert i b m)
 
 assoc : {A : Set} {n : ℕ} → EqInst A → List (Fin n) → List A → Maybe (FinMapMaybe n A)
 assoc _  []       []       = just empty
-assoc eq (i ∷ is) (b ∷ bs) = maybe′ (checkInsert eq i b) nothing (assoc eq is bs)
+assoc eq (i ∷ is) (b ∷ bs) = (assoc eq is bs) >>= (checkInsert eq i b)
 assoc _  _        _        = nothing
 
 generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
@@ -93,8 +96,8 @@ bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B �
 bff get eq s v = let s′ = idrange (length s)
                      g  = fromFunc (λ f → lookupVec f (fromList s))
                      h  = assoc eq (get s′) v
-                     h′ = maybe′ (λ jh → just (union jh g)) nothing h
-                 in maybe′ (λ jh′ → just (map (flip lookup jh′) s′)) nothing h′
+                     h′ = h >>= (λ jh → just (union jh g))
+                 in h′ >>= (λ jh′ → just (map (flip lookup jh′) s′))
 
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = {!!}
