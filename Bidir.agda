@@ -101,7 +101,10 @@ lemma-1 eq f (i ∷ is′) = begin
      where open Relation.Binary.PropositionalEquality.≡-Reasoning
 
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → just h ≡ assoc eq is v → map (flip lookup h) is ≡ map just v
-lemma-2 eq is v h p = {!!}
+lemma-2 eq []       []       h p = refl
+lemma-2 eq []       (x ∷ xs) h ()
+lemma-2 eq (x ∷ xs) []       h ()
+lemma-2 eq (i ∷ is) (x ∷ xs) h p = {!!}
 
 idrange : (n : ℕ) → List (Fin n)
 idrange n = toList (tabulate id)
