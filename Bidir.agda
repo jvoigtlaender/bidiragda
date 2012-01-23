@@ -79,15 +79,26 @@ lemma-insert-same [] () a?
 lemma-insert-same (.(just x) ∷ xs) zero (is-just x) = refl
 lemma-insert-same (x ∷ xs) (suc f′) a? = cong (_∷_ x) (lemma-insert-same xs f′ a?)
 
+lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
+lemma-checkInsert-generate eq f i is with lookupM i (generate f is)
+lemma-checkInsert-generate eq f i is | nothing = refl
+lemma-checkInsert-generate eq f i is | just x with eq (f i) x
+lemma-checkInsert-generate eq f i is | just .(f i) | yes refl = cong just (lemma-insert-same (generate f is) i {!!})
+lemma-checkInsert-generate eq f i is | just x | no ¬p = {!!}
+
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
-lemma-1 eq f (i ∷ is′) with assoc eq is′ (map f is′) | generate f is′ | lemma-1 eq f is′
-lemma-1 eq f (i ∷ is′) | nothing | _ | ()
-lemma-1 eq f (i ∷ is′) | just m | .m | refl with lookup i m
-lemma-1 eq f (i ∷ is′) | just m | .m | refl | nothing = refl
-lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x with eq (f i) x
-lemma-1 eq f (i ∷ is′) | just m | .m | refl | just .(f i) | yes refl = cong just (lemma-insert-same m i {!!})
-lemma-1 eq f (i ∷ is′) | just m | .m | refl | just x | no ¬p = {!!}
+lemma-1 eq f (i ∷ is′) = begin
+  (assoc eq (i ∷ is′) (map f (i ∷ is′)))
+    ≡⟨ refl ⟩
+  (assoc eq is′ (map f is′) >>= checkInsert eq i (f i))
+    ≡⟨ cong (λ m → m >>= checkInsert eq i (f i)) (lemma-1 eq f is′) ⟩
+  (just (generate f is′) >>= (checkInsert eq i (f i)))
+    ≡⟨ refl ⟩
+  (checkInsert eq i (f i) (generate f is′))
+    ≡⟨ lemma-checkInsert-generate eq f i is′ ⟩
+  just (generate f (i ∷ is′)) ∎
+     where open Relation.Binary.PropositionalEquality.≡-Reasoning
 
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → just h ≡ assoc eq is v → map (flip lookup h) is ≡ map just v
 lemma-2 eq is v h p = {!!}
