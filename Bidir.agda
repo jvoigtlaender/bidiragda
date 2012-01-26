@@ -73,13 +73,22 @@ lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → 
 lemma-2 eq []       []       h p = refl
 lemma-2 eq []       (x ∷ xs) h ()
 lemma-2 eq (x ∷ xs) []       h ()
-lemma-2 eq (i ∷ is) (x ∷ xs) h p = begin
+lemma-2 eq (i ∷ is) (x ∷ xs) h p with assoc eq is xs | inspect (assoc eq is) xs
+lemma-2 eq (i ∷ is) (x ∷ xs) h () | nothing | _
+lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
   map (flip lookupM h) (i ∷ is)
     ≡⟨ refl ⟩
   lookup i h ∷ map (flip lookupM h) is
-    ≡⟨ cong (flip _∷_ (map (flip lookup h) is)) (lemma-lookupM-assoc eq i is x xs h p) ⟩
+    ≡⟨ cong (flip _∷_ (map (flip lookup h) is)) (lemma-lookupM-assoc eq i is x xs h (begin
+      assoc eq (i ∷ is) (x ∷ xs)
+        ≡⟨ cong (flip _>>=_ (checkInsert eq i x)) ir ⟩
+      checkInsert eq i x h'
+        ≡⟨ p ⟩
+      just h ∎) ) ⟩
   just x ∷ map (flip lookupM h) is
-    ≡⟨ cong (_∷_ (just x)) (lemma-2 eq is xs h {!!}) ⟩
+    ≡⟨  cong (_∷_ (just x)) {!!} ⟩
+  just x ∷ map (flip lookupM h') is
+    ≡⟨ cong (_∷_ (just x)) (lemma-2 eq is xs h' ir) ⟩
   just x ∷ map just xs
     ≡⟨ refl ⟩
   map just (x ∷ xs) ∎
