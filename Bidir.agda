@@ -71,20 +71,20 @@ assoc _  _        _        = nothing
 generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 generate f is = fromAscList (zip is (map f is))
 
-lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → just a ≡ lookupM f m → m ≡ insert f a m
+lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → lookupM f m ≡ just a → m ≡ insert f a m
 lemma-insert-same []               ()      a p
 lemma-insert-same (.(just a) ∷ xs) zero    a refl = refl
 lemma-insert-same (x ∷ xs)         (suc i) a p    = cong (_∷_ x) (lemma-insert-same xs i a p)
 
-lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → nothing ≡ lookupM {A} i empty
+lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → lookupM {A} i empty ≡ nothing
 lemma-lookupM-empty zero    = refl
 lemma-lookupM-empty (suc i) = lemma-lookupM-empty i
 
 lemma-from-just : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
 lemma-from-just refl = refl
 
-lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : FinMapMaybe n A) → just a ≡ lookupM i (insert i a m)
-lemma-lookupM-insert zero    _ (_ ∷ _)  = sym refl
+lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : FinMapMaybe n A) → lookupM i (insert i a m) ≡ just a
+lemma-lookupM-insert zero    _ (_ ∷ _)  = refl
 lemma-lookupM-insert (suc i) a (_ ∷ xs) = lemma-lookupM-insert i a xs
 
 lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → ¬(i ≡ j) → lookupM i m ≡ lookupM i (insert j a m)
@@ -93,40 +93,40 @@ lemma-lookupM-insert-other zero (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (contraposition (cong suc) p)
 
-lemma-lookupM-generate : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → just a ≡ lookupM i (generate f is) → a ≡ f i
+lemma-lookupM-generate : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (generate f is) ≡ just a → f i ≡ a
 lemma-lookupM-generate {A} i f [] a p with begin
   just a
-    ≡⟨ p ⟩
+    ≡⟨ sym p ⟩
   lookupM i (generate f [])
     ≡⟨ refl ⟩
   lookupM i empty
-    ≡⟨ sym (lemma-lookupM-empty i) ⟩
+    ≡⟨ lemma-lookupM-empty i ⟩
   nothing ∎
 lemma-lookupM-generate i f [] a p | ()
 lemma-lookupM-generate i f (i' ∷ is) a p with i ≟F i'
 lemma-lookupM-generate i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
-   just a
-     ≡⟨ p ⟩
-   lookupM i (generate f (i ∷ is))
-     ≡⟨ refl ⟩
-   lookupM i (insert i (f i) (generate f is))
+   just (f i)
      ≡⟨ sym (lemma-lookupM-insert i (f i) (generate f is)) ⟩
-   just (f i) ∎)
+   lookupM i (insert i (f i) (generate f is))
+     ≡⟨ refl ⟩
+   lookupM i (generate f (i ∷ is))
+     ≡⟨ p ⟩
+   just a ∎)
 lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i f is a (begin
-  just a
-    ≡⟨ p ⟩
-  lookupM i (generate f (i' ∷ is))
-    ≡⟨ refl ⟩
+  lookupM i (generate f is)
+    ≡⟨ lemma-lookupM-insert-other i i' (f i') (generate f is) ¬p2 ⟩
   lookupM i (insert i' (f i') (generate f is))
-    ≡⟨ sym (lemma-lookupM-insert-other i i' (f i') (generate f is) ¬p2) ⟩
-  lookupM i (generate f is) ∎)
+    ≡⟨ refl ⟩
+  lookupM i (generate f (i' ∷ is))
+    ≡⟨ p ⟩
+  just a ∎)
 
 lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
 lemma-checkInsert-generate eq f i is with lookupM i (generate f is) | inspect (lookupM i) (generate f is)
 lemma-checkInsert-generate eq f i is | nothing | _ = refl
-lemma-checkInsert-generate eq f i is | just x | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x (sym prf)
+lemma-checkInsert-generate eq f i is | just x | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x prf
 lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl with eq (f i) (f i)
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (generate f is) i (f i) (sym prf))
+lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (generate f is) i (f i) prf)
 lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no ¬p = contradiction refl ¬p
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
