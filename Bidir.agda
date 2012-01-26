@@ -68,22 +68,16 @@ assoc _  _        _        = nothing
 generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 generate f is = fromAscList (zip is (map f is))
 
-data Is-Just {A : Set} : (Maybe A) → Set where
-  is-just : (x : A) → Is-Just (just x) 
-
-the : {A : Set} {t : Maybe A} → Is-Just t → A
-the (is-just x) = x
-
-lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a? : Is-Just (lookup f m)) → m ≡ insert f (the a?) m
-lemma-insert-same [] () a?
-lemma-insert-same (.(just x) ∷ xs) zero (is-just x) = refl
-lemma-insert-same (x ∷ xs) (suc f′) a? = cong (_∷_ x) (lemma-insert-same xs f′ a?)
+lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → just a ≡ lookupM f m → m ≡ insert f a m
+lemma-insert-same []               ()      a p
+lemma-insert-same (.(just a) ∷ xs) zero    a refl = refl
+lemma-insert-same (x ∷ xs)         (suc i) a p    = cong (_∷_ x) (lemma-insert-same xs i a p)
 
 lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
 lemma-checkInsert-generate eq f i is with lookupM i (generate f is)
 lemma-checkInsert-generate eq f i is | nothing = refl
 lemma-checkInsert-generate eq f i is | just x with eq (f i) x
-lemma-checkInsert-generate eq f i is | just .(f i) | yes refl = cong just (lemma-insert-same (generate f is) i {!!})
+lemma-checkInsert-generate eq f i is | just .(f i) | yes refl = cong just (lemma-insert-same (generate f is) i (f i) {!!})
 lemma-checkInsert-generate eq f i is | just x | no ¬p = {!!}
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
