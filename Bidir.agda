@@ -88,9 +88,9 @@ lemma-lookupM-insert zero    _ (_ ∷ _)  = refl
 lemma-lookupM-insert (suc i) a (_ ∷ xs) = lemma-lookupM-insert i a xs
 
 lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → ¬(i ≡ j) → lookupM i m ≡ lookupM i (insert j a m)
-lemma-lookupM-insert-other zero    zero    a m p = contradiction refl p
-lemma-lookupM-insert-other zero (suc j) a (x ∷ xs) p = refl
-lemma-lookupM-insert-other (suc i) zero a (x ∷ xs) p = refl
+lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
+lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
+lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (contraposition (cong suc) p)
 
 lemma-lookupM-generate : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (generate f is) ≡ just a → f i ≡ a
@@ -123,11 +123,11 @@ lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i 
 
 lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
 lemma-checkInsert-generate eq f i is with lookupM i (generate f is) | inspect (lookupM i) (generate f is)
-lemma-checkInsert-generate eq f i is | nothing | _ = refl
-lemma-checkInsert-generate eq f i is | just x | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x prf
+lemma-checkInsert-generate eq f i is | nothing     | _ = refl
+lemma-checkInsert-generate eq f i is | just x      | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x prf
 lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl with eq (f i) (f i)
 lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (generate f is) i (f i) prf)
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no ¬p = contradiction refl ¬p
+lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no  ¬p   = contradiction refl ¬p
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
