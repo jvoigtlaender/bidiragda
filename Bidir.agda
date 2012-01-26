@@ -1,18 +1,16 @@
 module Bidir where
-open import Data.Bool hiding (_≟_)
-open import Data.Nat
-open import Data.Fin
-open import Data.Fin.Props renaming (_≟_ to _≟F_)
-open import Data.Maybe
-open import Data.List hiding (replicate)
-open import Data.Vec hiding (map ; zip ; _>>=_) renaming (lookup to lookupVec)
-open import Data.Product hiding (zip ; map)
-open import Function
-open import Relation.Nullary
-open import Relation.Nullary.Negation
-open import Relation.Binary.Core
-open import Relation.Binary.PropositionalEquality
-open Relation.Binary.PropositionalEquality.≡-Reasoning
+
+open import Data.Nat using (ℕ)
+open import Data.Fin using (Fin)
+open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
+open import Data.List using (List ; [] ; _∷_ ; map ; length)
+open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec)
+open import Function using (id ; _∘_ ; flip)
+open import Relation.Nullary using (Dec ; yes ; no)
+open import Relation.Nullary.Negation using (contradiction)
+open import Relation.Binary.Core using (_≡_ ; refl)
+open import Relation.Binary.PropositionalEquality using (cong ; inspect ; Reveal_is_)
+open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
 
