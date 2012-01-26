@@ -13,6 +13,7 @@ open import Relation.Nullary
 open import Relation.Nullary.Negation
 open import Relation.Binary.Core
 open import Relation.Binary.PropositionalEquality
+open Relation.Binary.PropositionalEquality.≡-Reasoning
 
 _>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
 _>>=_ = flip (flip maybe′ nothing)
@@ -101,7 +102,6 @@ lemma-lookupM-generate {A} i f [] a p with begin
   lookupM i empty
     ≡⟨ sym (lemma-lookupM-empty i) ⟩
   nothing ∎
-    where open Relation.Binary.PropositionalEquality.≡-Reasoning
 lemma-lookupM-generate i f [] a p | ()
 lemma-lookupM-generate i f (i' ∷ is) a p with i ≟F i'
 lemma-lookupM-generate i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
@@ -112,7 +112,6 @@ lemma-lookupM-generate i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
    lookupM i (insert i (f i) (generate f is))
      ≡⟨ sym (lemma-lookupM-insert i (f i) (generate f is)) ⟩
    just (f i) ∎)
-    where open Relation.Binary.PropositionalEquality.≡-Reasoning
 lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i f is a (begin
   just a
     ≡⟨ p ⟩
@@ -121,7 +120,6 @@ lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i 
   lookupM i (insert i' (f i') (generate f is))
     ≡⟨ sym (lemma-lookupM-insert-other i i' (f i') (generate f is) ¬p2) ⟩
   lookupM i (generate f is) ∎)
-    where open Relation.Binary.PropositionalEquality.≡-Reasoning
 
 lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
 lemma-checkInsert-generate eq f i is with lookupM i (generate f is) | inspect (lookupM i) (generate f is)
@@ -143,7 +141,6 @@ lemma-1 eq f (i ∷ is′) = begin
   (checkInsert eq i (f i) (generate f is′))
     ≡⟨ lemma-checkInsert-generate eq f i is′ ⟩
   just (generate f (i ∷ is′)) ∎
-     where open Relation.Binary.PropositionalEquality.≡-Reasoning
 
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → just h ≡ assoc eq is v → map (flip lookup h) is ≡ map just v
 lemma-2 eq []       []       h p = refl
