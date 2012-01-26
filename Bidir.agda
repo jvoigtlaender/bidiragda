@@ -9,7 +9,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl)
-open import Relation.Binary.PropositionalEquality using (cong ; inspect ; Reveal_is_)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; Reveal_is_)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
@@ -55,11 +55,34 @@ lemma-1 eq f (i ∷ is′) = begin
     ≡⟨ lemma-checkInsert-generate eq f i is′ ⟩
   just (generate f (i ∷ is′)) ∎
 
-lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → just h ≡ assoc eq is v → map (flip lookup h) is ≡ map just v
+lemma-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
+lemma-lookupM-assoc eq i is x xs h    p with assoc eq is xs
+lemma-lookupM-assoc eq i is x xs h    ()   | nothing
+lemma-lookupM-assoc eq i is x xs h    p    | just h' with lookupM i h' | inspect (lookupM i) h'
+lemma-lookupM-assoc eq i is x xs .(insert i x h') refl | just h' | nothing | _ = lemma-lookupM-insert i x h'
+lemma-lookupM-assoc eq i is x xs h    p    | just h'   | just y  | _ with eq x y
+lemma-lookupM-assoc eq i is x xs h    ()   | just h'   | just y  | _ | no ¬prf
+lemma-lookupM-assoc eq i is x xs h    p    | just h'   | just .x | Reveal_is_.[_] p' | yes refl = begin
+  lookupM i h
+    ≡⟨ cong (lookupM i) (lemma-from-just (sym p)) ⟩
+  lookupM i h'
+    ≡⟨ p' ⟩
+  just x ∎
+
+lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → assoc eq is v ≡ just h → map (flip lookupM h) is ≡ map just v
 lemma-2 eq []       []       h p = refl
 lemma-2 eq []       (x ∷ xs) h ()
 lemma-2 eq (x ∷ xs) []       h ()
-lemma-2 eq (i ∷ is) (x ∷ xs) h p = {!!}
+lemma-2 eq (i ∷ is) (x ∷ xs) h p = begin
+  map (flip lookupM h) (i ∷ is)
+    ≡⟨ refl ⟩
+  lookup i h ∷ map (flip lookupM h) is
+    ≡⟨ cong (flip _∷_ (map (flip lookup h) is)) (lemma-lookupM-assoc eq i is x xs h p) ⟩
+  just x ∷ map (flip lookupM h) is
+    ≡⟨ cong (_∷_ (just x)) (lemma-2 eq is xs h {!!}) ⟩
+  just x ∷ map just xs
+    ≡⟨ refl ⟩
+  map just (x ∷ xs) ∎
 
 idrange : (n : ℕ) → List (Fin n)
 idrange n = toList (tabulate id)
