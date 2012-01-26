@@ -3,12 +3,14 @@ module Bidir where
 open import Data.Bool hiding (_≟_)
 open import Data.Nat
 open import Data.Fin
+open import Data.Fin.Props renaming (_≟_ to _≟F_)
 open import Data.Maybe
 open import Data.List hiding (replicate)
 open import Data.Vec hiding (map ; zip ; _>>=_) renaming (lookup to lookupVec)
 open import Data.Product hiding (zip ; map)
 open import Function
 open import Relation.Nullary
+open import Relation.Nullary.Negation
 open import Relation.Binary.Core
 open import Relation.Binary.PropositionalEquality
 
@@ -73,13 +75,61 @@ lemma-insert-same []               ()      a p
 lemma-insert-same (.(just a) ∷ xs) zero    a refl = refl
 lemma-insert-same (x ∷ xs)         (suc i) a p    = cong (_∷_ x) (lemma-insert-same xs i a p)
 
+lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → nothing ≡ lookupM {A} i empty
+lemma-lookupM-empty zero    = refl
+lemma-lookupM-empty (suc i) = lemma-lookupM-empty i
+
+lemma-from-just : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
+lemma-from-just refl = refl
+
+lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : FinMapMaybe n A) → just a ≡ lookupM i (insert i a m)
+lemma-lookupM-insert zero    _ (_ ∷ _)  = sym refl
+lemma-lookupM-insert (suc i) a (_ ∷ xs) = lemma-lookupM-insert i a xs
+
+lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → ¬(i ≡ j) → lookupM i m ≡ lookupM i (insert j a m)
+lemma-lookupM-insert-other zero    zero    a m p = contradiction refl p
+lemma-lookupM-insert-other zero (suc j) a (x ∷ xs) p = refl
+lemma-lookupM-insert-other (suc i) zero a (x ∷ xs) p = refl
+lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (contraposition (cong suc) p)
+
+lemma-lookupM-generate : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → just a ≡ lookupM i (generate f is) → a ≡ f i
+lemma-lookupM-generate {A} i f [] a p with begin
+  just a
+    ≡⟨ p ⟩
+  lookupM i (generate f [])
+    ≡⟨ refl ⟩
+  lookupM i empty
+    ≡⟨ sym (lemma-lookupM-empty i) ⟩
+  nothing ∎
+    where open Relation.Binary.PropositionalEquality.≡-Reasoning
+lemma-lookupM-generate i f [] a p | ()
+lemma-lookupM-generate i f (i' ∷ is) a p with i ≟F i'
+lemma-lookupM-generate i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
+   just a
+     ≡⟨ p ⟩
+   lookupM i (generate f (i ∷ is))
+     ≡⟨ refl ⟩
+   lookupM i (insert i (f i) (generate f is))
+     ≡⟨ sym (lemma-lookupM-insert i (f i) (generate f is)) ⟩
+   just (f i) ∎)
+    where open Relation.Binary.PropositionalEquality.≡-Reasoning
+lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i f is a (begin
+  just a
+    ≡⟨ p ⟩
+  lookupM i (generate f (i' ∷ is))
+    ≡⟨ refl ⟩
+  lookupM i (insert i' (f i') (generate f is))
+    ≡⟨ sym (lemma-lookupM-insert-other i i' (f i') (generate f is) ¬p2) ⟩
+  lookupM i (generate f is) ∎)
+    where open Relation.Binary.PropositionalEquality.≡-Reasoning
+
 lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
 lemma-checkInsert-generate eq f i is with lookupM i (generate f is) | inspect (lookupM i) (generate f is)
 lemma-checkInsert-generate eq f i is | nothing | _ = refl
-lemma-checkInsert-generate eq f i is | just x | _ with eq (f i) x
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] p | yes refl = cong just (lemma-insert-same (generate f is) i (f i) (sym p))
-lemma-checkInsert-generate eq f i is | just x | _ | no ¬p = {!!}
-
+lemma-checkInsert-generate eq f i is | just x | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x (sym prf)
+lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl with eq (f i) (f i)
+lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (generate f is) i (f i) (sym prf))
+lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no ¬p = contradiction refl ¬p
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
 lemma-1 eq f []        = refl
