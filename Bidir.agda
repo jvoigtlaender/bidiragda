@@ -103,5 +103,8 @@ bff get eq s v = let s′ = idrange (length s)
                      h′ = fmap (flip union g) h
                  in fmap (flip map s′ ∘ flip lookup) h′
 
+postulate
+  free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → (l : List β) → get (map f l) ≡ map f (get l)
+
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = {!!}
