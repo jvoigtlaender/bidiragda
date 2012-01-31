@@ -93,11 +93,11 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
     ≡⟨ refl ⟩
   map just (x ∷ xs) ∎
 
-idrange : (n : ℕ) → List (Fin n)
-idrange n = toList (tabulate id)
+enumerate : {A : Set} → (l : List A) → List (Fin (length l))
+enumerate l = toList (tabulate id)
 
 bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
-bff get eq s v = let s′ = idrange (length s)
+bff get eq s v = let s′ = enumerate s
                      g  = fromFunc (λ f → lookupVec f (fromList s))
                      h  = assoc eq (get s′) v
                      h′ = fmap (flip union g) h
