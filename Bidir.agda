@@ -47,13 +47,13 @@ lemma-checkInsert-restrict eq f i is | just .(f i) | Reveal_is_.[_] prf | refl |
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (restrict f is)
 lemma-1 eq f []        = refl
 lemma-1 eq f (i ∷ is′) = begin
-  (assoc eq (i ∷ is′) (map f (i ∷ is′)))
+  assoc eq (i ∷ is′) (map f (i ∷ is′))
     ≡⟨ refl ⟩
-  (assoc eq is′ (map f is′) >>= checkInsert eq i (f i))
+  assoc eq is′ (map f is′) >>= checkInsert eq i (f i)
     ≡⟨ cong (λ m → m >>= checkInsert eq i (f i)) (lemma-1 eq f is′) ⟩
-  (just (restrict f is′) >>= (checkInsert eq i (f i)))
+  just (restrict f is′) >>= (checkInsert eq i (f i))
     ≡⟨ refl ⟩
-  (checkInsert eq i (f i) (restrict f is′))
+  checkInsert eq i (f i) (restrict f is′)
     ≡⟨ lemma-checkInsert-restrict eq f i is′ ⟩
   just (restrict f (i ∷ is′)) ∎
 
