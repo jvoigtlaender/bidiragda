@@ -4,9 +4,9 @@ open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
-open import Data.List.Properties using () renaming (map-compose to map-∘)
+open import Data.List.Properties using (map-cong) renaming (map-compose to map-∘)
 open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec ; _∷_ to _∷V_)
-open import Data.Vec.Properties using (tabulate-∘)
+open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
@@ -130,6 +130,9 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
     ≡⟨ lemma-map-denumerate-enumerate as ⟩
   as ∎)
 
+lemma-union-generate : {A : Set} {n : ℕ} → (f : Fin n → A) → (is : List (Fin n)) → union (generate f is) (fromFunc f) ≡ fromFunc f
+lemma-union-generate f is = {!!}
+
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = begin
   bff get eq s (get s)
@@ -137,5 +140,17 @@ theorem-1 get eq s = begin
   bff get eq s (get (map (denumerate s) (enumerate s)))
     ≡⟨ cong (bff get eq s) (free-theorem-list-list get (denumerate s) (enumerate s)) ⟩
   bff get eq s (map (denumerate s) (get (enumerate s)))
-    ≡⟨ {!!} ⟩
+    ≡⟨ refl ⟩
+  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc eq (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
+    ≡⟨ cong (fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) (lemma-1 eq (denumerate s) (get (enumerate s))) ⟩
+  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (flip lookupVec (fromList s)))) (just (generate (denumerate s) (get (enumerate s)))))
+    ≡⟨ refl ⟩
+  just ((flip map (enumerate s) ∘ flip lookup) (union (generate (denumerate s) (get (enumerate s))) (fromFunc (denumerate s))))
+    ≡⟨ cong just (cong (flip map (enumerate s) ∘ flip lookup) (lemma-union-generate (denumerate s) (get (enumerate s)))) ⟩
+  just ((flip map (enumerate s) ∘ flip lookup) (fromFunc (denumerate s)))
+    ≡⟨ refl ⟩
+  just (map (flip lookup (fromFunc (denumerate s))) (enumerate s))
+    ≡⟨ cong just (map-cong (lookup∘tabulate (denumerate s)) (enumerate s)) ⟩
+  just (map (denumerate s) (enumerate s))
+    ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
