@@ -151,3 +151,6 @@ theorem-1 get eq s = begin
   just (map (denumerate s) (enumerate s))
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
+
+theorem-2 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (v s u : List τ) → bff get eq s v ≡ just u → get u ≡ v
+theorem-2 get eq v s u p = {!!}
