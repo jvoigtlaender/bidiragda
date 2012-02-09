@@ -122,11 +122,11 @@ lemma-union-restrict f is = begin
             lookup j (fromFunc f)
               ≡⟨ lookup∘tabulate f j ⟩
             f j ∎
-          lemma-inner f (i ∷ is)  j with i ≟ j
+          lemma-inner f (i ∷ is)  j with j ≟ i
           lemma-inner f (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (restrict f is))
-          lemma-inner f (i ∷ is)  j | no i≢j = begin
+          lemma-inner f (i ∷ is)  j | no j≢i = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (restrict f is)))
-              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) (i≢j ∘ sym) )) ⟩
+              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) j≢i)) ⟩
             maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is))
               ≡⟨ lemma-inner f is j ⟩
             f j ∎
