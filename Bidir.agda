@@ -11,7 +11,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; Reveal_is_)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; Reveal_is_ ; _≗_)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
@@ -109,7 +109,7 @@ bff get eq s v = let s′ = enumerate s
                  in fmap (flip map s′ ∘ flip lookup) h′
 
 postulate
-  free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → (l : List β) → get (map f l) ≡ map f (get l)
+  free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → get ∘ map f ≗ map f ∘ get
 
 toList-map-commutes : {A B : Set} {n : ℕ} → (f : A → B) → (v : Data.Vec.Vec A n) → (toList (Data.Vec.map f v)) ≡ map f (toList v)
 toList-map-commutes f Data.Vec.[] = refl
