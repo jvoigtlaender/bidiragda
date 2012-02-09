@@ -4,7 +4,9 @@ open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
-open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec)
+open import Data.List.Properties using () renaming (map-compose to map-∘)
+open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec ; _∷_ to _∷V_)
+open import Data.Vec.Properties using (tabulate-∘)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
@@ -96,15 +98,37 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
 enumerate : {A : Set} → (l : List A) → List (Fin (length l))
 enumerate l = toList (tabulate id)
 
+denumerate : {A : Set} (l : List A) → Fin (length l) → A
+denumerate l = flip lookupVec (fromList l)
+
 bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
 bff get eq s v = let s′ = enumerate s
-                     g  = fromFunc (λ f → lookupVec f (fromList s))
+                     g  = fromFunc (denumerate s)
                      h  = assoc eq (get s′) v
                      h′ = fmap (flip union g) h
                  in fmap (flip map s′ ∘ flip lookup) h′
 
 postulate
   free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → (l : List β) → get (map f l) ≡ map f (get l)
+
+toList-map-commutes : {A B : Set} {n : ℕ} → (f : A → B) → (v : Data.Vec.Vec A n) → (toList (Data.Vec.map f v)) ≡ map f (toList v)
+toList-map-commutes f Data.Vec.[] = refl
+toList-map-commutes f (x ∷V xs) = cong (_∷_ (f x)) (toList-map-commutes f xs)
+
+lemma-map-denumerate-enumerate : {A : Set} → (as : List A) → map (denumerate as) (enumerate as) ≡ as
+lemma-map-denumerate-enumerate [] = refl
+lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
+  map (flip lookupVec (a ∷V (fromList as))) (toList (tabulate Fin.suc))
+    ≡⟨ cong (map (flip lookupVec (a ∷V (fromList as))) ∘ toList) (tabulate-∘ Fin.suc id) ⟩
+  map (flip lookupVec (a ∷V (fromList as))) (toList (Data.Vec.map Fin.suc (tabulate id)))
+    ≡⟨ cong (map (flip lookupVec (a ∷V fromList as))) (toList-map-commutes Data.Fin.suc (tabulate id)) ⟩
+  map (flip lookupVec (a ∷V fromList as)) (map Fin.suc (enumerate as))
+    ≡⟨ sym (map-∘ (enumerate as)) ⟩
+  map (flip lookupVec (a ∷V (fromList as)) ∘ Fin.suc) (enumerate as)
+    ≡⟨ refl ⟩
+  map (denumerate as) (enumerate as)
+    ≡⟨ lemma-map-denumerate-enumerate as ⟩
+  as ∎)
 
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = {!!}
