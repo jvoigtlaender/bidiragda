@@ -131,4 +131,11 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
   as ∎)
 
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
-theorem-1 get eq s = {!!}
+theorem-1 get eq s = begin
+  bff get eq s (get s)
+    ≡⟨ cong (bff get eq s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
+  bff get eq s (get (map (denumerate s) (enumerate s)))
+    ≡⟨ cong (bff get eq s) (free-theorem-list-list get (denumerate s) (enumerate s)) ⟩
+  bff get eq s (map (denumerate s) (get (enumerate s)))
+    ≡⟨ {!!} ⟩
+  just s ∎
