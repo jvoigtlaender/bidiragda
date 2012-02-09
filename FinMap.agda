@@ -1,17 +1,18 @@
 module FinMap where
 
-open import Data.Nat using (ℕ)
+open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Props using (_≟_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec.Properties using (lookup∘tabulate)
 open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
-open import Function using (id)
+open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (¬_ ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction ; contraposition)
 open import Relation.Binary.Core using (_≡_ ; refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 FinMapMaybe : ℕ → Set → Set
@@ -95,3 +96,37 @@ lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i 
   lookupM i (generate f (i' ∷ is))
     ≡⟨ p ⟩
   just a ∎)
+
+lemma-tabulate-∘ : {n : ℕ} {A : Set} → {f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
+lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
+lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = begin
+  f zero ∷ tabulate (f ∘ suc)
+    ≡⟨ cong (flip Vec._∷_ (tabulate (f ∘ suc))) (f≗g zero) ⟩
+  g zero ∷ tabulate (f ∘ suc)
+    ≡⟨ cong (Vec._∷_ (g zero)) (lemma-tabulate-∘ (f≗g ∘ suc)) ⟩
+  g zero ∷ tabulate (g ∘ suc) ∎
+
+lemma-union-generate : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (generate f is) (fromFunc f) ≡ fromFunc f
+lemma-union-generate f is = begin
+  union (generate f is) (fromFunc f)
+    ≡⟨ refl ⟩
+  tabulate (λ j → maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is)))
+    ≡⟨ lemma-tabulate-∘ (lemma-inner f is) ⟩
+  tabulate f ∎
+    where lemma-inner : {n : ℕ} {A : Set} (f : Fin n → A) → (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is)) ≡ f j
+          lemma-inner f []       j = begin
+            maybe′ id (lookup j (fromFunc f)) (lookupM j empty)
+              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-empty j) ⟩
+            maybe′ id (lookup j (fromFunc f)) nothing
+              ≡⟨ refl ⟩
+            lookup j (fromFunc f)
+              ≡⟨ lookup∘tabulate f j ⟩
+            f j ∎
+          lemma-inner f (i ∷ is)  j with i ≟ j
+          lemma-inner f (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (generate f is))
+          lemma-inner f (i ∷ is)  j | no i≢j = begin
+            maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (generate f is)))
+              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (generate f is) (i≢j ∘ sym) )) ⟩
+            maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is))
+              ≡⟨ lemma-inner f is j ⟩
+            f j ∎

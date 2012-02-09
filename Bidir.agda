@@ -130,9 +130,6 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
     ≡⟨ lemma-map-denumerate-enumerate as ⟩
   as ∎)
 
-lemma-union-generate : {A : Set} {n : ℕ} → (f : Fin n → A) → (is : List (Fin n)) → union (generate f is) (fromFunc f) ≡ fromFunc f
-lemma-union-generate f is = {!!}
-
 theorem-1 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (s : List τ) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = begin
   bff get eq s (get s)
