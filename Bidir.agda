@@ -36,26 +36,26 @@ assoc _  []       []       = just empty
 assoc eq (i ∷ is) (b ∷ bs) = (assoc eq is bs) >>= (checkInsert eq i b)
 assoc _  _        _        = nothing
 
-lemma-checkInsert-generate : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (generate f is) ≡ just (generate f (i ∷ is))
-lemma-checkInsert-generate eq f i is with lookupM i (generate f is) | inspect (lookupM i) (generate f is)
-lemma-checkInsert-generate eq f i is | nothing     | _ = refl
-lemma-checkInsert-generate eq f i is | just x      | Reveal_is_.[_] prf with lemma-lookupM-generate i f is x prf
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl with eq (f i) (f i)
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (generate f is) i (f i) prf)
-lemma-checkInsert-generate eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no  ¬p   = contradiction refl ¬p
+lemma-checkInsert-restrict : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (i : Fin n) → (is : List (Fin n)) → checkInsert eq i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
+lemma-checkInsert-restrict eq f i is with lookupM i (restrict f is) | inspect (lookupM i) (restrict f is)
+lemma-checkInsert-restrict eq f i is | nothing     | _ = refl
+lemma-checkInsert-restrict eq f i is | just x      | Reveal_is_.[_] prf with lemma-lookupM-restrict i f is x prf
+lemma-checkInsert-restrict eq f i is | just .(f i) | Reveal_is_.[_] prf | refl with eq (f i) (f i)
+lemma-checkInsert-restrict eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | yes refl = cong just (lemma-insert-same (restrict f is) i (f i) prf)
+lemma-checkInsert-restrict eq f i is | just .(f i) | Reveal_is_.[_] prf | refl | no  ¬p   = contradiction refl ¬p
 
-lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (generate f is)
+lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (restrict f is)
 lemma-1 eq f []        = refl
 lemma-1 eq f (i ∷ is′) = begin
   (assoc eq (i ∷ is′) (map f (i ∷ is′)))
     ≡⟨ refl ⟩
   (assoc eq is′ (map f is′) >>= checkInsert eq i (f i))
     ≡⟨ cong (λ m → m >>= checkInsert eq i (f i)) (lemma-1 eq f is′) ⟩
-  (just (generate f is′) >>= (checkInsert eq i (f i)))
+  (just (restrict f is′) >>= (checkInsert eq i (f i)))
     ≡⟨ refl ⟩
-  (checkInsert eq i (f i) (generate f is′))
-    ≡⟨ lemma-checkInsert-generate eq f i is′ ⟩
-  just (generate f (i ∷ is′)) ∎
+  (checkInsert eq i (f i) (restrict f is′))
+    ≡⟨ lemma-checkInsert-restrict eq f i is′ ⟩
+  just (restrict f (i ∷ is′)) ∎
 
 lemma-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
 lemma-lookupM-assoc eq i is x xs h    p with assoc eq is xs
@@ -140,10 +140,10 @@ theorem-1 get eq s = begin
     ≡⟨ refl ⟩
   fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc eq (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
     ≡⟨ cong (fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) (lemma-1 eq (denumerate s) (get (enumerate s))) ⟩
-  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (flip lookupVec (fromList s)))) (just (generate (denumerate s) (get (enumerate s)))))
+  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (flip lookupVec (fromList s)))) (just (restrict (denumerate s) (get (enumerate s)))))
     ≡⟨ refl ⟩
-  just ((flip map (enumerate s) ∘ flip lookup) (union (generate (denumerate s) (get (enumerate s))) (fromFunc (denumerate s))))
-    ≡⟨ cong just (cong (flip map (enumerate s) ∘ flip lookup) (lemma-union-generate (denumerate s) (get (enumerate s)))) ⟩
+  just ((flip map (enumerate s) ∘ flip lookup) (union (restrict (denumerate s) (get (enumerate s))) (fromFunc (denumerate s))))
+    ≡⟨ cong just (cong (flip map (enumerate s) ∘ flip lookup) (lemma-union-restrict (denumerate s) (get (enumerate s)))) ⟩
   just ((flip map (enumerate s) ∘ flip lookup) (fromFunc (denumerate s)))
     ≡⟨ refl ⟩
   just (map (flip lookup (fromFunc (denumerate s))) (enumerate s))

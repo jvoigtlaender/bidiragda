@@ -43,8 +43,8 @@ fromFunc = tabulate
 union : {A : Set} {n : ℕ} → FinMapMaybe n A → FinMap n  A → FinMap n A
 union m1 m2 = tabulate (λ f → maybe′ id (lookup f m2) (lookupM f m1))
 
-generate : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
-generate f is = fromAscList (zip is (map f is))
+restrict : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
+restrict f is = fromAscList (zip is (map f is))
 
 
 lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → lookupM f m ≡ just a → m ≡ insert f a m
@@ -69,31 +69,31 @@ lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert
 lemma-from-just : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
 lemma-from-just refl = refl
 
-lemma-lookupM-generate : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (generate f is) ≡ just a → f i ≡ a
-lemma-lookupM-generate {A} i f [] a p with begin
+lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
+lemma-lookupM-restrict {A} i f [] a p with begin
   just a
     ≡⟨ sym p ⟩
-  lookupM i (generate f [])
+  lookupM i (restrict f [])
     ≡⟨ refl ⟩
   lookupM i empty
     ≡⟨ lemma-lookupM-empty i ⟩
   nothing ∎
-lemma-lookupM-generate i f [] a p | ()
-lemma-lookupM-generate i f (i' ∷ is) a p with i ≟ i'
-lemma-lookupM-generate i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
+lemma-lookupM-restrict i f [] a p | ()
+lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
+lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
    just (f i)
-     ≡⟨ sym (lemma-lookupM-insert i (f i) (generate f is)) ⟩
-   lookupM i (insert i (f i) (generate f is))
+     ≡⟨ sym (lemma-lookupM-insert i (f i) (restrict f is)) ⟩
+   lookupM i (insert i (f i) (restrict f is))
      ≡⟨ refl ⟩
-   lookupM i (generate f (i ∷ is))
+   lookupM i (restrict f (i ∷ is))
      ≡⟨ p ⟩
    just a ∎)
-lemma-lookupM-generate i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-generate i f is a (begin
-  lookupM i (generate f is)
-    ≡⟨ lemma-lookupM-insert-other i i' (f i') (generate f is) ¬p2 ⟩
-  lookupM i (insert i' (f i') (generate f is))
+lemma-lookupM-restrict i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-restrict i f is a (begin
+  lookupM i (restrict f is)
+    ≡⟨ lemma-lookupM-insert-other i i' (f i') (restrict f is) ¬p2 ⟩
+  lookupM i (insert i' (f i') (restrict f is))
     ≡⟨ refl ⟩
-  lookupM i (generate f (i' ∷ is))
+  lookupM i (restrict f (i' ∷ is))
     ≡⟨ p ⟩
   just a ∎)
 
@@ -106,14 +106,14 @@ lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = begin
     ≡⟨ cong (Vec._∷_ (g zero)) (lemma-tabulate-∘ (f≗g ∘ suc)) ⟩
   g zero ∷ tabulate (g ∘ suc) ∎
 
-lemma-union-generate : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (generate f is) (fromFunc f) ≡ fromFunc f
-lemma-union-generate f is = begin
-  union (generate f is) (fromFunc f)
+lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
+lemma-union-restrict f is = begin
+  union (restrict f is) (fromFunc f)
     ≡⟨ refl ⟩
-  tabulate (λ j → maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is)))
+  tabulate (λ j → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)))
     ≡⟨ lemma-tabulate-∘ (lemma-inner f is) ⟩
   tabulate f ∎
-    where lemma-inner : {n : ℕ} {A : Set} (f : Fin n → A) → (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is)) ≡ f j
+    where lemma-inner : {n : ℕ} {A : Set} (f : Fin n → A) → (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)) ≡ f j
           lemma-inner f []       j = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j empty)
               ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-empty j) ⟩
@@ -123,10 +123,10 @@ lemma-union-generate f is = begin
               ≡⟨ lookup∘tabulate f j ⟩
             f j ∎
           lemma-inner f (i ∷ is)  j with i ≟ j
-          lemma-inner f (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (generate f is))
+          lemma-inner f (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (restrict f is))
           lemma-inner f (i ∷ is)  j | no i≢j = begin
-            maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (generate f is)))
-              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (generate f is) (i≢j ∘ sym) )) ⟩
-            maybe′ id (lookup j (fromFunc f)) (lookupM j (generate f is))
+            maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (restrict f is)))
+              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) (i≢j ∘ sym) )) ⟩
+            maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is))
               ≡⟨ lemma-inner f is j ⟩
             f j ∎
