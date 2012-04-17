@@ -66,6 +66,9 @@ lemma-checkInsert-wrong eq i x m x' d refl | .(just x') with eq x x'
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') | no ¬q = refl
 
+lemma-just≢nothing : {A Whatever : Set} {a : A} → _≡_ {_} {Maybe A} (just a) nothing → Whatever
+lemma-just≢nothing ()
+
 record checkInsertEqualProof {A : Set} {n : ℕ} (eq : EqInst A) (i : Fin n) (x : A) (m : FinMapMaybe n A) (e : Maybe (FinMapMaybe n A)) : Set where
   field
      same : lookupM i m ≡ just x → just m ≡ e
@@ -99,9 +102,6 @@ lemma-1 eq f (i ∷ is′) = begin
     ≡⟨ lemma-checkInsert-restrict eq f i is′ ⟩
   just (restrict f (i ∷ is′)) ∎
 
-lemma-just-nothing : {A : Set} → {a : A} → ¬ (_≡_ {_} {Maybe A} (just a) nothing)
-lemma-just-nothing ()
-
 lemma-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
 lemma-lookupM-assoc eq i is x xs h    p with assoc eq is xs
 lemma-lookupM-assoc eq i is x xs h    () | nothing
@@ -118,7 +118,7 @@ lemma-lookupM-assoc eq i is x xs h    p | just h' = apply-checkInsertProof eq i 
       lookupM i (insert i x h')
         ≡⟨ lemma-lookupM-insert i x h' ⟩
       just x ∎
-  ; wrong = λ x' x≢x' lookupM≡justx' → ⊥-elim (lemma-just-nothing (trans (sym p) (lemma-checkInsert-wrong eq i x h' x' x≢x' lookupM≡justx')))
+  ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing (trans (sym p) (lemma-checkInsert-wrong eq i x h' x' x≢x' lookupM≡justx'))
   }
 
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → assoc eq is v ≡ just h → map (flip lookupM h) is ≡ map just v
