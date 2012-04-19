@@ -72,7 +72,7 @@ lemma-from-just : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just
 lemma-from-just refl = refl
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
-lemma-lookupM-restrict {A} i f [] a p = lemma-just≢nothing (trans (sym p) (lemma-lookupM-empty i))
+lemma-lookupM-restrict i f [] a p = lemma-just≢nothing (trans (sym p) (lemma-lookupM-empty i))
 lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
 lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
    just (f i)
