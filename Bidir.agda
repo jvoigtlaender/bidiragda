@@ -2,11 +2,15 @@ module Bidir where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
+open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.List.Properties using (map-cong) renaming (map-compose to map-∘)
+open import Data.List.Any using (Any ; any ; here ; there)
+open Data.List.Any.Membership-≡ using (_∈_ ; _∉_)
 open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec ; _∷_ to _∷V_)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate)
+open import Data.Product using (∃ ; _,_)
 open import Data.Empty using (⊥-elim)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
@@ -118,6 +122,87 @@ lemma-lookupM-assoc eq i is x xs h    p | just h' = apply-checkInsertProof eq i 
   ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing (trans (sym p) (lemma-checkInsert-wrong eq i x h' x' x≢x' lookupM≡justx'))
   }
 
+lemma-lookupM-checkInsert : {A : Set} {n : ℕ} → (eq : EqInst A) → (i j : Fin n) → (x y : A) → (h h' : FinMapMaybe n A) → lookupM i h ≡ just x → checkInsert eq j y h ≡ just h' → lookupM i h' ≡ just x
+lemma-lookupM-checkInsert eq i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
+lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' with i ≟ j
+lemma-lookupM-checkInsert eq i .i x y h .(insert i y h) pl refl | nothing | Reveal_is_.[_] pl' | yes refl with begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ nothing ∎
+... | ()
+lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' | no ¬p = begin
+  lookupM i (insert j y h)
+    ≡⟨ sym (lemma-lookupM-insert-other i j y h ¬p) ⟩
+  lookupM i h
+    ≡⟨ pl ⟩
+  just x ∎
+lemma-lookupM-checkInsert eq i j x y h h' pl ph' | just z | pl' with eq y z
+lemma-lookupM-checkInsert eq i j x y h h' pl ph' | just .y | pl' | yes refl = begin
+  lookupM i h'
+    ≡⟨ cong (lookupM i) (lemma-from-just (sym ph')) ⟩
+  lookupM i h
+    ≡⟨ pl ⟩
+  just x ∎
+lemma-lookupM-checkInsert eq i j x y h h' pl () | just z | pl' | no ¬p
+
+lemma-∈-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → (i ∈ is) → (∃ λ x → lookupM i h ≡ just x)
+lemma-∈-lookupM-assoc eq i [] [] h ph ()
+lemma-∈-lookupM-assoc eq i (i' ∷ is) [] h () i∈is
+lemma-∈-lookupM-assoc eq i [] (x ∷ xs) h () i∈is
+lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph i∈is with assoc eq is xs | inspect (assoc eq is) xs
+lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h () i∈is | nothing | ph'
+lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h ph (here refl) | just h' | ph' with lookupM i h' | inspect (lookupM i) h'
+lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h ph (here refl) | just h' | ph' | just x' | px with eq x x' 
+lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h refl (here refl) | just .h | ph' | just .x | Reveal_is_.[_] px | yes refl = x , px
+lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h () (here refl) | just h' | ph' | just x' | px | no ¬p
+lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) .(insert i x h') refl (here refl) | just h' | ph' | nothing | px = x , lemma-lookupM-insert i x h'
+lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph (there pxs) | just h' | Reveal_is_.[_] ph' with lemma-∈-lookupM-assoc eq i is xs h' ph' pxs
+lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph (there pxs) | just h' | Reveal_is_.[_] ph' | x' , px' = x' , lemma-lookupM-checkInsert eq i i' x' x h' h px' ph
+
+lemma-∉-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → (i ∉ is) → lookupM i h ≡ nothing
+lemma-∉-lookupM-assoc eq i []         []         h ph i∉is = begin
+  lookupM i h
+    ≡⟨ cong (lookupM i) (sym (lemma-from-just ph)) ⟩
+  lookupM i empty
+    ≡⟨ lemma-lookupM-empty i ⟩
+  nothing ∎
+lemma-∉-lookupM-assoc eq i []         (x' ∷ xs') h () i∉is
+lemma-∉-lookupM-assoc eq i (i' ∷ is') []         h () i∉is
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is with i ≟ i'
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | yes p = contradiction (here p) i∉is
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p with assoc eq is' xs' | inspect (assoc eq is') xs'
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h () i∉is | no ¬p | nothing | Reveal_is_.[_] ph'
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
+    same = λ lookupM-i'-h'≡just-x' → begin
+      lookupM i h
+        ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym ph) (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x'))) ⟩
+      lookupM i h'
+        ≡⟨ lemma-∉-lookupM-assoc eq i is' xs' h' ph' (i∉is ∘ there) ⟩
+      nothing ∎
+  ; new = λ lookupM-i'-h'≡nothing → begin
+      lookupM i h
+        ≡⟨ cong (lookupM i)  (lemma-from-just (trans (sym ph) (lemma-checkInsert-new eq i' x' h' lookupM-i'-h'≡nothing))) ⟩
+      lookupM i (insert i' x' h')
+        ≡⟨ sym (lemma-lookupM-insert-other i i' x' h' ¬p) ⟩
+      lookupM i h'
+        ≡⟨ lemma-∉-lookupM-assoc eq i is' xs' h' ph' (i∉is ∘ there) ⟩
+      nothing ∎
+  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong eq i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
+  }
+
+lemma-map-lookupM-assoc : {n : ℕ} {A : Set} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (xs : List A) → (h : FinMapMaybe n A) → (h' : FinMapMaybe n A) → assoc eq is xs ≡ just h' → checkInsert eq i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
+lemma-map-lookupM-assoc eq i []         x []         h h' ph' ph = refl
+lemma-map-lookupM-assoc eq i []         x (x' ∷ xs') h h' ()  ph
+lemma-map-lookupM-assoc eq i (i' ∷ is') x []         h h' ()  ph
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph with any (_≟_ i) (i' ∷ is')
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p with lemma-∈-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' p
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , p') with lookupM i h' 
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , refl) | .(just x'') with eq x x''
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h .h ph' refl | yes p | (.x , refl) | .(just x)  | yes refl = refl
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' () | yes p | (x'' , refl) | .(just x'') | no ¬p
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p with lookupM i h' | lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' ¬p
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p | .nothing | refl = begin
+  map (flip lookupM h) (i' ∷ is')
+    ≡⟨ map-cong {!!} (i' ∷ is') ⟩
+  map (flip lookupM h') (i' ∷ is') ∎
+
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → assoc eq is v ≡ just h → map (flip lookupM h) is ≡ map just v
 lemma-2 eq []       []       h p = refl
 lemma-2 eq []       (x ∷ xs) h ()
@@ -135,7 +220,7 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
         ≡⟨ p ⟩
       just h ∎) ) ⟩
   just x ∷ map (flip lookupM h) is
-    ≡⟨  cong (_∷_ (just x)) {!!} ⟩
+    ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc eq i is x xs h h' ir p) ⟩
   just x ∷ map (flip lookupM h') is
     ≡⟨ cong (_∷_ (just x)) (lemma-2 eq is xs h' ir) ⟩
   just x ∷ map just xs
