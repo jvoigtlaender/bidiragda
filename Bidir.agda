@@ -66,9 +66,6 @@ lemma-checkInsert-wrong eq i x m x' d refl | .(just x') with eq x x'
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') | no ¬q = refl
 
-lemma-just≢nothing : {A Whatever : Set} {a : A} → _≡_ {_} {Maybe A} (just a) nothing → Whatever
-lemma-just≢nothing ()
-
 record checkInsertEqualProof {A : Set} {n : ℕ} (eq : EqInst A) (i : Fin n) (x : A) (m : FinMapMaybe n A) (e : Maybe (FinMapMaybe n A)) : Set where
   field
      same : lookupM i m ≡ just x → just m ≡ e
