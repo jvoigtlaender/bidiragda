@@ -143,20 +143,6 @@ lemma-lookupM-checkInsert eq i j x y h h' pl ph' | just .y | pl' | yes refl = be
   just x ∎
 lemma-lookupM-checkInsert eq i j x y h h' pl () | just z | pl' | no ¬p
 
-lemma-∈-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → (i ∈ is) → (∃ λ x → lookupM i h ≡ just x)
-lemma-∈-lookupM-assoc eq i [] [] h ph ()
-lemma-∈-lookupM-assoc eq i (i' ∷ is) [] h () i∈is
-lemma-∈-lookupM-assoc eq i [] (x ∷ xs) h () i∈is
-lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph i∈is with assoc eq is xs | inspect (assoc eq is) xs
-lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h () i∈is | nothing | ph'
-lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h ph (here refl) | just h' | ph' with lookupM i h' | inspect (lookupM i) h'
-lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h ph (here refl) | just h' | ph' | just x' | px with eq x x' 
-lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h refl (here refl) | just .h | ph' | just .x | Reveal_is_.[_] px | yes refl = x , px
-lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) h () (here refl) | just h' | ph' | just x' | px | no ¬p
-lemma-∈-lookupM-assoc eq i (.i ∷ is) (x ∷ xs) .(insert i x h') refl (here refl) | just h' | ph' | nothing | px = x , lemma-lookupM-insert i x h'
-lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph (there pxs) | just h' | Reveal_is_.[_] ph' with lemma-∈-lookupM-assoc eq i is xs h' ph' pxs
-lemma-∈-lookupM-assoc eq i (i' ∷ is) (x ∷ xs) h ph (there pxs) | just h' | Reveal_is_.[_] ph' | x' , px' = x' , lemma-lookupM-checkInsert eq i i' x' x h' h px' ph
-
 lemma-∉-lookupM-assoc : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → (i ∉ is) → lookupM i h ≡ nothing
 lemma-∉-lookupM-assoc eq i []         []         h ph i∉is = begin
   lookupM i h
@@ -223,7 +209,7 @@ lemma-map-lookupM-assoc eq i []         x []         h h' ph' ph = refl
 lemma-map-lookupM-assoc eq i []         x (x' ∷ xs') h h' ()  ph
 lemma-map-lookupM-assoc eq i (i' ∷ is') x []         h h' ()  ph
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph with any (_≟_ i) (i' ∷ is')
-lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p with lemma-∈-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' p
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p with Data.List.All.lookup (lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h' ph') p
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , p') with lookupM i h' 
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , refl) | .(just x'') with eq x x''
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h .h ph' refl | yes p | (.x , refl) | .(just x)  | yes refl = refl
