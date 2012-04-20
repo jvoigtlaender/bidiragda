@@ -7,10 +7,11 @@ open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.List.Properties using (map-cong) renaming (map-compose to map-∘)
 open import Data.List.Any using (Any ; any ; here ; there)
+open import Data.List.All using (All)
 open Data.List.Any.Membership-≡ using (_∈_ ; _∉_)
 open import Data.Vec using (toList ; fromList ; tabulate) renaming (lookup to lookupVec ; _∷_ to _∷V_)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate)
-open import Data.Product using (∃ ; _,_)
+open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Data.Empty using (⊥-elim)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
@@ -187,6 +188,36 @@ lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p | ju
   ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong eq i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
   }
 
+_in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
+_in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
+
+lemma-assoc-domain : {n : ℕ} {A : Set} → (eq : EqInst A) → (is : List (Fin n)) → (xs : List A) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → is in-domain-of h
+lemma-assoc-domain eq []  []  h  ph  = Data.List.All.[]
+lemma-assoc-domain eq [] (x' ∷ xs') h ()
+lemma-assoc-domain eq (i' ∷ is') [] h ()
+lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph with assoc eq is' xs' | inspect (assoc eq is') xs'
+lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h () | nothing | ph'
+lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
+    same = λ lookupM-i'-h'≡just-x' → Data.List.All._∷_
+      (x' , (trans (cong (lookupM i') (lemma-from-just (trans (sym ph) (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x')))) lookupM-i'-h'≡just-x'))
+      (lemma-assoc-domain eq is' xs' h (trans ph' (trans (sym (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x')) ph)))
+  ; new  = λ lookupM-i'-h'≡nothing → Data.List.All._∷_
+      (x' , (trans (cong (lookupM i') (lemma-from-just (trans (sym ph) (lemma-checkInsert-new eq i' x' h' lookupM-i'-h'≡nothing)))) (lemma-lookupM-insert i' x' h')))
+      (Data.List.All.map
+        (λ {i} p → proj₁ p , lemma-lookupM-checkInsert eq i i' (proj₁ p) x' h' h (proj₂ p) ph)
+        (lemma-assoc-domain eq is' xs' h' ph'))
+  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong eq i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
+  }
+
+lemma-map-lookupM-insert : {n : ℕ} {A : Set} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (h : FinMapMaybe n A) → ¬(i ∈ is) → is in-domain-of h → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
+lemma-map-lookupM-insert eq i []         x h i∉is ph = refl
+lemma-map-lookupM-insert eq i (i' ∷ is') x h i∉is ph = begin
+  lookupM i' (insert i x h) ∷ map (flip lookupM (insert i x h)) is'
+    ≡⟨ cong (flip _∷_ (map (flip lookupM (insert i x h)) is')) (sym (lemma-lookupM-insert-other i' i x h (i∉is ∘ here ∘ sym))) ⟩
+  lookupM i' h ∷ map (flip lookupM (insert i x h)) is'
+    ≡⟨ cong (_∷_ (lookupM i' h)) (lemma-map-lookupM-insert eq i is' x h (i∉is ∘ there) (Data.List.All.tail ph)) ⟩
+  lookupM i' h ∷ map (flip lookupM h) is' ∎
+
 lemma-map-lookupM-assoc : {n : ℕ} {A : Set} → (eq : EqInst A) → (i : Fin n) → (is : List (Fin n)) → (x : A) → (xs : List A) → (h : FinMapMaybe n A) → (h' : FinMapMaybe n A) → assoc eq is xs ≡ just h' → checkInsert eq i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
 lemma-map-lookupM-assoc eq i []         x []         h h' ph' ph = refl
 lemma-map-lookupM-assoc eq i []         x (x' ∷ xs') h h' ()  ph
@@ -200,7 +231,9 @@ lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' () | yes p | (
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p with lookupM i h' | lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' ¬p
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p | .nothing | refl = begin
   map (flip lookupM h) (i' ∷ is')
-    ≡⟨ map-cong {!!} (i' ∷ is') ⟩
+    ≡⟨ map-cong (λ i'' → cong (lookupM i'') (lemma-from-just (sym ph))) (i' ∷ is') ⟩
+  map (flip lookupM (insert i x h')) (i' ∷ is')
+    ≡⟨ lemma-map-lookupM-insert eq i (i' ∷ is') x h' ¬p (lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h' ph') ⟩
   map (flip lookupM h') (i' ∷ is') ∎
 
 lemma-2 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (is : List (Fin n)) → (v : List τ) → (h : FinMapMaybe n τ) → assoc eq is v ≡ just h → map (flip lookupM h) is ≡ map just v
