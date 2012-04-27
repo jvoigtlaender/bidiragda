@@ -232,7 +232,7 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
   map (flip lookupM h) (i ∷ is)
     ≡⟨ refl ⟩
   lookupM i h ∷ map (flip lookupM h) is
-    ≡⟨ cong (flip _∷_ (map (flip lookup h) is)) (lemma-lookupM-assoc eq i is x xs h (begin
+    ≡⟨ cong (flip _∷_ (map (flip lookupM h) is)) (lemma-lookupM-assoc eq i is x xs h (begin
       assoc eq (i ∷ is) (x ∷ xs)
         ≡⟨ cong (flip _>>=_ (checkInsert eq i x)) ir ⟩
       checkInsert eq i x h'
