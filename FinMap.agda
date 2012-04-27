@@ -41,7 +41,7 @@ fromFunc : {A : Set} {n : ℕ} → (Fin n → A) → FinMap n A
 fromFunc = tabulate
 
 union : {A : Set} {n : ℕ} → FinMapMaybe n A → FinMap n  A → FinMap n A
-union m1 m2 = tabulate (λ f → maybe′ id (lookup f m2) (lookupM f m1))
+union m1 m2 = fromFunc (λ f → maybe′ id (lookup f m2) (lookupM f m1))
 
 restrict : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 restrict f is = fromAscList (zip is (map f is))
