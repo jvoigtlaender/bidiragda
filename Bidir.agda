@@ -5,7 +5,7 @@ open import Data.Fin using (Fin)
 open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
-open import Data.List.Properties using (map-cong) renaming (map-compose to map-∘)
+open import Data.List.Properties using (map-cong ; ∷-injective) renaming (map-compose to map-∘)
 open import Data.List.Any using (Any ; any ; here ; there)
 open import Data.List.All using (All)
 open Data.List.Any.Membership-≡ using (_∈_ ; _∉_)
@@ -303,5 +303,59 @@ theorem-1 get eq s = begin
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
 
+lemma-fmap-just : {A B : Set} → {f : A → B} {b : B} → (ma : Maybe A) → fmap f ma ≡ just b → ∃ λ a → ma ≡ just a
+lemma-fmap-just (just x) fmap-f-ma≡just-b = x , refl
+lemma-fmap-just nothing  ()
+
+lemma-from-map-just : {A : Set} → {xs ys : List A} → map Maybe.just xs ≡ map Maybe.just ys → xs ≡ ys
+lemma-from-map-just {xs = []}      {ys = []}      p  = refl
+lemma-from-map-just {xs = []}      {ys = y ∷ ys'} ()
+lemma-from-map-just {xs = x ∷ xs'} {ys = []}      ()
+lemma-from-map-just {xs = x ∷ xs'} {ys = y ∷ ys'} p with ∷-injective p
+lemma-from-map-just {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷_ x) (lemma-from-map-just p')
+
+lemma-union-not-used : {n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : List (Fin n)) → is in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
+lemma-union-not-used h h' []        p = refl
+lemma-union-not-used h h' (i ∷ is') p with Data.List.All.head p
+lemma-union-not-used h h' (i ∷ is') p | x , lookupM-i-h≡just-x = begin
+  just (lookup i (union h h')) ∷ map just (map (flip lookup (union h h')) is')
+    ≡⟨ cong (flip _∷_ (map just (map (flip lookup (union h h')) is'))) (begin
+      just (lookup i (union h h'))
+        ≡⟨ cong just (lookup∘tabulate (λ j → maybe′ id (lookup j h') (lookupM j h)) i) ⟩
+      just (maybe′ id (lookup i h') (lookupM i h))
+        ≡⟨ cong just (cong (maybe′ id (lookup i h')) lookupM-i-h≡just-x) ⟩
+      just (maybe′ id (lookup i h') (just x))
+        ≡⟨ refl ⟩
+      just x
+        ≡⟨ sym lookupM-i-h≡just-x ⟩
+      lookupM i h ∎) ⟩
+  lookupM i h ∷ map just (map (flip lookup (union h h')) is')
+    ≡⟨ cong (_∷_ (lookupM i h)) (lemma-union-not-used h h' is' (Data.List.All.tail p)) ⟩
+  lookupM i h ∷ map (flip lookupM h) is' ∎
+
 theorem-2 : (get : {α : Set} → List α → List α) → {τ : Set} → (eq : EqInst τ) → (v s u : List τ) → bff get eq s v ≡ just u → get u ≡ v
-theorem-2 get eq v s u p = {!!}
+theorem-2 get eq v s u p with lemma-fmap-just (assoc eq (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc eq (get (enumerate s)) v)) p))
+theorem-2 get eq v s u p | h , ph = begin
+  get u
+    ≡⟨ lemma-from-just (begin
+      just (get u)
+        ≡⟨ refl ⟩
+      fmap get (just u)
+        ≡⟨ cong (fmap get) (sym p) ⟩
+      fmap get (bff get eq s v)
+        ≡⟨ cong (fmap get ∘ fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) ph ⟩
+      fmap get (fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (just h)))
+       ≡⟨ refl ⟩
+     just (get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s)))
+       ∎) ⟩
+  get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s))
+    ≡⟨ free-theorem-list-list get (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s) ⟩
+  map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s))
+     ≡⟨ lemma-from-map-just (begin
+       map just (map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s)))
+         ≡⟨ lemma-union-not-used h (fromFunc (denumerate s)) (get (enumerate s)) (lemma-assoc-domain eq (get (enumerate s)) v h ph) ⟩
+       map (flip lookupM h) (get (enumerate s))
+         ≡⟨ lemma-2 eq (get (enumerate s)) v h ph ⟩
+       map just v
+         ∎) ⟩
+  v ∎
