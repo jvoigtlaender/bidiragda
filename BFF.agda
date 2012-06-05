@@ -4,7 +4,7 @@ open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
-open import Data.Vec using (Vec ; toList ; fromList ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
 
 open import FinMap
@@ -27,7 +27,7 @@ module ListBFF where
   enumerate l = toList (tabulate id)
 
   denumerate : {A : Set} (l : List A) → Fin (length l) → A
-  denumerate l = flip lookupVec (fromList l)
+  denumerate l = flip lookupV (fromList l)
 
   bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
   bff get eq s v = let s′ = enumerate s
@@ -35,3 +35,18 @@ module ListBFF where
                        h  = assoc eq (get s′) v
                        h′ = fmap (flip union g) h
                    in fmap (flip map s′ ∘ flip lookup) h′
+
+module VecBFF where
+  assoc : {A : Set} {m n : ℕ} → EqInst A → Vec (Fin m) n → Vec A n → Maybe (FinMapMaybe m A)
+  assoc _  []V       []V       = just empty
+  assoc eq (i ∷V is) (b ∷V bs) = (assoc eq is bs) >>= (checkInsert eq i b)
+
+  denumerate : {A : Set} {n : ℕ} → Vec A n → Fin n → A
+  denumerate = flip lookupV
+
+  bff : (getlen : ℕ → ℕ) → ({A : Set} {n : ℕ} → Vec A (getlen n) → Vec A n) → ({m : ℕ} {B : Set} → EqInst B → Vec B (getlen m) → Vec B m → Maybe (Vec B (getlen m)))
+  bff getlen get {m} eq s v = let s′ = allFin (getlen m)
+                                  g  = fromFunc (denumerate s)
+                                  h  = assoc eq (get s′) v
+                                  h′ = fmap (flip union g) h
+                               in fmap (flip mapV s′ ∘ (flip lookup)) h′
