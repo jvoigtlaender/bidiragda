@@ -23,16 +23,9 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 open import FinMap
 open import CheckInsert
 
-_>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
-_>>=_ = flip (flip maybe′ nothing)
+open import BFF using (_>>=_ ; fmap)
 
-fmap : {A B : Set} → (A → B) → Maybe A → Maybe B
-fmap f = maybe′ (λ a → just (f a)) nothing
-
-assoc : {A : Set} {n : ℕ} → EqInst A → List (Fin n) → List A → Maybe (FinMapMaybe n A)
-assoc _  []       []       = just empty
-assoc eq (i ∷ is) (b ∷ bs) = (assoc eq is bs) >>= (checkInsert eq i b)
-assoc _  _        _        = nothing
+open BFF.ListBFF using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-1 : {τ : Set} {n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : List (Fin n)) → assoc eq is (map f is) ≡ just (restrict f is)
 lemma-1 eq f []        = refl
@@ -168,19 +161,6 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
   just x ∷ map just xs
     ≡⟨ refl ⟩
   map just (x ∷ xs) ∎
-
-enumerate : {A : Set} → (l : List A) → List (Fin (length l))
-enumerate l = toList (tabulate id)
-
-denumerate : {A : Set} (l : List A) → Fin (length l) → A
-denumerate l = flip lookupVec (fromList l)
-
-bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
-bff get eq s v = let s′ = enumerate s
-                     g  = fromFunc (denumerate s)
-                     h  = assoc eq (get s′) v
-                     h′ = fmap (flip union g) h
-                 in fmap (flip map s′ ∘ flip lookup) h′
 
 postulate
   free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → get ∘ map f ≗ map f ∘ get
