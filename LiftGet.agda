@@ -11,20 +11,26 @@ open import Relation.Binary.Core using (_≡_)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-getVec-to-getList : {getlen : ℕ → ℕ} → ({A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)) → ({B : Set} → List B → List B)
+get-type : Set₁
+get-type = {A : Set} → List A → List A
+
+getV-type : (ℕ → ℕ) → Set₁
+getV-type getlen = {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
+
+getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
 
-getList-to-getlen : ({A : Set} → List A → List A) → ℕ → ℕ
+getList-to-getlen : get-type → ℕ → ℕ
 getList-to-getlen get = length ∘ get ∘ flip replicate tt
 
 postulate
-  free-theorem-list-list : {β γ : Set} → (get : {α : Set} → List α → List α) → (f : β → γ) → get ∘ map f ≗ map f ∘ get
+  free-theorem-list-list : {β γ : Set} → (get : get-type) → (f : β → γ) → get ∘ map f ≗ map f ∘ get
 
 replicate-length : {A : Set} → (l : List A) → map (const tt) l ≡ replicate (length l) tt
 replicate-length [] = refl
 replicate-length (_ ∷ l) = cong (_∷_ tt) (replicate-length l)
 
-getList-length : (get : {A : Set} → List A → List A) → {B : Set} → (l : List B) → length (get l) ≡ getList-to-getlen get (length l)
+getList-length : (get : get-type) → {B : Set} → (l : List B) → length (get l) ≡ getList-to-getlen get (length l)
 getList-length get l = begin
   length (get l)
     ≡⟨ sym (length-map (const tt) (get l)) ⟩
@@ -41,7 +47,7 @@ length-toList (x ∷V xs) = cong suc (length-toList xs)
 vec-length : {A : Set} {n m : ℕ} → n ≡ m → Vec A n → Vec A m
 vec-length refl v = v
 
-getList-to-getVec : ({A : Set} → List A → List A) → ∃ λ (getlen : ℕ → ℕ) → {B : Set} {n : ℕ} → Vec B n → Vec B (getlen n)
+getList-to-getVec : get-type → ∃ λ (getlen : ℕ → ℕ) → (getV-type getlen)
 getList-to-getVec get = getlen , get'
   where getlen : ℕ → ℕ
         getlen = getList-to-getlen get
@@ -55,7 +61,7 @@ getList-to-getVec get = getlen , get'
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
         get' {_} {m} v = vec-length (length-prop m v) (fromList (get (toList v)))
 
-get-trafo-1 : (get : {A : Set} → List A → List A) → {B : Set} → getVec-to-getList (proj₂ (getList-to-getVec get)) {B} ≗ get {B}
+get-trafo-1 : (get : get-type) → {B : Set} → getVec-to-getList (proj₂ (getList-to-getVec get)) {B} ≗ get {B}
 get-trafo-1 get l = begin
   getVec-to-getList (proj₂ (getList-to-getVec get)) l
     ≡⟨ {!!} ⟩
