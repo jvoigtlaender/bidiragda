@@ -47,22 +47,36 @@ length-toList (x ∷V xs) = cong suc (length-toList xs)
 vec-length : {A : Set} {n m : ℕ} → n ≡ m → Vec A n → Vec A m
 vec-length refl v = v
 
+toList-fromList : {A : Set} → (l : List A) → toList (fromList l) ≡ l
+toList-fromList []       = refl
+toList-fromList (x ∷ xs) = cong (_∷_ x) (toList-fromList xs)
+
+vec-length-same : {A : Set} → (l : List A) → {n : ℕ} → (p : length l ≡ n) → toList (vec-length p (fromList l)) ≡ l
+vec-length-same l refl = toList-fromList l
+
+getList-to-getVec-length-property : (get : get-type) → {C : Set} → {m : ℕ} → (v : Vec C m) → length (get (toList v)) ≡ length (get (replicate m tt))
+getList-to-getVec-length-property get {_} {m} v = begin
+    length (get (toList v))
+      ≡⟨ getList-length get (toList v) ⟩
+    length (get (replicate (length (toList v)) tt))
+      ≡⟨ cong (length ∘ get ∘ flip replicate tt) (length-toList v) ⟩
+    length (get (replicate m tt)) ∎
+
 getList-to-getVec : get-type → ∃ λ (getlen : ℕ → ℕ) → (getV-type getlen)
 getList-to-getVec get = getlen , get'
   where getlen : ℕ → ℕ
         getlen = getList-to-getlen get
-        length-prop : {C : Set} → (m : ℕ) → (v : Vec C m) → length (get (toList v)) ≡ length (get (replicate m tt))
-        length-prop m v = begin
-            length (get (toList v))
-              ≡⟨ getList-length get (toList v) ⟩
-            length (get (replicate (length (toList v)) tt))
-              ≡⟨ cong (length ∘ get ∘ flip replicate tt) (length-toList v) ⟩
-            length (get (replicate m tt)) ∎
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
-        get' {_} {m} v = vec-length (length-prop m v) (fromList (get (toList v)))
+        get' v = vec-length (getList-to-getVec-length-property get v) (fromList (get (toList v)))
 
 get-trafo-1 : (get : get-type) → {B : Set} → getVec-to-getList (proj₂ (getList-to-getVec get)) {B} ≗ get {B}
 get-trafo-1 get l = begin
   getVec-to-getList (proj₂ (getList-to-getVec get)) l
-    ≡⟨ {!!} ⟩
+    ≡⟨ refl ⟩
+  toList (proj₂ (getList-to-getVec get) (fromList l))
+    ≡⟨ refl ⟩
+  toList (vec-length (getList-to-getVec-length-property get (fromList l)) (fromList (get (toList (fromList l)))))
+    ≡⟨ vec-length-same (get (toList (fromList l))) (getList-to-getVec-length-property get (fromList l)) ⟩
+  get (toList (fromList l))
+    ≡⟨ cong get (toList-fromList l) ⟩
   get l ∎
