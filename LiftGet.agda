@@ -81,10 +81,25 @@ get-trafo-1 get l = begin
     ≡⟨ cong get (toList-fromList l) ⟩
   get l ∎
 
+vec-len : {A : Set} {n : ℕ} → Vec A n → ℕ
+vec-len {_} {n} _ = n
+
+vec-len-via-list : {A : Set} {n : ℕ} → (v : Vec A n) → length (toList v) ≡ vec-len v
+vec-len-via-list []V       = refl
+vec-len-via-list (x ∷V xs) = cong suc (vec-len-via-list xs)
+
+length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) ≡ n
+length-replicate 0       = refl
+length-replicate (suc n) = cong suc (length-replicate n)
+
 get-trafo-2-getlen : (getlen : ℕ → ℕ) → (get : getV-type getlen) → proj₁ (getList-to-getVec (getVec-to-getList get)) ≗ getlen
 get-trafo-2-getlen getlen get n = begin
   proj₁ (getList-to-getVec (getVec-to-getList get)) n
-    ≡⟨ {!!} ⟩
+    ≡⟨ refl ⟩
+  length (toList (get (fromList (replicate n tt))))
+    ≡⟨ vec-len-via-list (get (fromList (replicate n tt))) ⟩
+  vec-len (get (fromList (replicate n tt)))
+    ≡⟨ cong getlen (length-replicate n) ⟩
   getlen n ∎
 
 getVec-getlen : {getlen₁ getlen₂ : ℕ → ℕ} → (get : getV-type getlen₁) → getlen₁ ≗ getlen₂ → getV-type getlen₂
