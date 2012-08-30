@@ -5,7 +5,7 @@ open import Data.Nat using (ℕ ; suc)
 open import Data.Vec using (Vec ; toList ; fromList) renaming ([] to []V ; _∷_ to _∷V_)
 open import Data.List using (List ; [] ; _∷_ ; length ; replicate ; map)
 open import Data.List.Properties using (length-map)
-open import Data.Product using (∃ ; _,_ ; proj₂)
+open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (_∘_ ; flip ; const)
 open import Relation.Binary.Core using (_≡_)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl)
@@ -80,3 +80,15 @@ get-trafo-1 get l = begin
   get (toList (fromList l))
     ≡⟨ cong get (toList-fromList l) ⟩
   get l ∎
+
+get-trafo-2-getlen : (getlen : ℕ → ℕ) → (get : getV-type getlen) → proj₁ (getList-to-getVec (getVec-to-getList get)) ≗ getlen
+get-trafo-2-getlen getlen get n = begin
+  proj₁ (getList-to-getVec (getVec-to-getList get)) n
+    ≡⟨ {!!} ⟩
+  getlen n ∎
+
+getVec-getlen : {getlen₁ getlen₂ : ℕ → ℕ} → (get : getV-type getlen₁) → getlen₁ ≗ getlen₂ → getV-type getlen₂
+getVec-getlen get p {B} {n} v = vec-length (p n) (get v)
+
+get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) {B} {n} ≗ getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get))
+get-trafo-2-get getlen get v = {!!}
