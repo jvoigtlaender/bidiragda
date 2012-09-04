@@ -69,6 +69,13 @@ getList-to-getVec get = getlen , get'
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
         get' v = vec-length (getList-to-getVec-length-property get v) (fromList (get (toList v)))
 
+{-
+-- We cannot formulate the first commutation property, because the type of
+-- fromList (get l) depends on the concrete l, more specifically its length.
+get-commut-1 : (get : get-type) → (fromList ∘ get) ≗ (proj₂ (getList-to-getVec get)) ∘ fromList
+get-commut-1 get l = ?
+-}
+
 get-trafo-1 : (get : get-type) → {B : Set} → getVec-to-getList (proj₂ (getList-to-getVec get)) {B} ≗ get {B}
 get-trafo-1 get l = begin
   getVec-to-getList (proj₂ (getList-to-getVec get)) l
@@ -92,6 +99,18 @@ length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) �
 length-replicate 0       = refl
 length-replicate (suc n) = cong suc (length-replicate n)
 
+{-
+-- We cannot write the following property, because the expressions
+-- fromList (toList v) and v have different type. The type differs in the
+-- length. Somehow we would have to embed a proof that those types are in fact
+-- the same into the type signature of the function.
+fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≡ v
+fromList-toList v = ?
+-}
+
+get-commut-2 : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → (toList ∘ get {B} {n}) ≗ (getVec-to-getList get) ∘ toList
+get-commut-2 getlen get v = {!!}
+
 get-trafo-2-getlen : (getlen : ℕ → ℕ) → (get : getV-type getlen) → proj₁ (getList-to-getVec (getVec-to-getList get)) ≗ getlen
 get-trafo-2-getlen getlen get n = begin
   proj₁ (getList-to-getVec (getVec-to-getList get)) n
@@ -106,4 +125,13 @@ getVec-getlen : {getlen₁ getlen₂ : ℕ → ℕ} → (get : getV-type getlen�
 getVec-getlen get p {B} {n} v = vec-length (p n) (get v)
 
 get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) {B} {n} ≗ getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get))
-get-trafo-2-get getlen get v = {!!}
+get-trafo-2-get getlen get v = begin
+  proj₂ (getList-to-getVec (getVec-to-getList get)) v
+    ≡⟨ refl ⟩
+  vec-length (getList-to-getVec-length-property (getVec-to-getList get) v) (fromList (toList (get (fromList (toList v)))))
+    ≡⟨ {!!} ⟩
+  vec-length (sym (get-trafo-2-getlen getlen get (vec-len v))) (vec-length (cong getlen (length-toList v)) (get (fromList (toList v))))
+    ≡⟨ {!!} ⟩
+  vec-length (sym (get-trafo-2-getlen getlen get (vec-len v))) (get v)
+    ≡⟨ refl ⟩
+  getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get)) v ∎
