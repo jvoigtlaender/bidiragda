@@ -8,7 +8,7 @@ open import Data.List.Properties using (length-map)
 open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (_∘_ ; flip ; const)
 open import Relation.Binary.Core using (_≡_)
-open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl)
+open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 get-type : Set₁
@@ -44,14 +44,11 @@ length-toList : {A : Set} {n : ℕ} → (v : Vec A n) → length (toList v) ≡ 
 length-toList []V = refl
 length-toList (x ∷V xs) = cong suc (length-toList xs) 
 
-vec-length : {A : Set} {n m : ℕ} → n ≡ m → Vec A n → Vec A m
-vec-length refl v = v
-
 toList-fromList : {A : Set} → (l : List A) → toList (fromList l) ≡ l
 toList-fromList []       = refl
 toList-fromList (x ∷ xs) = cong (_∷_ x) (toList-fromList xs)
 
-vec-length-same : {A : Set} → (l : List A) → {n : ℕ} → (p : length l ≡ n) → toList (vec-length p (fromList l)) ≡ l
+vec-length-same : {A : Set} → (l : List A) → {n : ℕ} → (p : length l ≡ n) → toList (subst (Vec A) p (fromList l)) ≡ l
 vec-length-same l refl = toList-fromList l
 
 getList-to-getVec-length-property : (get : get-type) → {C : Set} → {m : ℕ} → (v : Vec C m) → length (get (toList v)) ≡ length (get (replicate m tt))
@@ -67,7 +64,7 @@ getList-to-getVec get = getlen , get'
   where getlen : ℕ → ℕ
         getlen = getList-to-getlen get
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
-        get' v = vec-length (getList-to-getVec-length-property get v) (fromList (get (toList v)))
+        get' {C} v = subst (Vec C) (getList-to-getVec-length-property get v) (fromList (get (toList v)))
 
 {-
 -- We cannot formulate the first commutation property, because the type of
@@ -77,12 +74,12 @@ get-commut-1 get l = ?
 -}
 
 get-trafo-1 : (get : get-type) → {B : Set} → getVec-to-getList (proj₂ (getList-to-getVec get)) {B} ≗ get {B}
-get-trafo-1 get l = begin
+get-trafo-1 get {B} l = begin
   getVec-to-getList (proj₂ (getList-to-getVec get)) l
     ≡⟨ refl ⟩
   toList (proj₂ (getList-to-getVec get) (fromList l))
     ≡⟨ refl ⟩
-  toList (vec-length (getList-to-getVec-length-property get (fromList l)) (fromList (get (toList (fromList l)))))
+  toList (subst (Vec B) (getList-to-getVec-length-property get (fromList l)) (fromList (get (toList (fromList l)))))
     ≡⟨ vec-length-same (get (toList (fromList l))) (getList-to-getVec-length-property get (fromList l)) ⟩
   get (toList (fromList l))
     ≡⟨ cong get (toList-fromList l) ⟩
@@ -122,16 +119,16 @@ get-trafo-2-getlen getlen get n = begin
   getlen n ∎
 
 getVec-getlen : {getlen₁ getlen₂ : ℕ → ℕ} → (get : getV-type getlen₁) → getlen₁ ≗ getlen₂ → getV-type getlen₂
-getVec-getlen get p {B} {n} v = vec-length (p n) (get v)
+getVec-getlen get p {B} {n} v = subst (Vec B) (p n) (get v)
 
 get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) {B} {n} ≗ getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get))
-get-trafo-2-get getlen get v = begin
+get-trafo-2-get getlen get {B} v = begin
   proj₂ (getList-to-getVec (getVec-to-getList get)) v
     ≡⟨ refl ⟩
-  vec-length (getList-to-getVec-length-property (getVec-to-getList get) v) (fromList (toList (get (fromList (toList v)))))
+  subst (Vec B) (getList-to-getVec-length-property (getVec-to-getList get) v) (fromList (toList (get (fromList (toList v)))))
     ≡⟨ {!!} ⟩
-  vec-length (sym (get-trafo-2-getlen getlen get (vec-len v))) (vec-length (cong getlen (length-toList v)) (get (fromList (toList v))))
+  subst (Vec B) (sym (get-trafo-2-getlen getlen get (vec-len v))) (subst (Vec B) (cong getlen (length-toList v)) (get (fromList (toList v))))
     ≡⟨ {!!} ⟩
-  vec-length (sym (get-trafo-2-getlen getlen get (vec-len v))) (get v)
+  subst (Vec B) (sym (get-trafo-2-getlen getlen get (vec-len v))) (get v)
     ≡⟨ refl ⟩
   getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get)) v ∎
