@@ -8,7 +8,7 @@ open import Data.List.Properties using (length-map)
 open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (_∘_ ; flip ; const)
 open import Relation.Binary.Core using (_≡_)
-open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst)
+open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; proof-irrelevance)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 get-type : Set₁
@@ -98,14 +98,19 @@ length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) �
 length-replicate 0       = refl
 length-replicate (suc n) = cong suc (length-replicate n)
 
-{-
--- We cannot write the following property, because the expressions
--- fromList (toList v) and v have different type. The type differs in the
--- length. Somehow we would have to embed a proof that those types are in fact
--- the same into the type signature of the function.
-fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≡ v
-fromList-toList v = ?
--}
+∷-subst : {A : Set} {n m : ℕ} → (x : A) → (xs : Vec A n) → (p : n ≡ m) → x ∷V subst (Vec A) p xs ≡ subst (Vec A) (cong suc p) (x ∷V xs)
+∷-subst x xs refl = refl
+
+fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≡ subst (Vec A) (sym (length-toList v)) v
+fromList-toList     []V       = refl
+fromList-toList {A} (x ∷V xs) = begin
+  x ∷V fromList (toList xs)
+    ≡⟨ cong (_∷V_ x) (fromList-toList xs) ⟩
+  x ∷V subst (Vec A) (sym (length-toList xs)) xs
+    ≡⟨ ∷-subst x xs (sym (length-toList xs)) ⟩
+  subst (Vec A) (cong suc (sym (length-toList xs))) (x ∷V xs)
+    ≡⟨ cong (λ p →  subst (Vec A) p (x ∷V xs)) (proof-irrelevance (cong suc (sym (length-toList xs))) (sym (cong suc (length-toList xs)))) ⟩
+  subst (Vec A) (sym (length-toList (x ∷V xs))) (x ∷V xs) ∎
 
 get-commut-2 : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → (toList ∘ get {B} {n}) ≗ (getVec-to-getList get) ∘ toList
 get-commut-2 getlen get v = {!!}
