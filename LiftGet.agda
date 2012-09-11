@@ -48,8 +48,8 @@ toList-fromList : {A : Set} → (l : List A) → toList (fromList l) ≡ l
 toList-fromList []       = refl
 toList-fromList (x ∷ xs) = cong (_∷_ x) (toList-fromList xs)
 
-vec-length-same : {A : Set} → (l : List A) → {n : ℕ} → (p : length l ≡ n) → toList (subst (Vec A) p (fromList l)) ≡ l
-vec-length-same l refl = toList-fromList l
+toList-subst : {A : Set} → {n m : ℕ} (v : Vec A n) → (p : n ≡ m) → toList (subst (Vec A) p v) ≡ toList v
+toList-subst v refl = refl
 
 getList-to-getVec-length-property : (get : get-type) → {C : Set} → {m : ℕ} → (v : Vec C m) → length (get (toList v)) ≡ length (get (replicate m tt))
 getList-to-getVec-length-property get {_} {m} v = begin
@@ -80,7 +80,9 @@ get-trafo-1 get {B} l = begin
   toList (proj₂ (getList-to-getVec get) (fromList l))
     ≡⟨ refl ⟩
   toList (subst (Vec B) (getList-to-getVec-length-property get (fromList l)) (fromList (get (toList (fromList l)))))
-    ≡⟨ vec-length-same (get (toList (fromList l))) (getList-to-getVec-length-property get (fromList l)) ⟩
+    ≡⟨ toList-subst (fromList (get (toList (fromList l)))) (getList-to-getVec-length-property get (fromList l)) ⟩
+  toList (fromList (get (toList (fromList l))))
+    ≡⟨ toList-fromList (get (toList (fromList l))) ⟩
   get (toList (fromList l))
     ≡⟨ cong get (toList-fromList l) ⟩
   get l ∎
