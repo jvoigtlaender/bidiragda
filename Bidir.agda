@@ -130,8 +130,7 @@ lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , refl) | .(just x'') with eq x x''
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h .h ph' refl | yes p | (.x , refl) | .(just x)  | yes refl = refl
 lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' () | yes p | (x'' , refl) | .(just x'') | no ¬p
-lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p with lookupM i h' | lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' ¬p
-lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p | .nothing | refl = begin
+lemma-map-lookupM-assoc eq i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p rewrite lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h' ph' ¬p = begin
   map (flip lookupM h) (i' ∷ is')
     ≡⟨ map-cong (λ i'' → cong (lookupM i'') (lemma-from-just (sym ph))) (i' ∷ is') ⟩
   map (flip lookupM (insert i x h')) (i' ∷ is')
