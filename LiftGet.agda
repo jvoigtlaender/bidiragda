@@ -109,8 +109,8 @@ length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) �
 length-replicate 0       = refl
 length-replicate (suc n) = cong suc (length-replicate n)
 
-∷-subst : {A : Set} {n m : ℕ} → (x : A) → (xs : Vec A n) → (p : n ≡ m) → x ∷V subst (Vec A) p xs ≡ subst (Vec A) (cong suc p) (x ∷V xs)
-∷-subst x xs refl = refl
+subst-cong : {A : Set} → (T : A → Set) → {g : A → A} → {a b : A} → (f : {c : A} → T c → T (g c)) → (p : a ≡ b) → f ∘ subst T p ≗ subst T (cong g p) ∘ f
+subst-cong T f refl _ = refl
 
 fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≡ subst (Vec A) (sym (length-toList v)) v
 fromList-toList     []V       = refl
@@ -118,20 +118,17 @@ fromList-toList {A} (x ∷V xs) = begin
   x ∷V fromList (toList xs)
     ≡⟨ cong (_∷V_ x) (fromList-toList xs) ⟩
   x ∷V subst (Vec A) (sym (length-toList xs)) xs
-    ≡⟨ ∷-subst x xs (sym (length-toList xs)) ⟩
+    ≡⟨ subst-cong (Vec A) (_∷V_ x) (sym (length-toList xs)) xs ⟩
   subst (Vec A) (cong suc (sym (length-toList xs))) (x ∷V xs)
     ≡⟨ cong (λ p →  subst (Vec A) p (x ∷V xs)) (proof-irrelevance (cong suc (sym (length-toList xs))) (sym (cong suc (length-toList xs)))) ⟩
   subst (Vec A) (sym (length-toList (x ∷V xs))) (x ∷V xs) ∎
-
-subst-cong : {A : Set} (T : A → Set) {a b : A} → (f' : A → A) → (f : {c : A} → T c → T (f' c)) → (x : T a) → (p : a ≡ b) → f (subst T p x) ≡ subst T (cong f' p) (f x)
-subst-cong T f' f x refl = refl
 
 get-commut-2 : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → (toList ∘ get {B} {n}) ≗ (getVec-to-getList get) ∘ toList
 get-commut-2 getlen get {B} v = begin
   toList (get v)
     ≡⟨ sym (toList-subst (get v) (cong getlen (sym (length-toList v)))) ⟩
   toList (subst (Vec B) (cong getlen (sym (length-toList v))) (get v))
-    ≡⟨ cong toList (sym (subst-cong (Vec B) getlen get v (sym (length-toList v)))) ⟩
+    ≡⟨ cong toList (sym (subst-cong (Vec B) get (sym (length-toList v)) v)) ⟩
   toList (get (subst (Vec B) (sym (length-toList v)) v))
     ≡⟨ cong (toList ∘ get) (sym (fromList-toList v)) ⟩
   toList (get (fromList (toList v))) ∎
@@ -160,7 +157,7 @@ get-trafo-2-get getlen get {B} {n} v = begin
   subst (Vec B) (trans p' p) (get (fromList (toList v)))
     ≡⟨ cong (subst (Vec B) (trans p' p) ∘ get) (fromList-toList v) ⟩
   subst (Vec B) (trans p' p) (get (subst (Vec B) (sym (length-toList v)) v))
-    ≡⟨ cong (subst (Vec B) (trans p' p)) (subst-cong (Vec B) getlen get v (sym (length-toList v))) ⟩
+    ≡⟨ cong (subst (Vec B) (trans p' p)) (subst-cong (Vec B) get (sym (length-toList v)) v) ⟩
   subst (Vec B) (trans p' p) (subst (Vec B) (cong getlen (sym (length-toList v))) (get v))
     ≡⟨ subst-subst (Vec B) (cong getlen (sym (length-toList v))) (trans p' p) (get v) ⟩
   subst (Vec B) (trans (cong getlen (sym (length-toList v))) (trans p' p)) (get v)
