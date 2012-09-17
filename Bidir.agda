@@ -68,11 +68,9 @@ lemma-∉-lookupM-assoc eq i []         []         h ph i∉is = begin
   nothing ∎
 lemma-∉-lookupM-assoc eq i []         (x' ∷ xs') h () i∉is
 lemma-∉-lookupM-assoc eq i (i' ∷ is') []         h () i∉is
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is with i ≟ i'
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | yes p = contradiction (here p) i∉is
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p with assoc eq is' xs' | inspect (assoc eq is') xs'
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h () i∉is | no ¬p | nothing | Reveal_is_.[_] ph'
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc eq is' xs' | inspect (assoc eq is') xs'
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | Reveal_is_.[_] ph'
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → begin
       lookupM i h
         ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym ph) (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x'))) ⟩
@@ -83,7 +81,7 @@ lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | no ¬p | ju
       lookupM i h
         ≡⟨ cong (lookupM i)  (lemma-from-just (trans (sym ph) (lemma-checkInsert-new eq i' x' h' lookupM-i'-h'≡nothing))) ⟩
       lookupM i (insert i' x' h')
-        ≡⟨ sym (lemma-lookupM-insert-other i i' x' h' ¬p) ⟩
+        ≡⟨ sym (lemma-lookupM-insert-other i i' x' h' (i∉is ∘ here)) ⟩
       lookupM i h'
         ≡⟨ lemma-∉-lookupM-assoc eq i is' xs' h' ph' (i∉is ∘ there) ⟩
       nothing ∎
