@@ -75,8 +75,7 @@ lemma-checkInsert-restrict {τ} eq f i is = apply-checkInsertProof eq i (f i) (r
 lemma-lookupM-checkInsert : {A : Set} {n : ℕ} → (eq : EqInst A) → (i j : Fin n) → (x y : A) → (h h' : FinMapMaybe n A) → lookupM i h ≡ just x → checkInsert eq j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert eq i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
 lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' with i ≟ j
-lemma-lookupM-checkInsert eq i .i x y h .(insert i y h) pl refl | nothing | Reveal_is_.[_] pl' | yes refl with begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ nothing ∎
-... | ()
+lemma-lookupM-checkInsert eq i .i x y h .(insert i y h) pl refl | nothing | Reveal_is_.[_] pl' | yes refl = lemma-just≢nothing (begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ (nothing ∎))
 lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' | no ¬p = begin
   lookupM i (insert j y h)
     ≡⟨ sym (lemma-lookupM-insert-other i j y h ¬p) ⟩
