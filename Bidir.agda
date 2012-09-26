@@ -13,7 +13,7 @@ open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-co
 open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Data.Empty using (⊥-elim)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Nullary using (yes ; no ; ¬_)
+open import Relation.Nullary using (yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans)
@@ -104,7 +104,7 @@ lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply
   ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong eq i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
   }
 
-lemma-map-lookupM-insert : {m n : ℕ} {A : Set} → (eq : EqInst A) → (i : Fin n) → (is : Vec (Fin n) m) → (x : A) → (h : FinMapMaybe n A) → ¬(i ∈ (toList is)) → (toList is) in-domain-of h → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
+lemma-map-lookupM-insert : {m n : ℕ} {A : Set} → (eq : EqInst A) → (i : Fin n) → (is : Vec (Fin n) m) → (x : A) → (h : FinMapMaybe n A) → i ∉ (toList is) → (toList is) in-domain-of h → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
 lemma-map-lookupM-insert eq i []         x h i∉is ph = refl
 lemma-map-lookupM-insert eq i (i' ∷ is') x h i∉is ph = begin
   lookupM i' (insert i x h) ∷ map (flip lookupM (insert i x h)) is'

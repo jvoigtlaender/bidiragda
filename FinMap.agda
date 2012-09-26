@@ -9,9 +9,9 @@ open import Data.Vec.Properties using (lookup∘tabulate)
 open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Nullary using (¬_ ; yes ; no)
+open import Relation.Nullary using (yes ; no)
 open import Relation.Nullary.Negation using (contradiction ; contraposition)
-open import Relation.Binary.Core using (_≡_ ; refl)
+open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
@@ -62,7 +62,7 @@ lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : 
 lemma-lookupM-insert zero    _ (_ ∷ _)  = refl
 lemma-lookupM-insert (suc i) a (_ ∷ xs) = lemma-lookupM-insert i a xs
 
-lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → ¬(i ≡ j) → lookupM i m ≡ lookupM i (insert j a m)
+lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → i ≢ j → lookupM i m ≡ lookupM i (insert j a m)
 lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
 lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl

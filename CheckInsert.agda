@@ -5,9 +5,9 @@ open import Data.Fin using (Fin)
 open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just)
 open import Data.List using (List ; [] ; _∷_)
-open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
+open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
-open import Relation.Binary.Core using (_≡_ ; refl)
+open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
@@ -27,7 +27,7 @@ record checkInsertProof {A : Set} {n : ℕ} (eq : EqInst A) (i : Fin n) (x : A) 
   field
      same : lookupM i m ≡ just x → P
      new : lookupM i m ≡ nothing → P
-     wrong : (x' : A) → ¬(x ≡ x') → lookupM i m ≡ just x'  → P
+     wrong : (x' : A) → x ≢ x' → lookupM i m ≡ just x'  → P
 
 apply-checkInsertProof : {A P : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (x : A) → (m : FinMapMaybe n A) → checkInsertProof eq i x m P → P
 apply-checkInsertProof eq i x m rp with lookupM i m | inspect (lookupM i) m
@@ -46,7 +46,7 @@ lemma-checkInsert-new : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) 
 lemma-checkInsert-new eq i x m p with lookupM i m
 lemma-checkInsert-new eq i x m refl | .nothing = refl
 
-lemma-checkInsert-wrong : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (x : A) → (m : FinMapMaybe n A) → (x' : A) → ¬(x ≡ x') → lookupM i m ≡ just x' → checkInsert eq i x m ≡ nothing
+lemma-checkInsert-wrong : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (x : A) → (m : FinMapMaybe n A) → (x' : A) → x ≢ x' → lookupM i m ≡ just x' → checkInsert eq i x m ≡ nothing
 lemma-checkInsert-wrong eq i x m x' d p with lookupM i m
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') with eq x x'
 lemma-checkInsert-wrong eq i x m x' d refl | .(just x') | yes q = contradiction q d
@@ -56,7 +56,7 @@ record checkInsertEqualProof {A : Set} {n : ℕ} (eq : EqInst A) (i : Fin n) (x 
   field
      same : lookupM i m ≡ just x → just m ≡ e
      new : lookupM i m ≡ nothing → just (insert i x m) ≡ e
-     wrong : (x' : A) → ¬(x ≡ x') → lookupM i m ≡ just x' → nothing ≡ e
+     wrong : (x' : A) → x ≢ x' → lookupM i m ≡ just x' → nothing ≡ e
 
 lift-checkInsertProof : {A : Set} {n : ℕ} {eq : EqInst A} {i : Fin n} {x : A} {m : FinMapMaybe n A} {e : Maybe (FinMapMaybe n A)} → checkInsertEqualProof eq i x m e → checkInsertProof eq i x m (checkInsert eq i x m ≡ e)
 lift-checkInsertProof {_} {_} {eq} {i} {x} {m} o = record
