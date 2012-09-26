@@ -36,8 +36,8 @@ assoc-enough get {B} {m} eq s v h p = map (flip lookup (union h g)) s′ , (begi
 all-different : {A : Set} {n : ℕ} → Vec A n → Set
 all-different {_} {n} v = (i : Fin n) → (j : Fin n) → i ≢ j → lookup i v ≢ lookup j v
 
-suc-≡ : {n : ℕ} {i j : Fin n} → (suc i ≡ suc j) → i ≡ j
-suc-≡ refl = refl
+suc-injective : {n : ℕ} {i j : Fin n} → (suc i ≡ suc j) → i ≡ j
+suc-injective refl = refl
 
 different-swap : {A : Set} {n : ℕ} → (a b : A) → (v : Vec A n) → all-different (a ∷ b ∷ v) → all-different (b ∷ a ∷ v)
 different-swap a b v p zero          zero          i≢j li≡lj = i≢j refl
@@ -51,7 +51,7 @@ different-swap a b v p (suc (suc i)) (suc zero)    i≢j li≡lj = p (suc (suc i
 different-swap a b v p (suc (suc i)) (suc (suc j)) i≢j li≡lj = p (suc (suc i)) (suc (suc j)) i≢j li≡lj
 
 different-drop : {A : Set} {n : ℕ} → (a : A) → (v : Vec A n) → all-different (a ∷ v) → all-different v
-different-drop a v p i j i≢j = p (suc i) (suc j) (i≢j ∘ suc-≡)
+different-drop a v p i j i≢j = p (suc i) (suc j) (i≢j ∘ suc-injective)
 
 different-∉ : {A : Set} {n : ℕ} → (x : A) (xs : Vec A n) → all-different (x ∷ xs) → x ∉ (toList xs)
 different-∉ x [] p ()
@@ -60,7 +60,7 @@ different-∉ x (y ∷ ys) p (there pxs) = different-∉ x ys (different-drop y 
 
 different-assoc : {B : Set} {m n : ℕ} → (eq : EqInst B) → (u : Vec (Fin n) m) → (v : Vec B m) → all-different u → ∃ λ h → assoc eq u v ≡ just h
 different-assoc eq []       []       p = empty , refl
-different-assoc eq (u ∷ us) (v ∷ vs) p with different-assoc eq us vs (λ i j i≢j → p (suc i) (suc j) (i≢j ∘ suc-≡))
+different-assoc eq (u ∷ us) (v ∷ vs) p with different-assoc eq us vs (λ i j i≢j → p (suc i) (suc j) (i≢j ∘ suc-injective))
 different-assoc eq (u ∷ us) (v ∷ vs) p | h , p' = insert u v h , (begin
   assoc eq (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
