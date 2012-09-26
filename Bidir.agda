@@ -16,7 +16,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (yes ; no ; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; Reveal_is_ ; _≗_ ; trans)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
@@ -66,8 +66,8 @@ lemma-∉-lookupM-assoc eq i []         []         h ph i∉is = begin
     ≡⟨ lemma-lookupM-empty i ⟩
   nothing ∎
 lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc eq is' xs' | inspect (assoc eq is') xs'
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | Reveal_is_.[_] ph'
-lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
+lemma-∉-lookupM-assoc eq i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = apply-checkInsertProof eq i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → begin
       lookupM i h
         ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym ph) (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x'))) ⟩
@@ -91,8 +91,8 @@ _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
 lemma-assoc-domain : {m n : ℕ} {A : Set} → (eq : EqInst A) → (is : Vec (Fin n) m) → (xs : Vec A m) → (h : FinMapMaybe n A) → assoc eq is xs ≡ just h → (toList is) in-domain-of h
 lemma-assoc-domain eq []         []         h ph = Data.List.All.[]
 lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph with assoc eq is' xs' | inspect (assoc eq is') xs'
-lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h () | nothing | ph'
-lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph | just h' | Reveal_is_.[_] ph' = apply-checkInsertProof eq i' x' h' record {
+lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
+lemma-assoc-domain eq (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-checkInsertProof eq i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → Data.List.All._∷_
       (x' , (trans (cong (lookupM i') (lemma-from-just (trans (sym ph) (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x')))) lookupM-i'-h'≡just-x'))
       (lemma-assoc-domain eq is' xs' h (trans ph' (trans (sym (lemma-checkInsert-same eq i' x' h' lookupM-i'-h'≡just-x')) ph)))
@@ -132,7 +132,7 @@ lemma-2 : {τ : Set} {m n : ℕ} → (eq : EqInst τ) → (is : Vec (Fin n) m) �
 lemma-2 eq []       []       h p = refl
 lemma-2 eq (i ∷ is) (x ∷ xs) h p with assoc eq is xs | inspect (assoc eq is) xs
 lemma-2 eq (i ∷ is) (x ∷ xs) h () | nothing | _
-lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | Reveal_is_.[_] ir = begin
+lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   map (flip lookupM h) (i ∷ is)
     ≡⟨ refl ⟩
   lookupM i h ∷ map (flip lookupM h) is

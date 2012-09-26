@@ -8,7 +8,7 @@ open import Data.List using (List ; [] ; _∷_)
 open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; Reveal_is_ ; trans)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
@@ -32,9 +32,9 @@ record checkInsertProof {A : Set} {n : ℕ} (eq : EqInst A) (i : Fin n) (x : A) 
 apply-checkInsertProof : {A P : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (x : A) → (m : FinMapMaybe n A) → checkInsertProof eq i x m P → P
 apply-checkInsertProof eq i x m rp with lookupM i m | inspect (lookupM i) m
 apply-checkInsertProof eq i x m rp | just x' | il with eq x x'
-apply-checkInsertProof eq i x m rp | just .x | Reveal_is_.[_] il | yes refl = checkInsertProof.same rp il
-apply-checkInsertProof eq i x m rp | just x' | Reveal_is_.[_] il | no x≢x' = checkInsertProof.wrong rp x' x≢x' il
-apply-checkInsertProof eq i x m rp | nothing | Reveal_is_.[_] il = checkInsertProof.new rp il
+apply-checkInsertProof eq i x m rp | just .x | [ il ] | yes refl = checkInsertProof.same rp il
+apply-checkInsertProof eq i x m rp | just x' | [ il ] | no x≢x' = checkInsertProof.wrong rp x' x≢x' il
+apply-checkInsertProof eq i x m rp | nothing | [ il ] = checkInsertProof.new rp il
 
 lemma-checkInsert-same : {A : Set} {n : ℕ} → (eq : EqInst A) → (i : Fin n) → (x : A) → (m : FinMapMaybe n A) → lookupM i m ≡ just x → checkInsert eq i x m ≡ just m
 lemma-checkInsert-same eq i x m p with lookupM i m
@@ -75,7 +75,7 @@ lemma-checkInsert-restrict {τ} eq f i is = apply-checkInsertProof eq i (f i) (r
 lemma-lookupM-checkInsert : {A : Set} {n : ℕ} → (eq : EqInst A) → (i j : Fin n) → (x y : A) → (h h' : FinMapMaybe n A) → lookupM i h ≡ just x → checkInsert eq j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert eq i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
 lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' with i ≟ j
-lemma-lookupM-checkInsert eq i .i x y h .(insert i y h) pl refl | nothing | Reveal_is_.[_] pl' | yes refl = lemma-just≢nothing (begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ (nothing ∎))
+lemma-lookupM-checkInsert eq i .i x y h .(insert i y h) pl refl | nothing | [ pl' ] | yes refl = lemma-just≢nothing (begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ (nothing ∎))
 lemma-lookupM-checkInsert eq i j x y h .(insert j y h) pl refl | nothing | pl' | no ¬p = begin
   lookupM i (insert j y h)
     ≡⟨ sym (lemma-lookupM-insert-other i j y h ¬p) ⟩
