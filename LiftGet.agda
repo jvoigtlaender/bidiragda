@@ -141,10 +141,7 @@ get-trafo-2-getlen getlen get n = begin
     ≡⟨ cong getlen (length-replicate n) ⟩
   getlen n ∎
 
-getVec-getlen : {getlen₁ getlen₂ : ℕ → ℕ} → (get : getV-type getlen₁) → getlen₁ ≗ getlen₂ → getV-type getlen₂
-getVec-getlen get p {B} {n} v = subst (Vec B) (p n) (get v)
-
-get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) {B} {n} ≗ getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get))
+get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) ≗ subst (Vec B) (sym (get-trafo-2-getlen getlen get n)) ∘ get
 get-trafo-2-get getlen get {B} {n} v = begin
   proj₂ (getList-to-getVec (getVec-to-getList get)) v
     ≡⟨ refl ⟩
@@ -160,9 +157,7 @@ get-trafo-2-get getlen get {B} {n} v = begin
     ≡⟨ subst-subst (Vec B) (cong getlen (sym (length-toList v))) (trans p' p) (get v) ⟩
   subst (Vec B) (trans (cong getlen (sym (length-toList v))) (trans p' p)) (get v)
     ≡⟨ cong (flip (subst (Vec B)) (get v)) (proof-irrelevance (trans (cong getlen (sym (length-toList v))) (trans p' p)) p'') ⟩
-  subst (Vec B) p'' (get v)
-    ≡⟨ refl ⟩
-  getVec-getlen get (sym ∘ (get-trafo-2-getlen getlen get)) v ∎
+  subst (Vec B) p'' (get v) ∎
     where n' : ℕ
           n' = length (toList (get (fromList (replicate n tt))))
           p : length (toList (get (fromList (toList v)))) ≡ n'
