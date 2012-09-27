@@ -17,9 +17,9 @@ open import CheckInsert using (EqInst ; checkInsert ; lemma-checkInsert-new)
 open import BFF using (fmap ; _>>=_)
 open import Bidir using (lemma-∉-lookupM-assoc)
 
-open BFF.VecBFF using (assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
-assoc-enough : {getlen : ℕ → ℕ} (get : {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)) → {B : Set} {m : ℕ} → (eq : EqInst B) → (s : Vec B m) → (v : Vec B (getlen m)) → (h : FinMapMaybe m B) → assoc eq (get (enumerate s)) v ≡ just h → ∃ λ u → bff get eq s v ≡ just u
+assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {B : Set} {m : ℕ} → (eq : EqInst B) → (s : Vec B m) → (v : Vec B (getlen m)) → (h : FinMapMaybe m B) → assoc eq (get (enumerate s)) v ≡ just h → ∃ λ u → bff get eq s v ≡ just u
 assoc-enough get {B} {m} eq s v h p = map (flip lookup (union h g)) s′ , (begin
   bff get eq s v
     ≡⟨ refl ⟩

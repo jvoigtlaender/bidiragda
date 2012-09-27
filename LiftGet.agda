@@ -11,11 +11,9 @@ open import Relation.Binary.Core using (_≡_)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; trans ; proof-irrelevance)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-get-type : Set₁
-get-type = {A : Set} → List A → List A
-
-getV-type : (ℕ → ℕ) → Set₁
-getV-type getlen = {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
+import BFF
+open BFF.ListBFF using (get-type)
+open BFF.VecBFF using () renaming (get-type to getV-type)
 
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList

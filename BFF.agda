@@ -17,6 +17,8 @@ fmap : {A B : Set} → (A → B) → Maybe A → Maybe B
 fmap f = maybe′ (λ a → just (f a)) nothing
 
 module ListBFF where
+  get-type : Set₁
+  get-type = {A : Set} → List A → List A
 
   assoc : {A : Set} {n : ℕ} → EqInst A → List (Fin n) → List A → Maybe (FinMapMaybe n A)
   assoc _  []       []       = just empty
@@ -29,7 +31,7 @@ module ListBFF where
   denumerate : {A : Set} (l : List A) → Fin (length l) → A
   denumerate l = flip lookupV (fromList l)
 
-  bff : ({A : Set} → List A → List A) → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
+  bff : get-type → ({B : Set} → EqInst B → List B → List B → Maybe (List B))
   bff get eq s v = let s′ = enumerate s
                        g  = fromFunc (denumerate s)
                        h  = assoc eq (get s′) v
@@ -37,6 +39,8 @@ module ListBFF where
                    in fmap (flip map s′ ∘ flip lookup) h′
 
 module VecBFF where
+  get-type : (ℕ → ℕ) → Set₁
+  get-type getlen = {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
 
   assoc : {A : Set} {n m : ℕ} → EqInst A → Vec (Fin n) m → Vec A m → Maybe (FinMapMaybe n A)
   assoc _  []V       []V       = just empty
@@ -48,7 +52,7 @@ module VecBFF where
   denumerate : {A : Set} {n : ℕ} → Vec A n → Fin n → A
   denumerate = flip lookupV
 
-  bff : {getlen : ℕ → ℕ} → ({A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)) → ({B : Set} {n : ℕ} → EqInst B → Vec B n → Vec B (getlen n) → Maybe (Vec B n))
+  bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({B : Set} {n : ℕ} → EqInst B → Vec B n → Vec B (getlen n) → Maybe (Vec B n))
   bff get eq s v = let s′ = enumerate s
                        g  = fromFunc (denumerate s)
                        h  = assoc eq (get s′) v
@@ -56,6 +60,9 @@ module VecBFF where
                    in fmap (flip mapV s′ ∘ flip lookupV) h′
 
 module VecRevBFF where
+  get-type : (ℕ → ℕ) → Set₁
+  get-type getlen = {A : Set} {n : ℕ} → Vec A (getlen n) → Vec A n
+
   assoc : {A : Set} {m n : ℕ} → EqInst A → Vec (Fin m) n → Vec A n → Maybe (FinMapMaybe m A)
   assoc _  []V       []V       = just empty
   assoc eq (i ∷V is) (b ∷V bs) = (assoc eq is bs) >>= (checkInsert eq i b)
@@ -66,7 +73,7 @@ module VecRevBFF where
   denumerate : {A : Set} {n : ℕ} → Vec A n → Fin n → A
   denumerate = flip lookupV
 
-  bff : {getlen : ℕ → ℕ} → ({A : Set} {n : ℕ} → Vec A (getlen n) → Vec A n) → ({m : ℕ} {B : Set} → EqInst B → Vec B (getlen m) → Vec B m → Maybe (Vec B (getlen m)))
+  bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({m : ℕ} {B : Set} → EqInst B → Vec B (getlen m) → Vec B m → Maybe (Vec B (getlen m)))
   bff get eq s v = let s′ = enumerate s
                        g  = fromFunc (denumerate s)
                        h  = assoc eq (get s′) v

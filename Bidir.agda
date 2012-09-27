@@ -24,7 +24,7 @@ open import CheckInsert
 
 open import BFF using (_>>=_ ; fmap)
 
-open BFF.VecBFF using (assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
 lemma-1 : {τ : Set} {m n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : Vec (Fin n) m) → assoc eq is (map f is) ≡ just (restrict f (toList is))
 lemma-1 eq f []        = refl
@@ -151,7 +151,7 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   map just (x ∷ xs) ∎
 
 postulate
-  free-theorem-list-list : {β γ : Set} → {getlen : ℕ → ℕ} → (get : {α : Set} {n : ℕ} → Vec α n → Vec α (getlen n)) → (f : β → γ) → {m : ℕ } → (v : Vec β m) → get (map f v) ≡ map f (get v)
+  free-theorem-list-list : {getlen : ℕ → ℕ} → (get : get-type getlen) → {α β : Set} → (f : α → β) → {m : ℕ} → (v : Vec α m) → get (map f v) ≡ map f (get v)
 
 lemma-map-denumerate-enumerate : {m : ℕ} {A : Set} → (as : Vec A m) → map (denumerate as) (enumerate as) ≡ as
 lemma-map-denumerate-enumerate []       = refl
@@ -168,7 +168,7 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
     ≡⟨ lemma-map-denumerate-enumerate as ⟩
   as ∎)
 
-theorem-1 : {getlen : ℕ → ℕ} → (get : {α : Set} {n : ℕ} → Vec α n → Vec α (getlen n)) → {m : ℕ} {τ : Set} → (eq : EqInst τ) → (s : Vec τ m) → bff get eq s (get s) ≡ just s
+theorem-1 : {getlen : ℕ → ℕ} → (get : get-type getlen) → {m : ℕ} {τ : Set} → (eq : EqInst τ) → (s : Vec τ m) → bff get eq s (get s) ≡ just s
 theorem-1 get eq s = begin
   bff get eq s (get s)
     ≡⟨ cong (bff get eq s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
@@ -221,7 +221,7 @@ lemma-union-not-used h h' (i ∷ is') p | x , lookupM-i-h≡just-x = begin
     ≡⟨ cong (_∷_ (lookupM i h)) (lemma-union-not-used h h' is' (Data.List.All.tail p)) ⟩
   lookupM i h ∷ map (flip lookupM h) is' ∎
 
-theorem-2 : {getlen : ℕ → ℕ} (get : {α : Set} {n : ℕ} → Vec α n → Vec α (getlen n)) → {τ : Set} {m : ℕ} → (eq : EqInst τ) → (v : Vec τ (getlen m)) → (s u : Vec τ m) → bff get eq s v ≡ just u → get u ≡ v
+theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {τ : Set} {m : ℕ} → (eq : EqInst τ) → (v : Vec τ (getlen m)) → (s u : Vec τ m) → bff get eq s v ≡ just u → get u ≡ v
 theorem-2 get eq v s u p with lemma-fmap-just (assoc eq (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc eq (get (enumerate s)) v)) p))
 theorem-2 get eq v s u p | h , ph = begin
   get u
