@@ -58,24 +58,3 @@ module VecBFF where
                        h  = assoc eq (get s′) v
                        h′ = fmap (flip union g) h
                    in fmap (flip mapV s′ ∘ flip lookupV) h′
-
-module VecRevBFF where
-  get-type : (ℕ → ℕ) → Set₁
-  get-type getlen = {A : Set} {n : ℕ} → Vec A (getlen n) → Vec A n
-
-  assoc : {A : Set} {m n : ℕ} → EqInst A → Vec (Fin m) n → Vec A n → Maybe (FinMapMaybe m A)
-  assoc _  []V       []V       = just empty
-  assoc eq (i ∷V is) (b ∷V bs) = (assoc eq is bs) >>= (checkInsert eq i b)
-
-  enumerate : {A : Set} {n : ℕ} → Vec A n → Vec (Fin n) n
-  enumerate _ = tabulate id
-
-  denumerate : {A : Set} {n : ℕ} → Vec A n → Fin n → A
-  denumerate = flip lookupV
-
-  bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({m : ℕ} {B : Set} → EqInst B → Vec B (getlen m) → Vec B m → Maybe (Vec B (getlen m)))
-  bff get eq s v = let s′ = enumerate s
-                       g  = fromFunc (denumerate s)
-                       h  = assoc eq (get s′) v
-                       h′ = fmap (flip union g) h
-                   in fmap (flip mapV s′ ∘ (flip lookup)) h′
