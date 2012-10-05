@@ -19,12 +19,12 @@ open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
+import FreeTheorems
+open FreeTheorems.VecVec using (get-type ; free-theorem)
 open import FinMap
 open import CheckInsert
-
 open import BFF using (_>>=_ ; fmap)
-
-open BFF.VecBFF using (get-type ; assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-1 : {τ : Set} {m n : ℕ} → (eq : EqInst τ) → (f : Fin n → τ) → (is : Vec (Fin n) m) → assoc eq is (map f is) ≡ just (restrict f (toList is))
 lemma-1 eq f []        = refl
@@ -150,9 +150,6 @@ lemma-2 eq (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
     ≡⟨ refl ⟩
   map just (x ∷ xs) ∎
 
-postulate
-  free-theorem-list-list : {getlen : ℕ → ℕ} → (get : get-type getlen) → {α β : Set} → (f : α → β) → {m : ℕ} → (v : Vec α m) → get (map f v) ≡ map f (get v)
-
 lemma-map-denumerate-enumerate : {m : ℕ} {A : Set} → (as : Vec A m) → map (denumerate as) (enumerate as) ≡ as
 lemma-map-denumerate-enumerate []       = refl
 lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
@@ -173,7 +170,7 @@ theorem-1 get eq s = begin
   bff get eq s (get s)
     ≡⟨ cong (bff get eq s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
   bff get eq s (get (map (denumerate s) (enumerate s)))
-    ≡⟨ cong (bff get eq s) (free-theorem-list-list get (denumerate s) (enumerate s)) ⟩
+    ≡⟨ cong (bff get eq s) (free-theorem get (denumerate s) (enumerate s)) ⟩
   bff get eq s (map (denumerate s) (get (enumerate s)))
     ≡⟨ refl ⟩
   fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc eq (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
@@ -237,7 +234,7 @@ theorem-2 get eq v s u p | h , ph = begin
      just (get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s)))
        ∎) ⟩
   get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s))
-    ≡⟨ free-theorem-list-list get (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s) ⟩
+    ≡⟨ free-theorem get (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s) ⟩
   map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s))
      ≡⟨ lemma-from-map-just (begin
        map just (map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s)))

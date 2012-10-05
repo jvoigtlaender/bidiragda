@@ -11,18 +11,15 @@ open import Relation.Binary.Core using (_≡_)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; trans ; proof-irrelevance)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-import BFF
-open BFF.ListBFF using (get-type)
-open BFF.VecBFF using () renaming (get-type to getV-type)
+import FreeTheorems
+open FreeTheorems.ListList using (get-type ; free-theorem)
+open FreeTheorems.VecVec using () renaming (get-type to getV-type)
 
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
 
 getList-to-getlen : get-type → ℕ → ℕ
 getList-to-getlen get = length ∘ get ∘ flip replicate tt
-
-postulate
-  free-theorem-list-list : {β γ : Set} → (get : get-type) → (f : β → γ) → get ∘ map f ≗ map f ∘ get
 
 replicate-length : {A : Set} → (l : List A) → map (const tt) l ≡ replicate (length l) tt
 replicate-length [] = refl
@@ -33,7 +30,7 @@ getList-length get l = begin
   length (get l)
     ≡⟨ sym (length-map (const tt) (get l)) ⟩
   length (map (const tt) (get l))
-    ≡⟨ cong length (sym (free-theorem-list-list get (const tt) l)) ⟩
+    ≡⟨ cong length (sym (free-theorem get (const tt) l)) ⟩
   length (get (map (const tt) l))
     ≡⟨ cong (length ∘ get) (replicate-length l) ⟩
   length (get (replicate (length l) tt)) ∎

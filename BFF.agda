@@ -9,6 +9,7 @@ open import Function using (id ; _∘_ ; flip)
 
 open import FinMap
 open import CheckInsert
+import FreeTheorems
 
 _>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
 _>>=_ = flip (flip maybe′ nothing)
@@ -17,8 +18,7 @@ fmap : {A B : Set} → (A → B) → Maybe A → Maybe B
 fmap f = maybe′ (λ a → just (f a)) nothing
 
 module ListBFF where
-  get-type : Set₁
-  get-type = {A : Set} → List A → List A
+  open FreeTheorems.ListList public using (get-type)
 
   assoc : {A : Set} {n : ℕ} → EqInst A → List (Fin n) → List A → Maybe (FinMapMaybe n A)
   assoc _  []       []       = just empty
@@ -39,8 +39,7 @@ module ListBFF where
                    in fmap (flip map s′ ∘ flip lookup) h′
 
 module VecBFF where
-  get-type : (ℕ → ℕ) → Set₁
-  get-type getlen = {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
+  open FreeTheorems.VecVec public using (get-type)
 
   assoc : {A : Set} {n m : ℕ} → EqInst A → Vec (Fin n) m → Vec A m → Maybe (FinMapMaybe n A)
   assoc _  []V       []V       = just empty
