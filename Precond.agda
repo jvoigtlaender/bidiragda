@@ -15,7 +15,8 @@ open import Relation.Binary.PropositionalEquality using (refl ; cong)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap using (FinMap ; FinMapMaybe ; union ; fromFunc ; empty ; insert)
-open import CheckInsert using (EqInst ; checkInsert ; lemma-checkInsert-new)
+import CheckInsert
+open CheckInsert Carrier deq using (checkInsert ; lemma-checkInsert-new)
 open import BFF using (fmap ; _>>=_)
 import Bidir
 open Bidir Carrier deq using (lemma-∉-lookupM-assoc)
@@ -67,8 +68,8 @@ different-assoc (u ∷ us) (v ∷ vs) p with different-assoc us vs (λ i j i≢j
 different-assoc (u ∷ us) (v ∷ vs) p | h , p' = insert u v h , (begin
   assoc (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
-  assoc us vs >>= checkInsert deq u v
-    ≡⟨ cong (flip _>>=_ (checkInsert deq u v)) p' ⟩
-  checkInsert deq u v h
-    ≡⟨ lemma-checkInsert-new deq u v h (lemma-∉-lookupM-assoc u us vs h p' (different-∉ u us p)) ⟩
+  assoc us vs >>= checkInsert u v
+    ≡⟨ cong (flip _>>=_ (checkInsert u v)) p' ⟩
+  checkInsert u v h
+    ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs h p' (different-∉ u us p)) ⟩
   just (insert u v h) ∎)

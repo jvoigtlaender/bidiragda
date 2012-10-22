@@ -9,7 +9,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (Decidable ; _≡_)
 
 open import FinMap
-open import CheckInsert
+import CheckInsert
 import FreeTheorems
 
 _>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
@@ -20,10 +20,11 @@ fmap f = maybe′ (λ a → just (f a)) nothing
 
 module ListBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.ListList public using (get-type)
+  open CheckInsert Carrier deq
 
   assoc : {n : ℕ} → List (Fin n) → List Carrier → Maybe (FinMapMaybe n Carrier)
   assoc []       []       = just empty
-  assoc (i ∷ is) (b ∷ bs) = (assoc is bs) >>= (checkInsert deq i b)
+  assoc (i ∷ is) (b ∷ bs) = (assoc is bs) >>= (checkInsert i b)
   assoc _        _        = nothing
 
   enumerate : (l : List Carrier) → List (Fin (length l))
@@ -41,10 +42,11 @@ module ListBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
 module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.VecVec public using (get-type)
+  open CheckInsert Carrier deq
 
   assoc : {n m : ℕ} → Vec (Fin n) m → Vec Carrier m → Maybe (FinMapMaybe n Carrier)
   assoc []V       []V       = just empty
-  assoc (i ∷V is) (b ∷V bs) = (assoc is bs) >>= (checkInsert deq i b)
+  assoc (i ∷V is) (b ∷V bs) = (assoc is bs) >>= (checkInsert i b)
 
   enumerate : {n : ℕ} → Vec Carrier n → Vec (Fin n) n
   enumerate _ = tabulate id
