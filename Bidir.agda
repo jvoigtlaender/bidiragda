@@ -26,14 +26,14 @@ open FreeTheorems.VecVec using (get-type ; free-theorem)
 open import FinMap
 open import CheckInsert
 open import BFF using (_>>=_ ; fmap)
-open BFF.VecBFF using (assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF Carrier deq using (assoc ; enumerate ; denumerate ; bff)
 
-lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc deq is (map f is) ≡ just (restrict f (toList is))
+lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
-  assoc deq (i ∷ is′) (map f (i ∷ is′))
+  assoc (i ∷ is′) (map f (i ∷ is′))
     ≡⟨ refl ⟩
-  assoc deq is′ (map f is′) >>= checkInsert deq i (f i)
+  assoc is′ (map f is′) >>= checkInsert deq i (f i)
     ≡⟨ cong (λ m → m >>= checkInsert deq i (f i)) (lemma-1 f is′) ⟩
   just (restrict f (toList is′)) >>= (checkInsert deq i (f i))
     ≡⟨ refl ⟩
@@ -41,8 +41,8 @@ lemma-1 f (i ∷ is′) = begin
     ≡⟨ lemma-checkInsert-restrict deq f i (toList is′) ⟩
   just (restrict f (toList (i ∷ is′))) ∎
 
-lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc deq (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
-lemma-lookupM-assoc i is x xs h    p with assoc deq is xs
+lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
+lemma-lookupM-assoc i is x xs h    p with assoc is xs
 lemma-lookupM-assoc i is x xs h    () | nothing
 lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof deq i x h' record
   { same  = λ lookupM≡justx → begin
@@ -60,14 +60,14 @@ lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof deq i x 
   ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing (trans (sym p) (lemma-checkInsert-wrong deq i x h' x' x≢x' lookupM≡justx'))
   }
 
-lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc deq is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
+lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
 lemma-∉-lookupM-assoc i []         []         h ph i∉is = begin
   lookupM i h
     ≡⟨ cong (lookupM i) (sym (lemma-from-just ph)) ⟩
   lookupM i empty
     ≡⟨ lemma-lookupM-empty i ⟩
   nothing ∎
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc deq is' xs' | inspect (assoc deq is') xs'
+lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc is' xs' | inspect (assoc is') xs'
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = apply-checkInsertProof deq i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → begin
@@ -90,9 +90,9 @@ lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph
 _in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
 _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
 
-lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc deq is xs ≡ just h → (toList is) in-domain-of h
+lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (toList is) in-domain-of h
 lemma-assoc-domain []         []         h ph = Data.List.All.[]
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc deq is' xs' | inspect (assoc deq is') xs'
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-checkInsertProof deq i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → Data.List.All._∷_
@@ -115,7 +115,7 @@ lemma-map-lookupM-insert i (i' ∷ is') x h i∉is ph = begin
     ≡⟨ cong (_∷_ (lookupM i' h)) (lemma-map-lookupM-insert i is' x h (i∉is ∘ there) (Data.List.All.tail ph)) ⟩
   lookupM i' h ∷ map (flip lookupM h) is' ∎
 
-lemma-map-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → (h' : FinMapMaybe n Carrier) → assoc deq is xs ≡ just h' → checkInsert deq i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
+lemma-map-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → (h' : FinMapMaybe n Carrier) → assoc is xs ≡ just h' → checkInsert deq i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
 lemma-map-lookupM-assoc i []         x []         h h' ph' ph = refl
 lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph with any (_≟_ i) (toList (i' ∷ is'))
 lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p with Data.List.All.lookup (lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h' ph') p
@@ -130,16 +130,16 @@ lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p rewri
     ≡⟨ lemma-map-lookupM-insert i (i' ∷ is') x h' ¬p (lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h' ph') ⟩
   map (flip lookupM h') (i' ∷ is') ∎
 
-lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc deq is v ≡ just h → map (flip lookupM h) is ≡ map just v
+lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → map (flip lookupM h) is ≡ map just v
 lemma-2 []       []       h p = refl
-lemma-2 (i ∷ is) (x ∷ xs) h p with assoc deq is xs | inspect (assoc deq is) xs
+lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
 lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   map (flip lookupM h) (i ∷ is)
     ≡⟨ refl ⟩
   lookupM i h ∷ map (flip lookupM h) is
     ≡⟨ cong (flip _∷_ (map (flip lookupM h) is)) (lemma-lookupM-assoc i is x xs h (begin
-      assoc deq (i ∷ is) (x ∷ xs)
+      assoc (i ∷ is) (x ∷ xs)
         ≡⟨ cong (flip _>>=_ (checkInsert deq i x)) ir ⟩
       checkInsert deq i x h'
         ≡⟨ p ⟩
@@ -152,7 +152,7 @@ lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
     ≡⟨ refl ⟩
   map just (x ∷ xs) ∎
 
-lemma-map-denumerate-enumerate : {m : ℕ} {A : Set} → (as : Vec A m) → map (denumerate as) (enumerate as) ≡ as
+lemma-map-denumerate-enumerate : {m : ℕ} → (as : Vec Carrier m) → map (denumerate as) (enumerate as) ≡ as
 lemma-map-denumerate-enumerate []       = refl
 lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
   map (flip lookupVec (a ∷ as)) (tabulate Fin.suc)
@@ -167,15 +167,15 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
     ≡⟨ lemma-map-denumerate-enumerate as ⟩
   as ∎)
 
-theorem-1 : {getlen : ℕ → ℕ} → (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → bff get deq s (get s) ≡ just s
+theorem-1 : {getlen : ℕ → ℕ} → (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → bff get s (get s) ≡ just s
 theorem-1 get s = begin
-  bff get deq s (get s)
-    ≡⟨ cong (bff get deq s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
-  bff get deq s (get (map (denumerate s) (enumerate s)))
-    ≡⟨ cong (bff get deq s) (free-theorem get (denumerate s) (enumerate s)) ⟩
-  bff get deq s (map (denumerate s) (get (enumerate s)))
+  bff get s (get s)
+    ≡⟨ cong (bff get s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
+  bff get s (get (map (denumerate s) (enumerate s)))
+    ≡⟨ cong (bff get s) (free-theorem get (denumerate s) (enumerate s)) ⟩
+  bff get s (map (denumerate s) (get (enumerate s)))
     ≡⟨ refl ⟩
-  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc deq (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
+  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
     ≡⟨ cong (fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
   fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (flip lookupVec s))) (just (restrict (denumerate s) (toList (get (enumerate s))))))
     ≡⟨ refl ⟩
@@ -220,8 +220,8 @@ lemma-union-not-used h h' (i ∷ is') p | x , lookupM-i-h≡just-x = begin
     ≡⟨ cong (_∷_ (lookupM i h)) (lemma-union-not-used h h' is' (Data.List.All.tail p)) ⟩
   lookupM i h ∷ map (flip lookupM h) is' ∎
 
-theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get deq s v ≡ just u → get u ≡ v
-theorem-2 get v s u p with lemma-fmap-just (assoc deq (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc deq (get (enumerate s)) v)) p))
+theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → get u ≡ v
+theorem-2 get v s u p with lemma-fmap-just (assoc (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc (get (enumerate s)) v)) p))
 theorem-2 get v s u p | h , ph = begin
   get u
     ≡⟨ lemma-from-just (begin
@@ -229,7 +229,7 @@ theorem-2 get v s u p | h , ph = begin
         ≡⟨ refl ⟩
       fmap get (just u)
         ≡⟨ cong (fmap get) (sym p) ⟩
-      fmap get (bff get deq s v)
+      fmap get (bff get s v)
         ≡⟨ cong (fmap get ∘ fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) ph ⟩
       fmap get (fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (just h)))
        ≡⟨ refl ⟩

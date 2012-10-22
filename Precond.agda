@@ -20,13 +20,13 @@ open import BFF using (fmap ; _>>=_)
 import Bidir
 open Bidir Carrier deq using (lemma-∉-lookupM-assoc)
 
-open BFF.VecBFF using (get-type ; assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF Carrier deq using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
-assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → (h : FinMapMaybe m Carrier) → assoc deq (get (enumerate s)) v ≡ just h → ∃ λ u → bff get deq s v ≡ just u
+assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → (h : FinMapMaybe m Carrier) → assoc (get (enumerate s)) v ≡ just h → ∃ λ u → bff get s v ≡ just u
 assoc-enough get {m} s v h p = map (flip lookup (union h g)) s′ , (begin
-  bff get deq s v
+  bff get s v
     ≡⟨ refl ⟩
-  fmap (flip map s′ ∘ flip lookup) (fmap (flip union g) (assoc deq (get s′) v))
+  fmap (flip map s′ ∘ flip lookup) (fmap (flip union g) (assoc (get s′) v))
     ≡⟨ cong (fmap (flip map s′ ∘ flip lookup)) (cong (fmap (flip union g)) p) ⟩
   fmap (flip map s′ ∘ flip lookup) (fmap (flip union g) (just h))
     ≡⟨ refl ⟩
@@ -61,13 +61,13 @@ different-∉ x [] p ()
 different-∉ x (y ∷ ys) p (here px) = p zero (suc zero) (λ ()) px
 different-∉ x (y ∷ ys) p (there pxs) = different-∉ x ys (different-drop y (x ∷ ys) (different-swap x y ys p)) pxs
 
-different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → all-different u → ∃ λ h → assoc deq u v ≡ just h
+different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → all-different u → ∃ λ h → assoc u v ≡ just h
 different-assoc []       []       p = empty , refl
 different-assoc (u ∷ us) (v ∷ vs) p with different-assoc us vs (λ i j i≢j → p (suc i) (suc j) (i≢j ∘ suc-injective))
 different-assoc (u ∷ us) (v ∷ vs) p | h , p' = insert u v h , (begin
-  assoc deq (u ∷ us) (v ∷ vs)
+  assoc (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
-  assoc deq us vs >>= checkInsert deq u v
+  assoc us vs >>= checkInsert deq u v
     ≡⟨ cong (flip _>>=_ (checkInsert deq u v)) p' ⟩
   checkInsert deq u v h
     ≡⟨ lemma-checkInsert-new deq u v h (lemma-∉-lookupM-assoc u us vs h p' (different-∉ u us p)) ⟩
