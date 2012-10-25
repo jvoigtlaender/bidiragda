@@ -84,7 +84,7 @@ lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' | no
 lemma-lookupM-checkInsert i j x y h h' pl ph' | just z | pl' with deq y z
 lemma-lookupM-checkInsert i j x y h h' pl ph' | just .y | pl' | yes refl = begin
   lookupM i h'
-    ≡⟨ cong (lookupM i) (lemma-from-just (sym ph')) ⟩
+    ≡⟨ cong (lookupM i) (just-injective (sym ph')) ⟩
   lookupM i h
     ≡⟨ pl ⟩
   just x ∎

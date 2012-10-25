@@ -68,13 +68,13 @@ lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (contraposition (cong suc) p)
 
-lemma-from-just : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
-lemma-from-just refl = refl
+just-injective : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
+just-injective refl = refl
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
 lemma-lookupM-restrict i f [] a p = lemma-just≢nothing (trans (sym p) (lemma-lookupM-empty i))
 lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
-lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = lemma-from-just (begin
+lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
    just (f i)
      ≡⟨ sym (lemma-lookupM-insert i (f i) (restrict f is)) ⟩
    lookupM i (insert i (f i) (restrict f is))

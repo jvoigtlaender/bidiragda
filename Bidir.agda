@@ -48,13 +48,13 @@ lemma-lookupM-assoc i is x xs h    () | nothing
 lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof i x h' record
   { same  = λ lookupM≡justx → begin
       lookupM i h
-        ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym p) (lemma-checkInsert-same i x h' lookupM≡justx))) ⟩
+        ≡⟨ cong (lookupM i) (just-injective (trans (sym p) (lemma-checkInsert-same i x h' lookupM≡justx))) ⟩
       lookupM i h'
         ≡⟨ lookupM≡justx ⟩
       just x ∎
   ; new   = λ lookupM≡nothing → begin
       lookupM i h
-        ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym p) (lemma-checkInsert-new i x h' lookupM≡nothing))) ⟩
+        ≡⟨ cong (lookupM i) (just-injective (trans (sym p) (lemma-checkInsert-new i x h' lookupM≡nothing))) ⟩
       lookupM i (insert i x h')
         ≡⟨ lemma-lookupM-insert i x h' ⟩
       just x ∎
@@ -64,7 +64,7 @@ lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof i x h' r
 lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
 lemma-∉-lookupM-assoc i []         []         h ph i∉is = begin
   lookupM i h
-    ≡⟨ cong (lookupM i) (sym (lemma-from-just ph)) ⟩
+    ≡⟨ cong (lookupM i) (sym (just-injective ph)) ⟩
   lookupM i empty
     ≡⟨ lemma-lookupM-empty i ⟩
   nothing ∎
@@ -73,13 +73,13 @@ lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = apply-checkInsertProof i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → begin
       lookupM i h
-        ≡⟨ cong (lookupM i) (lemma-from-just (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x'))) ⟩
+        ≡⟨ cong (lookupM i) (just-injective (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x'))) ⟩
       lookupM i h'
         ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
       nothing ∎
   ; new = λ lookupM-i'-h'≡nothing → begin
       lookupM i h
-        ≡⟨ cong (lookupM i)  (lemma-from-just (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing))) ⟩
+        ≡⟨ cong (lookupM i)  (just-injective (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing))) ⟩
       lookupM i (insert i' x' h')
         ≡⟨ sym (lemma-lookupM-insert-other i i' x' h' (i∉is ∘ here)) ⟩
       lookupM i h'
@@ -97,10 +97,10 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-checkInsertProof i' x' h' record {
     same = λ lookupM-i'-h'≡just-x' → Data.List.All._∷_
-      (x' , (trans (cong (lookupM i') (lemma-from-just (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x')))) lookupM-i'-h'≡just-x'))
+      (x' , (trans (cong (lookupM i') (just-injective (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x')))) lookupM-i'-h'≡just-x'))
       (lemma-assoc-domain is' xs' h (trans ph' (trans (sym (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x')) ph)))
   ; new  = λ lookupM-i'-h'≡nothing → Data.List.All._∷_
-      (x' , (trans (cong (lookupM i') (lemma-from-just (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing)))) (lemma-lookupM-insert i' x' h')))
+      (x' , (trans (cong (lookupM i') (just-injective (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing)))) (lemma-lookupM-insert i' x' h')))
       (Data.List.All.map
         (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' h (proj₂ p) ph)
         (lemma-assoc-domain is' xs' h' ph'))
@@ -126,7 +126,7 @@ lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h .h ph' refl | yes p | (.
 lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' () | yes p | (x'' , refl) | .(just x'') | no ¬p
 lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p rewrite lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h' ph' ¬p = begin
   map (flip lookupM h) (i' ∷ is')
-    ≡⟨ map-cong (λ i'' → cong (lookupM i'') (lemma-from-just (sym ph))) (i' ∷ is') ⟩
+    ≡⟨ map-cong (λ i'' → cong (lookupM i'') (just-injective (sym ph))) (i' ∷ is') ⟩
   map (flip lookupM (insert i x h')) (i' ∷ is')
     ≡⟨ lemma-map-lookupM-insert i (i' ∷ is') x h' ¬p (lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h' ph') ⟩
   map (flip lookupM h') (i' ∷ is') ∎
@@ -225,7 +225,7 @@ theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v 
 theorem-2 get v s u p with lemma-fmap-just (assoc (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc (get (enumerate s)) v)) p))
 theorem-2 get v s u p | h , ph = begin
   get u
-    ≡⟨ lemma-from-just (begin
+    ≡⟨ just-injective (begin
       just (get u)
         ≡⟨ refl ⟩
       fmap get (just u)
