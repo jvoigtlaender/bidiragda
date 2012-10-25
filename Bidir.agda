@@ -197,10 +197,10 @@ lemma-fmap-just nothing  ()
 ∷-injective : {A : Set} {n : ℕ} {x y : A} {xs ys : Vec A n} → (x ∷ xs) ≡ (y ∷ ys) → x ≡ y × xs ≡ ys
 ∷-injective refl = refl , refl
 
-lemma-from-map-just : {A : Set} {n : ℕ} → {xs ys : Vec A n} → map Maybe.just xs ≡ map Maybe.just ys → xs ≡ ys
-lemma-from-map-just {xs = []}      {ys = []}       p  = refl
-lemma-from-map-just {xs = x ∷ xs'} {ys = y ∷ ys'}  p with ∷-injective p
-lemma-from-map-just {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷_ x) (lemma-from-map-just p')
+map-just-injective : {A : Set} {n : ℕ} {xs ys : Vec A n} → map Maybe.just xs ≡ map Maybe.just ys → xs ≡ ys
+map-just-injective {xs = []}      {ys = []}       p  = refl
+map-just-injective {xs = x ∷ xs'} {ys = y ∷ ys'}  p with ∷-injective p
+map-just-injective {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷_ x) (map-just-injective p')
 
 lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl
@@ -239,7 +239,7 @@ theorem-2 get v s u p | h , ph = begin
   get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s))
     ≡⟨ free-theorem get (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s) ⟩
   map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s))
-     ≡⟨ lemma-from-map-just (begin
+     ≡⟨ map-just-injective (begin
        map just (map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s)))
          ≡⟨ lemma-union-not-used h (fromFunc (denumerate s)) (get (enumerate s)) (lemma-assoc-domain (get (enumerate s)) v h ph) ⟩
        map (flip lookupM h) (get (enumerate s))
