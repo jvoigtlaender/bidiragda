@@ -17,10 +17,10 @@ open import FinMap
 
 checkInsert : {n : ℕ} → Fin n → Carrier → FinMapMaybe n Carrier → Maybe (FinMapMaybe n Carrier)
 checkInsert i b m with lookupM i m
-checkInsert i b m | just c with deq b c
-checkInsert i b m | just .b | yes refl = just m
-checkInsert i b m | just c  | no ¬p    = nothing
-checkInsert i b m | nothing = just (insert i b m)
+...               | nothing = just (insert i b m)
+...               | just c with deq b c
+...                         | yes b≡c = just m
+...                         | no b≢c  = nothing
 
 record checkInsertProof {n : ℕ} (i : Fin n) (x : Carrier) (m : FinMapMaybe n Carrier) (P : Set) : Set where
   field
