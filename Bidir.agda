@@ -32,12 +32,8 @@ open BFF.VecBFF Carrier deq using (assoc ; enumerate ; denumerate ; bff)
 lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
-  assoc (i ∷ is′) (map f (i ∷ is′))
-    ≡⟨ refl ⟩
   assoc is′ (map f is′) >>= checkInsert i (f i)
     ≡⟨ cong (λ m → m >>= checkInsert i (f i)) (lemma-1 f is′) ⟩
-  just (restrict f (toList is′)) >>= (checkInsert i (f i))
-    ≡⟨ refl ⟩
   checkInsert i (f i) (restrict f (toList is′))
     ≡⟨ lemma-checkInsert-restrict f i (toList is′) ⟩
   just (restrict f (toList (i ∷ is′))) ∎
@@ -136,8 +132,6 @@ lemma-2 []       []       h p = refl
 lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
 lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
-  map (flip lookupM h) (i ∷ is)
-    ≡⟨ refl ⟩
   lookupM i h ∷ map (flip lookupM h) is
     ≡⟨ cong (flip _∷_ (map (flip lookupM h) is)) (lemma-lookupM-assoc i is x xs h (begin
       assoc (i ∷ is) (x ∷ xs)
@@ -149,9 +143,7 @@ lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
     ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc i is x xs h h' ir p) ⟩
   just x ∷ map (flip lookupM h') is
     ≡⟨ cong (_∷_ (just x)) (lemma-2 is xs h' ir) ⟩
-  just x ∷ map just xs
-    ≡⟨ refl ⟩
-  map just (x ∷ xs) ∎
+  just x ∷ map just xs ∎
 
 lemma-map-denumerate-enumerate : {m : ℕ} → (as : Vec Carrier m) → map (denumerate as) (enumerate as) ≡ as
 lemma-map-denumerate-enumerate []       = refl
