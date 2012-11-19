@@ -24,7 +24,7 @@ open Bidir Carrier deq using (lemma-∉-lookupM-assoc)
 open BFF.VecBFF Carrier deq using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
 assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
-assoc-enough get {m} s v (h , p) = u , cong (fmap (flip map s′ ∘ flip lookup) ∘ (fmap (flip union g))) p
+assoc-enough get s v (h , p) = u , cong (fmap (flip map s′ ∘ flip lookup) ∘ (fmap (flip union g))) p
     where s′ = enumerate s
           g  = fromFunc (denumerate s)
           u  = map (flip lookup (union h g)) s′
