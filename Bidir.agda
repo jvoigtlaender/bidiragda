@@ -182,9 +182,9 @@ theorem-1 get s = begin
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
 
-lemma-fmap-just : {A B : Set} → {f : A → B} {b : B} → (ma : Maybe A) → fmap f ma ≡ just b → ∃ λ a → ma ≡ just a
-lemma-fmap-just (just x) fmap-f-ma≡just-b = x , refl
-lemma-fmap-just nothing  ()
+lemma-fmap-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → fmap f ma ≡ just b → ∃ λ a → ma ≡ just a
+lemma-fmap-just {ma = just x}  fmap-f-ma≡just-b = x , refl
+lemma-fmap-just {ma = nothing} ()
 
 ∷-injective : {A : Set} {n : ℕ} {x y : A} {xs ys : Vec A n} → (x ∷ xs) ≡ (y ∷ ys) → x ≡ y × xs ≡ ys
 ∷-injective refl = refl , refl
@@ -214,7 +214,7 @@ lemma-union-not-used h h' (i ∷ is') p | x , lookupM-i-h≡just-x = begin
   lookupM i h ∷ map (flip lookupM h) is' ∎
 
 theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → get u ≡ v
-theorem-2 get v s u p with lemma-fmap-just (assoc (get (enumerate s)) v) (proj₂ (lemma-fmap-just (fmap (flip union (fromFunc (denumerate s))) (assoc (get (enumerate s)) v)) p))
+theorem-2 get v s u p with lemma-fmap-just (proj₂ (lemma-fmap-just p))
 theorem-2 get v s u p | h , ph = begin
   get u
     ≡⟨ just-injective (begin
