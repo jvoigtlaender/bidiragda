@@ -220,24 +220,23 @@ theorem-2 get v s u p with lemma-fmap-just (proj₂ (lemma-fmap-just p))
 theorem-2 get v s u p | h , ph = begin
   get u
     ≡⟨ just-injective (begin
-      just (get u)
-        ≡⟨ refl ⟩
       fmap get (just u)
         ≡⟨ cong (fmap get) (sym p) ⟩
       fmap get (bff get s v)
-        ≡⟨ cong (fmap get ∘ fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) ph ⟩
-      fmap get (fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (just h)))
-       ≡⟨ refl ⟩
-     just (get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s)))
-       ∎) ⟩
-  get (map (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s))
-    ≡⟨ free-theorem get (flip lookup (union h (fromFunc (denumerate s)))) (enumerate s) ⟩
-  map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s))
+        ≡⟨ cong (fmap get ∘ fmap h′↦r ∘ fmap h↦h′) ph ⟩
+      fmap get (fmap h′↦r (fmap h↦h′ (just h))) ∎) ⟩
+  get (map (flip lookup (h↦h′ h)) s′)
+    ≡⟨ free-theorem get (flip lookup (h↦h′ h)) s′ ⟩
+  map (flip lookup (h↦h′ h)) (get s′)
      ≡⟨ map-just-injective (begin
-       map just (map (flip lookup (union h (fromFunc (denumerate s)))) (get (enumerate s)))
-         ≡⟨ lemma-union-not-used h (fromFunc (denumerate s)) (get (enumerate s)) (lemma-assoc-domain (get (enumerate s)) v h ph) ⟩
-       map (flip lookupM h) (get (enumerate s))
-         ≡⟨ lemma-2 (get (enumerate s)) v h ph ⟩
+       map just (map (flip lookup (union h g)) (get s′))
+         ≡⟨ lemma-union-not-used h g (get s′) (lemma-assoc-domain (get s′) v h ph) ⟩
+       map (flip lookupM h) (get s′)
+         ≡⟨ lemma-2 (get s′) v h ph ⟩
        map just v
          ∎) ⟩
   v ∎
+    where s′   = enumerate s
+          g    = fromFunc (denumerate s)
+          h↦h′ = flip union g
+          h′↦r = flip map s′ ∘ flip lookupVec
