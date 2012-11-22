@@ -168,19 +168,21 @@ theorem-1 get s = begin
     ≡⟨ cong (bff get s) (free-theorem get (denumerate s) (enumerate s)) ⟩
   bff get s (map (denumerate s) (get (enumerate s)))
     ≡⟨ refl ⟩
-  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (denumerate s))) (assoc (get (enumerate s)) (map (denumerate s) (get (enumerate s)))))
-    ≡⟨ cong (fmap (flip map (enumerate s) ∘ flip lookup) ∘ fmap (flip union (fromFunc (denumerate s)))) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
-  fmap (flip map (enumerate s) ∘ flip lookup) (fmap (flip union (fromFunc (flip lookupVec s))) (just (restrict (denumerate s) (toList (get (enumerate s))))))
+  (h′↦r ∘ h↦h′) (assoc (get (enumerate s)) (map (denumerate s) (get (enumerate s))))
+    ≡⟨ cong (h′↦r ∘ h↦h′) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
+  (h′↦r ∘ h↦h′ ∘ just) (restrict (denumerate s) (toList (get (enumerate s))))
     ≡⟨ refl ⟩
-  just ((flip map (enumerate s) ∘ flip lookup) (union (restrict (denumerate s) (toList (get (enumerate s)))) (fromFunc (denumerate s))))
-    ≡⟨ cong just (cong (flip map (enumerate s) ∘ flip lookup) (lemma-union-restrict (denumerate s) (toList (get (enumerate s))))) ⟩
-  just ((flip map (enumerate s) ∘ flip lookup) (fromFunc (denumerate s)))
+  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (fromFunc (denumerate s)))
+    ≡⟨ cong (h′↦r ∘ just) (lemma-union-restrict (denumerate s) (toList (get (enumerate s)))) ⟩
+  (h′↦r ∘ just) (fromFunc (denumerate s))
     ≡⟨ refl ⟩
   just (map (flip lookup (fromFunc (denumerate s))) (enumerate s))
     ≡⟨ cong just (map-cong (lookup∘tabulate (denumerate s)) (enumerate s)) ⟩
   just (map (denumerate s) (enumerate s))
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
+    where h↦h′ = fmap (flip union (fromFunc (denumerate s)))
+          h′↦r = fmap (flip map (enumerate s) ∘ flip lookupVec)
 
 lemma-fmap-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → fmap f ma ≡ just b → ∃ λ a → ma ≡ just a
 lemma-fmap-just {ma = just x}  fmap-f-ma≡just-b = x , refl
