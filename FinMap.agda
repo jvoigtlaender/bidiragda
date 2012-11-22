@@ -101,14 +101,14 @@ lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = begin
   g zero ∷ tabulate (g ∘ suc) ∎
 
 lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
-lemma-union-restrict f is = begin
+lemma-union-restrict {n} f is = begin
   union (restrict f is) (fromFunc f)
     ≡⟨ refl ⟩
   tabulate (λ j → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)))
-    ≡⟨ lemma-tabulate-∘ (lemma-inner f is) ⟩
+    ≡⟨ lemma-tabulate-∘ (lemma-inner is) ⟩
   tabulate f ∎
-    where lemma-inner : {n : ℕ} {A : Set} (f : Fin n → A) → (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)) ≡ f j
-          lemma-inner f []       j = begin
+    where lemma-inner : (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)) ≡ f j
+          lemma-inner []       j = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j empty)
               ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-empty j) ⟩
             maybe′ id (lookup j (fromFunc f)) nothing
@@ -116,11 +116,11 @@ lemma-union-restrict f is = begin
             lookup j (fromFunc f)
               ≡⟨ lookup∘tabulate f j ⟩
             f j ∎
-          lemma-inner f (i ∷ is)  j with j ≟ i
-          lemma-inner f (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (restrict f is))
-          lemma-inner f (i ∷ is)  j | no j≢i = begin
+          lemma-inner (i ∷ is)  j with j ≟ i
+          lemma-inner (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (restrict f is))
+          lemma-inner (i ∷ is)  j | no j≢i = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (restrict f is)))
               ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) j≢i)) ⟩
             maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is))
-              ≡⟨ lemma-inner f is j ⟩
+              ≡⟨ lemma-inner is j ⟩
             f j ∎
