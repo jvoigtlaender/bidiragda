@@ -74,7 +74,7 @@ lemma-checkInsert-restrict f i is = apply-checkInsertProof i (f i) (restrict f i
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
 lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' with i ≟ j
-lemma-lookupM-checkInsert i .i x y h .(insert i y h) pl refl | nothing | [ pl' ] | yes refl = lemma-just≢nothing (begin just x ≡⟨ sym pl ⟩ lookupM i h ≡⟨ pl' ⟩ (nothing ∎))
+lemma-lookupM-checkInsert i .i x y h .(insert i y h) pl refl | nothing | [ pl' ] | yes refl = lemma-just≢nothing (trans (sym pl) pl')
 lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' | no ¬p = begin
   lookupM i (insert j y h)
     ≡⟨ sym (lemma-lookupM-insert-other i j y h ¬p) ⟩
