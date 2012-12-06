@@ -113,19 +113,18 @@ lemma-map-lookupM-insert i (i' ∷ is') x h i∉is ph = begin
   lookupM i' h ∷ map (flip lookupM h) is' ∎
 
 lemma-map-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → (h' : FinMapMaybe n Carrier) → assoc is xs ≡ just h' → checkInsert i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
-lemma-map-lookupM-assoc i []         x []         h h' ph' ph = refl
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph with any (_≟_ i) (toList (i' ∷ is'))
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p with Data.List.All.lookup (lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h' ph') p
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , p') with lookupM i h' 
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | yes p | (x'' , refl) | .(just x'') with deq x x''
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h .h ph' refl | yes p | (.x , refl) | .(just x)  | yes refl = refl
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' () | yes p | (x'' , refl) | .(just x'') | no ¬p
-lemma-map-lookupM-assoc i (i' ∷ is') x (x' ∷ xs') h h' ph' ph | no ¬p rewrite lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h' ph' ¬p = begin
-  map (flip lookupM h) (i' ∷ is')
-    ≡⟨ map-cong (λ i'' → cong (lookupM i'') (just-injective (sym ph))) (i' ∷ is') ⟩
-  map (flip lookupM (insert i x h')) (i' ∷ is')
-    ≡⟨ lemma-map-lookupM-insert i (i' ∷ is') x h' ¬p (lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h' ph') ⟩
-  map (flip lookupM h') (i' ∷ is') ∎
+lemma-map-lookupM-assoc i is x xs h h' ph' ph with any (_≟_ i) (toList is)
+lemma-map-lookupM-assoc i is x xs h h' ph' ph | yes p with Data.List.All.lookup (lemma-assoc-domain is xs h' ph') p
+lemma-map-lookupM-assoc i is x xs h h' ph' ph | yes p | (x'' , p') with lookupM i h' 
+lemma-map-lookupM-assoc i is x xs h h' ph' ph | yes p | (x'' , refl) | .(just x'') with deq x x''
+lemma-map-lookupM-assoc i is x xs h .h ph' refl | yes p | (.x , refl) | .(just x)  | yes refl = refl
+lemma-map-lookupM-assoc i is x xs h h' ph' () | yes p | (x'' , refl) | .(just x'') | no ¬p
+lemma-map-lookupM-assoc i is x xs h h' ph' ph | no ¬p rewrite lemma-∉-lookupM-assoc i is xs h' ph' ¬p = begin
+  map (flip lookupM h) is
+    ≡⟨ map-cong (λ i'' → cong (lookupM i'') (just-injective (sym ph))) is ⟩
+  map (flip lookupM (insert i x h')) is
+    ≡⟨ lemma-map-lookupM-insert i is x h' ¬p (lemma-assoc-domain is xs h' ph') ⟩
+  map (flip lookupM h') is ∎
 
 lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → map (flip lookupM h) is ≡ map just v
 lemma-2 []       []       h p = refl
