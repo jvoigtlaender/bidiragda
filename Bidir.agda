@@ -103,13 +103,13 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-ch
   ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
   }
 
-lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → (toList is) in-domain-of h → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
-lemma-map-lookupM-insert i []         x h i∉is ph = refl
-lemma-map-lookupM-insert i (i' ∷ is') x h i∉is ph = begin
+lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
+lemma-map-lookupM-insert i []         x h i∉is = refl
+lemma-map-lookupM-insert i (i' ∷ is') x h i∉is = begin
   lookupM i' (insert i x h) ∷ map (flip lookupM (insert i x h)) is'
     ≡⟨ cong (flip _∷_ (map (flip lookupM (insert i x h)) is')) (sym (lemma-lookupM-insert-other i' i x h (i∉is ∘ here ∘ sym))) ⟩
   lookupM i' h ∷ map (flip lookupM (insert i x h)) is'
-    ≡⟨ cong (_∷_ (lookupM i' h)) (lemma-map-lookupM-insert i is' x h (i∉is ∘ there) (Data.List.All.tail ph)) ⟩
+    ≡⟨ cong (_∷_ (lookupM i' h)) (lemma-map-lookupM-insert i is' x h (i∉is ∘ there)) ⟩
   lookupM i' h ∷ map (flip lookupM h) is' ∎
 
 lemma-map-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → (h' : FinMapMaybe n Carrier) → assoc is xs ≡ just h' → checkInsert i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
@@ -123,7 +123,7 @@ lemma-map-lookupM-assoc i is x xs h h' ph' ph | no ¬p rewrite lemma-∉-lookupM
   map (flip lookupM h) is
     ≡⟨ map-cong (λ i'' → cong (lookupM i'') (just-injective (sym ph))) is ⟩
   map (flip lookupM (insert i x h')) is
-    ≡⟨ lemma-map-lookupM-insert i is x h' ¬p (lemma-assoc-domain is xs h' ph') ⟩
+    ≡⟨ lemma-map-lookupM-insert i is x h' ¬p ⟩
   map (flip lookupM h') is ∎
 
 lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → map (flip lookupM h) is ≡ map just v
