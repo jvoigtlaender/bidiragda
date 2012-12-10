@@ -10,7 +10,7 @@ open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (yes ; no)
-open import Relation.Nullary.Negation using (contradiction ; contraposition)
+open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
@@ -66,7 +66,7 @@ lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) �
 lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
 lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
-lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (contraposition (cong suc) p)
+lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (p ∘ cong suc)
 
 just-injective : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
 just-injective refl = refl
