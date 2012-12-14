@@ -56,7 +56,7 @@ different-∉ x (y ∷ ys) p (there pxs) = different-∉ x ys (different-drop y 
 
 different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → all-different u → ∃ λ h → assoc u v ≡ just h
 different-assoc []       []       p = empty , refl
-different-assoc (u ∷ us) (v ∷ vs) p with different-assoc us vs (λ i j i≢j → p (suc i) (suc j) (i≢j ∘ suc-injective))
+different-assoc (u ∷ us) (v ∷ vs) p with different-assoc us vs (different-drop u us p)
 different-assoc (u ∷ us) (v ∷ vs) p | h , p' = insert u v h , (begin
   assoc (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
