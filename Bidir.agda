@@ -17,7 +17,7 @@ open import Data.Empty using (⊥-elim)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (yes ; no)
 open import Relation.Binary.Core using (refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 import FreeTheorems
@@ -99,12 +99,9 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-ch
 
 lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
 lemma-map-lookupM-insert i []         x h i∉is = refl
-lemma-map-lookupM-insert i (i' ∷ is') x h i∉is = begin
-  lookupM i' (insert i x h) ∷ map (flip lookupM (insert i x h)) is'
-    ≡⟨ cong (flip _∷_ (map (flip lookupM (insert i x h)) is')) (sym (lemma-lookupM-insert-other i' i x h (i∉is ∘ here ∘ sym))) ⟩
-  lookupM i' h ∷ map (flip lookupM (insert i x h)) is'
-    ≡⟨ cong (_∷_ (lookupM i' h)) (lemma-map-lookupM-insert i is' x h (i∉is ∘ there)) ⟩
-  lookupM i' h ∷ map (flip lookupM h) is' ∎
+lemma-map-lookupM-insert i (i' ∷ is') x h i∉is = cong₂ _∷_
+  (sym (lemma-lookupM-insert-other i' i x h (i∉is ∘ here ∘ sym)))
+  (lemma-map-lookupM-insert i is' x h (i∉is ∘ there))
 
 lemma-map-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → (h' : FinMapMaybe n Carrier) → assoc is xs ≡ just h' → checkInsert i x h' ≡ just h → map (flip lookupM h) is ≡ map (flip lookupM h') is
 lemma-map-lookupM-assoc i is x xs h h' ph' ph with any (_≟_ i) (toList is)
