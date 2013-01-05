@@ -57,12 +57,7 @@ lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof i x h' r
   }
 
 lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
-lemma-∉-lookupM-assoc i []         []         h ph i∉is = begin
-  lookupM i h
-    ≡⟨ cong (lookupM i) (sym (just-injective ph)) ⟩
-  lookupM i empty
-    ≡⟨ lemma-lookupM-empty i ⟩
-  nothing ∎
+lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc is' xs' | inspect (assoc is') xs'
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = apply-checkInsertProof i' x' h' record {
