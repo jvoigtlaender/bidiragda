@@ -12,7 +12,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Nullary using (yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 FinMapMaybe : ℕ → Set → Set
@@ -93,12 +93,7 @@ lemma-lookupM-restrict i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-restrict i 
 
 lemma-tabulate-∘ : {n : ℕ} {A : Set} → {f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
 lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
-lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = begin
-  f zero ∷ tabulate (f ∘ suc)
-    ≡⟨ cong (flip Vec._∷_ (tabulate (f ∘ suc))) (f≗g zero) ⟩
-  g zero ∷ tabulate (f ∘ suc)
-    ≡⟨ cong (Vec._∷_ (g zero)) (lemma-tabulate-∘ (f≗g ∘ suc)) ⟩
-  g zero ∷ tabulate (g ∘ suc) ∎
+lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = cong₂ _∷_ (f≗g zero) (lemma-tabulate-∘ (f≗g ∘ suc))
 
 lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
 lemma-union-restrict {n} f is = begin
