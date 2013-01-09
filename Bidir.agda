@@ -60,23 +60,12 @@ lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) �
 lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc is' xs' | inspect (assoc is') xs'
 lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = apply-checkInsertProof i' x' h' record {
-    same = λ lookupM-i'-h'≡just-x' → begin
-      lookupM i h
-        ≡⟨ cong (lookupM i) (just-injective (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x'))) ⟩
-      lookupM i h'
-        ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
-      nothing ∎
-  ; new = λ lookupM-i'-h'≡nothing → begin
-      lookupM i h
-        ≡⟨ cong (lookupM i)  (just-injective (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing))) ⟩
-      lookupM i (insert i' x' h')
-        ≡⟨ sym (lemma-lookupM-insert-other i i' x' h' (i∉is ∘ here)) ⟩
-      lookupM i h'
-        ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
-      nothing ∎
-  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
-  }
+lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = begin
+  lookupM i h
+    ≡⟨ sym (lemma-checkInsert-lookupM i i' (i∉is ∘ here) x' (lookupVec i h) h' h refl ph) ⟩
+  lookupM i h'
+    ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
+  nothing ∎
 
 _in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
 _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
