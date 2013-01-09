@@ -84,3 +84,15 @@ lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' | no
 lemma-lookupM-checkInsert i j x y h h' pl ph' | just z | pl' with deq y z
 lemma-lookupM-checkInsert i j x y h .h pl refl | just .y | pl' | yes refl = pl
 lemma-lookupM-checkInsert i j x y h h' pl () | just z | pl' | no ¬p
+
+lemma-checkInsert-lookupM : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (r : Maybe Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h' ≡ r → checkInsert j x h ≡ just h' → lookupM i h ≡ r
+lemma-checkInsert-lookupM i j i≢j x r h h' pl ph' with lookupM j h
+lemma-checkInsert-lookupM i j i≢j x r h h' pl ph' | just y with deq x y
+lemma-checkInsert-lookupM i j i≢j x r h .h pl refl | just .x | yes refl = pl
+lemma-checkInsert-lookupM i j i≢j x r h h' pl () | just y | no x≢y
+lemma-checkInsert-lookupM i j i≢j x r h .(insert j x h) pl refl | nothing = begin
+  lookupM i h
+    ≡⟨ lemma-lookupM-insert-other i j x h i≢j ⟩
+  lookupM i (insert j x h)
+    ≡⟨ pl ⟩
+  r ∎
