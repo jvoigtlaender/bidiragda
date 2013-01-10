@@ -29,39 +29,18 @@ assoc-enough get s v (h , p) = u , cong (fmap (flip map s′ ∘ flip lookup) �
           g  = fromFunc (denumerate s)
           u  = map (flip lookup (union h g)) s′
 
-all-different : {A : Set} {n : ℕ} → Vec A n → Set
-all-different {_} {n} v = (i : Fin n) → (j : Fin n) → i ≢ j → lookup i v ≢ lookup j v
+data All-different {A : Set} : {n : ℕ} → Vec A n → Set where
+  different-[] : All-different []
+  different-∷  : {n : ℕ} {x : A} {xs : Vec A n} → x ∉ toList xs → All-different xs → All-different (x ∷ xs)
 
-suc-injective : {n : ℕ} {i j : Fin n} → (suc i ≡ suc j) → i ≡ j
-suc-injective refl = refl
-
-different-swap : {A : Set} {n : ℕ} → (a b : A) → (v : Vec A n) → all-different (a ∷ b ∷ v) → all-different (b ∷ a ∷ v)
-different-swap a b v p zero          zero          i≢j li≡lj = i≢j refl
-different-swap a b v p zero          (suc zero)    i≢j li≡lj = p (suc zero) zero (λ ()) li≡lj
-different-swap a b v p zero          (suc (suc j)) i≢j li≡lj = p (suc zero) (suc (suc j)) (λ ()) li≡lj
-different-swap a b v p (suc zero)    zero          i≢j li≡lj = p zero (suc zero) (λ ()) li≡lj
-different-swap a b v p (suc zero)    (suc zero)    i≢j li≡lj = i≢j refl
-different-swap a b v p (suc zero)    (suc (suc j)) i≢j li≡lj = p zero (suc (suc j)) (λ ()) li≡lj
-different-swap a b v p (suc (suc i)) zero          i≢j li≡lj = p (suc (suc i)) (suc zero) (λ ()) li≡lj
-different-swap a b v p (suc (suc i)) (suc zero)    i≢j li≡lj = p (suc (suc i)) zero (λ ()) li≡lj
-different-swap a b v p (suc (suc i)) (suc (suc j)) i≢j li≡lj = p (suc (suc i)) (suc (suc j)) i≢j li≡lj
-
-different-drop : {A : Set} {n : ℕ} → (a : A) → (v : Vec A n) → all-different (a ∷ v) → all-different v
-different-drop a v p i j i≢j = p (suc i) (suc j) (i≢j ∘ suc-injective)
-
-different-∉ : {A : Set} {n : ℕ} → (x : A) (xs : Vec A n) → all-different (x ∷ xs) → x ∉ (toList xs)
-different-∉ x [] p ()
-different-∉ x (y ∷ ys) p (here px) = p zero (suc zero) (λ ()) px
-different-∉ x (y ∷ ys) p (there pxs) = different-∉ x ys (different-drop y (x ∷ ys) (different-swap x y ys p)) pxs
-
-different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → all-different u → ∃ λ h → assoc u v ≡ just h
+different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → All-different u → ∃ λ h → assoc u v ≡ just h
 different-assoc []       []       p = empty , refl
-different-assoc (u ∷ us) (v ∷ vs) p with different-assoc us vs (different-drop u us p)
-different-assoc (u ∷ us) (v ∷ vs) p | h , p' = insert u v h , (begin
+different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) with different-assoc us vs diff-us
+different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) | h , p' = insert u v h , (begin
   assoc (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
   assoc us vs >>= checkInsert u v
     ≡⟨ cong (flip _>>=_ (checkInsert u v)) p' ⟩
   checkInsert u v h
-    ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs h p' (different-∉ u us p)) ⟩
+    ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs h p' u∉us) ⟩
   just (insert u v h) ∎)
