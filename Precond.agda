@@ -2,15 +2,14 @@ open import Relation.Binary.Core using (Decidable ; _≡_)
 
 module Precond (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
-open import Data.Nat using (ℕ) renaming (zero to nzero ; suc to nsuc)
-open import Data.Fin using (Fin ; zero ; suc)
+open import Data.Nat using (ℕ)
+open import Data.Fin using (Fin)
 open import Data.Vec using (Vec ; [] ; _∷_ ; map ; lookup ; toList)
-open import Data.List.Any using (here ; there)
+import Data.List.Any
 open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Maybe using (just)
 open import Data.Product using (∃ ; _,_)
 open import Function using (flip ; _∘_)
-open import Relation.Binary.Core using (_≢_)
 open import Relation.Binary.PropositionalEquality using (refl ; cong)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
