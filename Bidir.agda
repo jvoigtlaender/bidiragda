@@ -40,21 +40,10 @@ lemma-1 f (i ∷ is′) = begin
 lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
 lemma-lookupM-assoc i is x xs h    p with assoc is xs
 lemma-lookupM-assoc i is x xs h    () | nothing
-lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof i x h' record
-  { same  = λ lookupM≡justx → begin
-      lookupM i h
-        ≡⟨ cong (lookupM i) (just-injective (trans (sym p) (lemma-checkInsert-same i x h' lookupM≡justx))) ⟩
-      lookupM i h'
-        ≡⟨ lookupM≡justx ⟩
-      just x ∎
-  ; new   = λ lookupM≡nothing → begin
-      lookupM i h
-        ≡⟨ cong (lookupM i) (just-injective (trans (sym p) (lemma-checkInsert-new i x h' lookupM≡nothing))) ⟩
-      lookupM i (insert i x h')
-        ≡⟨ lemma-lookupM-insert i x h' ⟩
-      just x ∎
-  ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing (trans (sym p) (lemma-checkInsert-wrong i x h' x' x≢x' lookupM≡justx'))
-  }
+lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | insertionresult i x h'
+lemma-lookupM-assoc i is x xs .h refl | just h | ._ | insert-same pl = pl
+lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | insert-new _ = lemma-lookupM-insert i x h'
+lemma-lookupM-assoc i is x xs h () | just h' | ._ | insert-wrong _ _ _
 
 lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
 lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
@@ -74,17 +63,14 @@ lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier 
 lemma-assoc-domain []         []         h ph = Data.List.All.[]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-checkInsertProof i' x' h' record {
-    same = λ lookupM-i'-h'≡just-x' → Data.List.All._∷_
-      (x' , (trans (cong (lookupM i') (just-injective (trans (sym ph) (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x')))) lookupM-i'-h'≡just-x'))
-      (lemma-assoc-domain is' xs' h (trans ph' (trans (sym (lemma-checkInsert-same i' x' h' lookupM-i'-h'≡just-x')) ph)))
-  ; new  = λ lookupM-i'-h'≡nothing → Data.List.All._∷_
-      (x' , (trans (cong (lookupM i') (just-injective (trans (sym ph) (lemma-checkInsert-new i' x' h' lookupM-i'-h'≡nothing)))) (lemma-lookupM-insert i' x' h')))
-      (Data.List.All.map
-        (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' h (proj₂ p) ph)
-        (lemma-assoc-domain is' xs' h' ph'))
-  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
-  }
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] with checkInsert i' x' h' | inspect (checkInsert i' x') h' | insertionresult i' x' h'
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | insert-same pl = All._∷_ (x' , pl) (lemma-assoc-domain is' xs' h ph')
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | [ cI≡ ] | insert-new _ = All._∷_
+  (x' , lemma-lookupM-insert i' x' h')
+  (Data.List.All.map
+    (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' (insert i' x' h') (proj₂ p) cI≡)
+    (lemma-assoc-domain is' xs' h' ph'))
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | insert-wrong _ _ _
 
 lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
 lemma-map-lookupM-insert i []         x h i∉is = refl

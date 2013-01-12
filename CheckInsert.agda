@@ -22,18 +22,17 @@ checkInsert i b m with lookupM i m
 ...                         | yes b≡c = just m
 ...                         | no b≢c  = nothing
 
-record checkInsertProof {n : ℕ} (i : Fin n) (x : Carrier) (m : FinMapMaybe n Carrier) (P : Set) : Set where
-  field
-     same : lookupM i m ≡ just x → P
-     new : lookupM i m ≡ nothing → P
-     wrong : (x' : Carrier) → x ≢ x' → lookupM i m ≡ just x'  → P
+data InsertionResult {n : ℕ} (i : Fin n) (x : Carrier) (h : FinMapMaybe n Carrier) : Maybe (FinMapMaybe n Carrier) → Set where
+  insert-same : lookupM i h ≡ just x → InsertionResult i x h (just h)
+  insert-new : lookupM i h ≡ nothing → InsertionResult i x h (just (insert i x h))
+  insert-wrong : (x' : Carrier) → x ≢ x' → lookupM i h ≡ just x' → InsertionResult i x h nothing
 
-apply-checkInsertProof : {P : Set} {n : ℕ} → (i : Fin n) → (x : Carrier) → (m : FinMapMaybe n Carrier) → checkInsertProof i x m P → P
-apply-checkInsertProof i x m rp with lookupM i m | inspect (lookupM i) m
-apply-checkInsertProof i x m rp | just x' | il with deq x x'
-apply-checkInsertProof i x m rp | just .x | [ il ] | yes refl = checkInsertProof.same rp il
-apply-checkInsertProof i x m rp | just x' | [ il ] | no x≢x' = checkInsertProof.wrong rp x' x≢x' il
-apply-checkInsertProof i x m rp | nothing | [ il ] = checkInsertProof.new rp il
+insertionresult : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h : FinMapMaybe n Carrier) → InsertionResult i x h (checkInsert i x h)
+insertionresult i x h with lookupM i h | inspect (lookupM i) h
+insertionresult i x h | just x' | _ with deq x x'
+insertionresult i x h | just .x | [ il ] | yes refl = insert-same il
+insertionresult i x h | just x' | [ il ] | no x≢x' = insert-wrong x' x≢x' il
+insertionresult i x h | nothing | [ il ] = insert-new il
 
 lemma-checkInsert-same : {n : ℕ} → (i : Fin n) → (x : Carrier) → (m : FinMapMaybe n Carrier) → lookupM i m ≡ just x → checkInsert i x m ≡ just m
 lemma-checkInsert-same i x m p with lookupM i m
@@ -51,25 +50,11 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') with deq x x'
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
-record checkInsertEqualProof {n : ℕ} (i : Fin n) (x : Carrier) (m : FinMapMaybe n Carrier) (e : Maybe (FinMapMaybe n Carrier)) : Set where
-  field
-     same : lookupM i m ≡ just x → just m ≡ e
-     new : lookupM i m ≡ nothing → just (insert i x m) ≡ e
-     wrong : (x' : Carrier) → x ≢ x' → lookupM i m ≡ just x' → nothing ≡ e
-
-lift-checkInsertProof : {n : ℕ} {i : Fin n} {x : Carrier} {m : FinMapMaybe n Carrier} {e : Maybe (FinMapMaybe n Carrier)} → checkInsertEqualProof i x m e → checkInsertProof i x m (checkInsert i x m ≡ e)
-lift-checkInsertProof {_} {i} {x} {m} o = record
-  { same  = λ p → trans (lemma-checkInsert-same i x m p) (checkInsertEqualProof.same o p)
-  ; new   = λ p → trans (lemma-checkInsert-new i x m p) (checkInsertEqualProof.new o p)
-  ; wrong = λ x' q p → trans (lemma-checkInsert-wrong i x m x' q p) (checkInsertEqualProof.wrong o x' q p)
-  }
-
 lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
-lemma-checkInsert-restrict f i is = apply-checkInsertProof i (f i) (restrict f is) (lift-checkInsertProof record
-  { same  = λ lookupM≡justx → cong just (lemma-insert-same (restrict f is) i (f i) lookupM≡justx)
-  ; new   = λ lookupM≡nothing → refl
-  ; wrong = λ x' x≢x' lookupM≡justx' → contradiction (lemma-lookupM-restrict i f is x' lookupM≡justx') x≢x'
-  })
+lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
+lemma-checkInsert-restrict f i is | ._ | insert-same p = cong just (lemma-insert-same _ i (f i) p)
+lemma-checkInsert-restrict f i is | ._ | insert-new _ = refl
+lemma-checkInsert-restrict f i is | ._ | insert-wrong x fi≢x p = contradiction (lemma-lookupM-restrict i f is x p) fi≢x
 
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
