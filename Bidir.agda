@@ -177,18 +177,15 @@ map-just-injective {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷
 
 lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl
-lemma-union-not-used h h' (i ∷ is') p with Data.List.All.head p
-lemma-union-not-used h h' (i ∷ is') p | x , lookupM-i-h≡just-x = cong₂ _∷_ (begin
+lemma-union-not-used h h' (i ∷ is') (All._∷_ (x , px) p') = cong₂ _∷_ (begin
       just (lookup i (union h h'))
         ≡⟨ cong just (lookup∘tabulate (λ j → maybe′ id (lookup j h') (lookupM j h)) i) ⟩
       just (maybe′ id (lookup i h') (lookupM i h))
-        ≡⟨ cong just (cong (maybe′ id (lookup i h')) lookupM-i-h≡just-x) ⟩
+        ≡⟨ cong just (cong (maybe′ id (lookup i h')) px) ⟩
       just (maybe′ id (lookup i h') (just x))
-        ≡⟨ refl ⟩
-      just x
-        ≡⟨ sym lookupM-i-h≡just-x ⟩
+        ≡⟨ sym px ⟩
       lookupM i h ∎)
-  (lemma-union-not-used h h' is' (Data.List.All.tail p))
+  (lemma-union-not-used h h' is' p')
 
 theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → get u ≡ v
 theorem-2 get v s u p with lemma-fmap-just (proj₂ (lemma-fmap-just p))
