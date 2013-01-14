@@ -53,7 +53,7 @@ lemma-lookupM-assoc i is x xs h    p | just h' = apply-checkInsertProof i x h' r
       lookupM i (insert i x h')
         ≡⟨ lemma-lookupM-insert i x h' ⟩
       just x ∎
-  ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing (trans (sym p) (lemma-checkInsert-wrong i x h' x' x≢x' lookupM≡justx'))
+  ; wrong = λ x' x≢x' lookupM≡justx' → lemma-just≢nothing p (lemma-checkInsert-wrong i x h' x' x≢x' lookupM≡justx')
   }
 
 lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
@@ -83,7 +83,7 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] = apply-ch
       (Data.List.All.map
         (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' h (proj₂ p) ph)
         (lemma-assoc-domain is' xs' h' ph'))
-  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing (trans (sym ph) (lemma-checkInsert-wrong i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x''))
+  ; wrong = λ x'' x'≢x'' lookupM-i'-h'≡just-x'' → lemma-just≢nothing ph (lemma-checkInsert-wrong i' x' h' x'' x'≢x'' lookupM-i'-h'≡just-x'')
   }
 
 lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is

@@ -46,8 +46,8 @@ union m1 m2 = fromFunc (λ f → maybe′ id (lookup f m2) (lookupM f m1))
 restrict : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 restrict f is = fromAscList (zip is (map f is))
 
-lemma-just≢nothing : {A Whatever : Set} {a : A} → _≡_ {_} {Maybe A} (just a) nothing → Whatever
-lemma-just≢nothing ()
+lemma-just≢nothing : {A Whatever : Set} {a : A} {ma : Maybe A} → ma ≡ just a → ma ≡ nothing  → Whatever
+lemma-just≢nothing refl ()
 
 lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → lookupM f m ≡ just a → m ≡ insert f a m
 lemma-insert-same []               ()      a p
@@ -72,7 +72,7 @@ just-injective : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just 
 just-injective refl = refl
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
-lemma-lookupM-restrict i f [] a p = lemma-just≢nothing (trans (sym p) (lemma-lookupM-empty i))
+lemma-lookupM-restrict i f [] a p = lemma-just≢nothing p (lemma-lookupM-empty i)
 lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
 lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
    just (f i)
