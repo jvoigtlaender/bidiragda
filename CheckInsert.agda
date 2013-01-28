@@ -23,16 +23,16 @@ checkInsert i b m with lookupM i m
 ...                         | no b≢c  = nothing
 
 data InsertionResult {n : ℕ} (i : Fin n) (x : Carrier) (h : FinMapMaybe n Carrier) : Maybe (FinMapMaybe n Carrier) → Set where
-  insert-same : lookupM i h ≡ just x → InsertionResult i x h (just h)
-  insert-new : lookupM i h ≡ nothing → InsertionResult i x h (just (insert i x h))
-  insert-wrong : (x' : Carrier) → x ≢ x' → lookupM i h ≡ just x' → InsertionResult i x h nothing
+  same : lookupM i h ≡ just x → InsertionResult i x h (just h)
+  new : lookupM i h ≡ nothing → InsertionResult i x h (just (insert i x h))
+  wrong : (x' : Carrier) → x ≢ x' → lookupM i h ≡ just x' → InsertionResult i x h nothing
 
 insertionresult : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h : FinMapMaybe n Carrier) → InsertionResult i x h (checkInsert i x h)
 insertionresult i x h with lookupM i h | inspect (lookupM i) h
 insertionresult i x h | just x' | _ with deq x x'
-insertionresult i x h | just .x | [ il ] | yes refl = insert-same il
-insertionresult i x h | just x' | [ il ] | no x≢x' = insert-wrong x' x≢x' il
-insertionresult i x h | nothing | [ il ] = insert-new il
+insertionresult i x h | just .x | [ il ] | yes refl = same il
+insertionresult i x h | just x' | [ il ] | no x≢x' = wrong x' x≢x' il
+insertionresult i x h | nothing | [ il ] = new il
 
 lemma-checkInsert-same : {n : ℕ} → (i : Fin n) → (x : Carrier) → (m : FinMapMaybe n Carrier) → lookupM i m ≡ just x → checkInsert i x m ≡ just m
 lemma-checkInsert-same i x m p with lookupM i m
@@ -52,9 +52,9 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
 lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
-lemma-checkInsert-restrict f i is | ._ | insert-same p = cong just (lemma-insert-same _ i (f i) p)
-lemma-checkInsert-restrict f i is | ._ | insert-new _ = refl
-lemma-checkInsert-restrict f i is | ._ | insert-wrong x fi≢x p = contradiction (lemma-lookupM-restrict i f is x p) fi≢x
+lemma-checkInsert-restrict f i is | ._ | same p = cong just (lemma-insert-same _ i (f i) p)
+lemma-checkInsert-restrict f i is | ._ | new _ = refl
+lemma-checkInsert-restrict f i is | ._ | wrong x fi≢x p = contradiction (lemma-lookupM-restrict i f is x p) fi≢x
 
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h

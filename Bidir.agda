@@ -41,9 +41,9 @@ lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (
 lemma-lookupM-assoc i is x xs h    p with assoc is xs
 lemma-lookupM-assoc i is x xs h    () | nothing
 lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | insertionresult i x h'
-lemma-lookupM-assoc i is x xs .h refl | just h | ._ | insert-same pl = pl
-lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | insert-new _ = lemma-lookupM-insert i x h'
-lemma-lookupM-assoc i is x xs h () | just h' | ._ | insert-wrong _ _ _
+lemma-lookupM-assoc i is x xs .h refl | just h | ._ | same pl = pl
+lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | new _ = lemma-lookupM-insert i x h'
+lemma-lookupM-assoc i is x xs h () | just h' | ._ | wrong _ _ _
 
 lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
 lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
@@ -64,13 +64,13 @@ lemma-assoc-domain []         []         h ph = Data.List.All.[]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] with checkInsert i' x' h' | inspect (checkInsert i' x') h' | insertionresult i' x' h'
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | insert-same pl = All._∷_ (x' , pl) (lemma-assoc-domain is' xs' h ph')
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | [ cI≡ ] | insert-new _ = All._∷_
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | same pl = All._∷_ (x' , pl) (lemma-assoc-domain is' xs' h ph')
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | [ cI≡ ] | new _ = All._∷_
   (x' , lemma-lookupM-insert i' x' h')
   (Data.List.All.map
     (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' (insert i' x' h') (proj₂ p) cI≡)
     (lemma-assoc-domain is' xs' h' ph'))
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | insert-wrong _ _ _
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | wrong _ _ _
 
 lemma-map-lookupM-insert : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (h : FinMapMaybe n Carrier) → i ∉ (toList is) → map (flip lookupM (insert i x h)) is ≡ map (flip lookupM h) is
 lemma-map-lookupM-insert i []         x h i∉is = refl
