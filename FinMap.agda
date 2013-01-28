@@ -59,8 +59,8 @@ lemma-lookupM-empty zero    = refl
 lemma-lookupM-empty (suc i) = lemma-lookupM-empty i
 
 lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : FinMapMaybe n A) → lookupM i (insert i a m) ≡ just a
-lemma-lookupM-insert zero    _ (_ ∷ _)  = refl
-lemma-lookupM-insert (suc i) a (_ ∷ xs) = lemma-lookupM-insert i a xs
+lemma-lookupM-insert zero    a (x ∷ xs) = refl
+lemma-lookupM-insert (suc i) a (x ∷ xs) = lemma-lookupM-insert i a xs
 
 lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → i ≢ j → lookupM i m ≡ lookupM i (insert j a m)
 lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
@@ -72,22 +72,18 @@ just-injective : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just 
 just-injective refl = refl
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
-lemma-lookupM-restrict i f [] a p = lemma-just≢nothing p (lemma-lookupM-empty i)
+lemma-lookupM-restrict i f []        a p = lemma-just≢nothing p (lemma-lookupM-empty i)
 lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
 lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
    just (f i)
      ≡⟨ sym (lemma-lookupM-insert i (f i) (restrict f is)) ⟩
    lookupM i (insert i (f i) (restrict f is))
-     ≡⟨ refl ⟩
-   lookupM i (restrict f (i ∷ is))
      ≡⟨ p ⟩
    just a ∎)
-lemma-lookupM-restrict i f (i' ∷ is) a p | no ¬p2 = lemma-lookupM-restrict i f is a (begin
+lemma-lookupM-restrict i f (i' ∷ is) a p | no i≢i' = lemma-lookupM-restrict i f is a (begin
   lookupM i (restrict f is)
-    ≡⟨ lemma-lookupM-insert-other i i' (f i') (restrict f is) ¬p2 ⟩
+    ≡⟨ lemma-lookupM-insert-other i i' (f i') (restrict f is) i≢i' ⟩
   lookupM i (insert i' (f i') (restrict f is))
-    ≡⟨ refl ⟩
-  lookupM i (restrict f (i' ∷ is))
     ≡⟨ p ⟩
   just a ∎)
 
