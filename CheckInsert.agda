@@ -57,18 +57,17 @@ lemma-checkInsert-restrict f i is | ._ | new _ = refl
 lemma-checkInsert-restrict f i is | ._ | wrong x fi≢x p = contradiction (lemma-lookupM-restrict i f is x p) fi≢x
 
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
-lemma-lookupM-checkInsert i j x y h h' pl ph' with lookupM j h | inspect (lookupM j) h
-lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' with i ≟ j
-lemma-lookupM-checkInsert i .i x y h .(insert i y h) pl refl | nothing | [ pl' ] | yes refl = lemma-just≢nothing pl pl'
-lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | nothing | pl' | no ¬p = begin
+lemma-lookupM-checkInsert i j x y h h' pl ph' with checkInsert j y h | insertionresult j y h
+lemma-lookupM-checkInsert i j x y h .h pl refl | ._ | same _ = pl
+lemma-lookupM-checkInsert i j x y h h' pl ph'  | ._ | new _ with i ≟ j
+lemma-lookupM-checkInsert i .i x y h h' pl ph' | ._ | new pl' | yes refl = lemma-just≢nothing pl pl'
+lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i≢j = begin
   lookupM i (insert j y h)
-    ≡⟨ sym (lemma-lookupM-insert-other i j y h ¬p) ⟩
+    ≡⟨ sym (lemma-lookupM-insert-other i j y h i≢j) ⟩
   lookupM i h
     ≡⟨ pl ⟩
   just x ∎
-lemma-lookupM-checkInsert i j x y h h' pl ph' | just z | pl' with deq y z
-lemma-lookupM-checkInsert i j x y h .h pl refl | just .y | pl' | yes refl = pl
-lemma-lookupM-checkInsert i j x y h h' pl () | just z | pl' | no ¬p
+lemma-lookupM-checkInsert i j x y h h' pl () | ._ | wrong _ _ _
 
 lemma-lookupM-checkInsert-other : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert j x h ≡ just h' → lookupM i h ≡ lookupM i h'
 lemma-lookupM-checkInsert-other i j i≢j x h h' ph' with lookupM j h
