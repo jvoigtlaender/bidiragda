@@ -7,9 +7,9 @@ open import Data.Fin using (Fin)
 open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List)
-open import Data.List.Any using (Any ; any ; here ; there)
+open import Data.List.Any using (here ; there)
 open import Data.List.All using (All)
-open Data.List.Any.Membership-≡ using (_∈_ ; _∉_)
+open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; fromList ; map ; tabulate) renaming (lookup to lookupVec)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
 open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
@@ -73,16 +73,10 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | 
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | wrong _ _ _
 
 lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → (h' : FinMapMaybe m Carrier) → checkInsert i x h' ≡ just h → {n : ℕ} → (js : Vec (Fin m) n) → (toList js) in-domain-of h' → map (flip lookupM h) js ≡ map (flip lookupM h') js
-lemma-map-lookupM-assoc i x h h' ph js pj with any (_≟_ i) (toList js)
-lemma-map-lookupM-assoc i x h h' ph js pj | yes p with Data.List.All.lookup pj p
-lemma-map-lookupM-assoc i x h h' ph js pj | yes p | x'' , p' with lookupM i h'
-lemma-map-lookupM-assoc i x h h' ph js pj | yes p | x'' , refl | .(just x'') with deq x x''
-lemma-map-lookupM-assoc i x h .h refl js pj | yes p | .x , refl | .(just x) | yes refl = refl
-lemma-map-lookupM-assoc i x h h' () js pj | yes p | x'' , refl | .(just x'') | no ¬p
-lemma-map-lookupM-assoc i x h h' ph [] pj | no ¬p = refl
-lemma-map-lookupM-assoc i x h h' ph (j ∷ js) pj | no ¬p = cong₂ _∷_
-  (sym (lemma-lookupM-checkInsert-other j i (¬p ∘ here ∘ sym) x h' h ph))
-  (lemma-map-lookupM-assoc i x h h' ph js (Data.List.All.tail pj))
+lemma-map-lookupM-assoc i x h h' ph [] pj = refl
+lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (All._∷_ (x' , pl) pj) = cong₂ _∷_
+  (trans (lemma-lookupM-checkInsert j i x' x h' h pl ph) (sym pl))
+  (lemma-map-lookupM-assoc i x h h' ph js pj)
 
 lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → map (flip lookupM h) is ≡ map just v
 lemma-2 []       []       h p = refl
