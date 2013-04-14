@@ -4,6 +4,7 @@ module Precond (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
+open import Data.List using (List ; [] ; _∷_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; map ; lookup ; toList)
 import Data.List.Any
 open Data.List.Any.Membership-≡ using (_∉_)
@@ -28,11 +29,11 @@ assoc-enough get s v (h , p) = u , cong (fmap (flip map s′ ∘ flip lookup) �
           g  = fromFunc (denumerate s)
           u  = map (flip lookup (union h g)) s′
 
-data All-different {A : Set} : {n : ℕ} → Vec A n → Set where
+data All-different {A : Set} : List A → Set where
   different-[] : All-different []
-  different-∷  : {n : ℕ} {x : A} {xs : Vec A n} → x ∉ toList xs → All-different xs → All-different (x ∷ xs)
+  different-∷  : {x : A} {xs : List A} → x ∉ xs → All-different xs → All-different (x ∷ xs)
 
-different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → All-different u → ∃ λ h → assoc u v ≡ just h
+different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → All-different (toList u) → ∃ λ h → assoc u v ≡ just h
 different-assoc []       []       p = empty , refl
 different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) with different-assoc us vs diff-us
 different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) | h , p' = insert u v h , (begin
