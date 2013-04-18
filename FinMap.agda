@@ -92,12 +92,7 @@ lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
 lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = cong₂ _∷_ (f≗g zero) (lemma-tabulate-∘ (f≗g ∘ suc))
 
 lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
-lemma-union-restrict {n} f is = begin
-  union (restrict f is) (fromFunc f)
-    ≡⟨ refl ⟩
-  tabulate (λ j → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)))
-    ≡⟨ lemma-tabulate-∘ (lemma-inner is) ⟩
-  tabulate f ∎
+lemma-union-restrict {n} f is = lemma-tabulate-∘ (lemma-inner is)
     where lemma-inner : (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)) ≡ f j
           lemma-inner []       j = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j empty)
@@ -108,7 +103,8 @@ lemma-union-restrict {n} f is = begin
               ≡⟨ lookup∘tabulate f j ⟩
             f j ∎
           lemma-inner (i ∷ is)  j with j ≟ i
-          lemma-inner (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-insert j (f j) (restrict f is))
+          lemma-inner (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f)))
+                                                    (lemma-lookupM-insert j (f j) (restrict f is))
           lemma-inner (i ∷ is)  j | no j≢i = begin
             maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (restrict f is)))
               ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) j≢i)) ⟩
