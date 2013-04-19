@@ -4,20 +4,15 @@ module Bidir (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
-open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open import Data.List using (List)
-open import Data.List.Any using (here ; there)
 open import Data.List.All using (All)
-open Data.List.Any.Membership-≡ using (_∉_)
-open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; fromList ; map ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
 open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
-open import Data.Empty using (⊥-elim)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Nullary using (yes ; no)
 open import Relation.Binary.Core using (refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; _≗_ ; trans ; cong₂)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 import FreeTheorems
@@ -44,17 +39,6 @@ lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | inserti
 lemma-lookupM-assoc i is x xs .h refl | just h | ._ | same pl = pl
 lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | new _ = lemma-lookupM-insert i x h'
 lemma-lookupM-assoc i is x xs h () | just h' | ._ | wrong _ _ _
-
-lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
-lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc is' xs' | inspect (assoc is') xs'
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = begin
-  lookupM i h
-    ≡⟨ sym (lemma-lookupM-checkInsert-other i i' (i∉is ∘ here) x' h' h ph) ⟩
-  lookupM i h'
-    ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
-  nothing ∎
 
 _in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
 _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
