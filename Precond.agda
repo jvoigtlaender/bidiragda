@@ -5,7 +5,12 @@ module Precond (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.List using (List ; [] ; _∷_)
+import Level
+import Category.Monad
+import Category.Functor
 open import Data.Maybe using (nothing ; just)
+open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
+open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; map ; lookup ; toList)
 open import Data.List.Any using (here ; there)
 open Data.List.Any.Membership-≡ using (_∉_)
@@ -18,13 +23,13 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 open import FinMap using (FinMap ; FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty)
 import CheckInsert
 open CheckInsert Carrier deq using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
-open import BFF using (fmap ; _>>=_)
+import BFF
 import Bidir
 
 open BFF.VecBFF Carrier deq using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
 assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
-assoc-enough get s v (h , p) = u , cong (fmap (flip map s′ ∘ flip lookup) ∘ (fmap (flip union g))) p
+assoc-enough get s v (h , p) = u , cong (_<$>_ (flip map s′ ∘ flip lookup) ∘ (_<$>_ (flip union g))) p
     where s′ = enumerate s
           g  = fromFunc (denumerate s)
           u  = map (flip lookup (union h g)) s′
@@ -50,7 +55,7 @@ different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) with differ
 different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) | h , p' = insert u v h , (begin
   assoc (u ∷ us) (v ∷ vs)
     ≡⟨ refl ⟩
-  assoc us vs >>= checkInsert u v
+  (assoc us vs >>= checkInsert u v)
     ≡⟨ cong (flip _>>=_ (checkInsert u v)) p' ⟩
   checkInsert u v h
     ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs h p' u∉us) ⟩

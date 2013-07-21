@@ -4,7 +4,12 @@ module Bidir (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
+import Level
+import Category.Monad
+import Category.Functor
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
+open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
+open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List)
 open import Data.List.All using (All)
 open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
@@ -20,13 +25,13 @@ open FreeTheorems.VecVec using (get-type ; free-theorem)
 open import FinMap
 import CheckInsert
 open CheckInsert Carrier deq
-open import BFF using (_>>=_ ; fmap)
+import BFF
 open BFF.VecBFF Carrier deq using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
-  assoc is′ (map f is′) >>= checkInsert i (f i)
+  (assoc is′ (map f is′) >>= checkInsert i (f i))
     ≡⟨ cong (λ m → m >>= checkInsert i (f i)) (lemma-1 f is′) ⟩
   checkInsert i (f i) (restrict f (toList is′))
     ≡⟨ lemma-checkInsert-restrict f i (toList is′) ⟩
@@ -116,12 +121,12 @@ theorem-1 get s = begin
   just (map (denumerate s) (enumerate s))
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
-    where h↦h′ = fmap (flip union (fromFunc (denumerate s)))
-          h′↦r = fmap (flip map (enumerate s) ∘ flip lookupVec)
+    where h↦h′ = _<$>_ (flip union (fromFunc (denumerate s)))
+          h′↦r = _<$>_ (flip map (enumerate s) ∘ flip lookupVec)
 
-lemma-fmap-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → fmap f ma ≡ just b → ∃ λ a → ma ≡ just a
-lemma-fmap-just {ma = just x}  fmap-f-ma≡just-b = x , refl
-lemma-fmap-just {ma = nothing} ()
+lemma-<$>-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
+lemma-<$>-just {ma = just x}  f<$>ma≡just-b = x , refl
+lemma-<$>-just {ma = nothing} ()
 
 ∷-injective : {A : Set} {n : ℕ} {x y : A} {xs ys : Vec A n} → (x ∷ xs) ≡ (y ∷ ys) → x ≡ y × xs ≡ ys
 ∷-injective refl = refl , refl
@@ -144,15 +149,15 @@ lemma-union-not-used h h' (i ∷ is') (All._∷_ (x , px) p') = cong₂ _∷_ (b
   (lemma-union-not-used h h' is' p')
 
 theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → get u ≡ v
-theorem-2 get v s u p with lemma-fmap-just (proj₂ (lemma-fmap-just p))
+theorem-2 get v s u p with lemma-<$>-just (proj₂ (lemma-<$>-just p))
 theorem-2 get v s u p | h , ph = begin
   get u
     ≡⟨ just-injective (begin
-      fmap get (just u)
-        ≡⟨ cong (fmap get) (sym p) ⟩
-      fmap get (bff get s v)
-        ≡⟨ cong (fmap get ∘ fmap h′↦r ∘ fmap h↦h′) ph ⟩
-      fmap get (fmap h′↦r (fmap h↦h′ (just h))) ∎) ⟩
+      get <$> (just u)
+        ≡⟨ cong (_<$>_ get) (sym p) ⟩
+      get <$> (bff get s v)
+        ≡⟨ cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
+      get <$> (h′↦r <$> (h↦h′ <$> just h)) ∎) ⟩
   get (map (flip lookup (h↦h′ h)) s′)
     ≡⟨ free-theorem get (flip lookup (h↦h′ h)) s′ ⟩
   map (flip lookup (h↦h′ h)) (get s′)

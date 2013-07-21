@@ -2,7 +2,12 @@ module BFF where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
+import Level
+import Category.Monad
+import Category.Functor
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
+open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
+open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
@@ -11,12 +16,6 @@ open import Relation.Binary.Core using (Decidable ; _≡_)
 open import FinMap
 import CheckInsert
 import FreeTheorems
-
-_>>=_ : {A B : Set} → Maybe A → (A → Maybe B) → Maybe B
-_>>=_ = flip (flip maybe′ nothing)
-
-fmap : {A B : Set} → (A → B) → Maybe A → Maybe B
-fmap f = maybe′ (λ a → just (f a)) nothing
 
 module ListBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.ListList public using (get-type)
@@ -37,8 +36,8 @@ module ListBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   bff get s v = let s′ = enumerate s
                     g  = fromFunc (denumerate s)
                     h  = assoc (get s′) v
-                    h′ = fmap (flip union g) h
-                in fmap (flip map s′ ∘ flip lookup) h′
+                    h′ = (flip union g) <$> h
+                in (flip map s′ ∘ flip lookup) <$> h′
 
 module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.VecVec public using (get-type)
@@ -58,5 +57,5 @@ module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   bff get s v = let s′ = enumerate s
                     g  = fromFunc (denumerate s)
                     h  = assoc (get s′) v
-                    h′ = fmap (flip union g) h
-                in fmap (flip mapV s′ ∘ flip lookupV) h′
+                    h′ = (flip union g) <$> h
+                in (flip mapV s′ ∘ flip lookupV) <$> h′
