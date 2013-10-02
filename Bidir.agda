@@ -63,7 +63,7 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ |
 
 lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → (h' : FinMapMaybe m Carrier) → checkInsert i x h' ≡ just h → {n : ℕ} → (js : Vec (Fin m) n) → (toList js) in-domain-of h' → map (flip lookupM h) js ≡ map (flip lookupM h') js
 lemma-map-lookupM-assoc i x h h' ph [] pj = refl
-lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (All._∷_ (x' , pl) pj) = cong₂ _∷_
+lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (Data.List.All._∷_ (x' , pl) pj) = cong₂ _∷_
   (trans (lemma-lookupM-checkInsert j i x' x h' h pl ph) (sym pl))
   (lemma-map-lookupM-assoc i x h h' ph js pj)
 
@@ -138,7 +138,7 @@ map-just-injective {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷
 
 lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl
-lemma-union-not-used h h' (i ∷ is') (All._∷_ (x , px) p') = cong₂ _∷_ (begin
+lemma-union-not-used h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
       just (lookup i (union h h'))
         ≡⟨ cong just (lookup∘tabulate (λ j → maybe′ id (lookup j h') (lookupM j h)) i) ⟩
       just (maybe′ id (lookup i h') (lookupM i h))
