@@ -4,11 +4,11 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Props using (_≟_)
-open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate ; foldr) renaming (lookup to lookupVec ; map to mapV)
 open import Data.Vec.Properties using (lookup∘tabulate)
 open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
-open import Function using (id ; _∘_ ; flip)
+open import Function using (id ; _∘_ ; flip ; const)
 open import Relation.Nullary using (yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
@@ -45,6 +45,15 @@ union m1 m2 = fromFunc (λ f → maybe′ id (lookup f m2) (lookupM f m1))
 
 restrict : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 restrict f is = fromAscList (zip is (map f is))
+
+delete : {A : Set} {n : ℕ} → Fin n → FinMapMaybe n A → FinMapMaybe n A
+delete i m = m [ i ]≔ nothing
+
+delete-many : {A : Set} {n m : ℕ} → Vec (Fin n) m → FinMapMaybe n A → FinMapMaybe n A
+delete-many = flip (foldr (const _) delete)
+
+partialize : {A : Set} {n : ℕ} → FinMap n A → FinMapMaybe n A
+partialize = mapV just
 
 lemma-just≢nothing : {A Whatever : Set} {a : A} {ma : Maybe A} → ma ≡ just a → ma ≡ nothing  → Whatever
 lemma-just≢nothing refl ()
@@ -90,6 +99,17 @@ lemma-lookupM-restrict i f (i' ∷ is) a p | no i≢i' = lemma-lookupM-restrict 
 lemma-tabulate-∘ : {n : ℕ} {A : Set} → {f g : Fin n → A} → f ≗ g → tabulate f ≡ tabulate g
 lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
 lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = cong₂ _∷_ (f≗g zero) (lemma-tabulate-∘ (f≗g ∘ suc))
+
+lemma-partialize-fromFunc : {n : ℕ} {A : Set} → (f : Fin n → A) → partialize (fromFunc f) ≡ fromFunc (just ∘ f)
+lemma-partialize-fromFunc {zero}  f = refl
+lemma-partialize-fromFunc {suc _} f = cong (_∷_ (just (f zero))) (lemma-partialize-fromFunc (f ∘ suc))
+
+lemma-lookupM-delete : {n : ℕ} {A : Set} {i j : Fin n} → (f : FinMapMaybe n A) → i ≢ j → lookupM i (delete j f) ≡ lookupM i f
+lemma-lookupM-delete {i = zero}  {j = zero}  (_ ∷ _)  p with p refl
+...                                                      | ()
+lemma-lookupM-delete {i = zero}  {j = suc j} (_ ∷ _)  p = refl
+lemma-lookupM-delete {i = suc i} {j = zero}  (x ∷ xs) p = refl
+lemma-lookupM-delete {i = suc i} {j = suc j} (x ∷ xs) p = lemma-lookupM-delete xs (p ∘ cong suc)
 
 lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
 lemma-union-restrict {n} f is = lemma-tabulate-∘ (lemma-inner is)
