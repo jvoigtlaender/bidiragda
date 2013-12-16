@@ -22,6 +22,7 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
+open import Generic using (just-injective ; map-just-injective)
 open import FinMap
 import CheckInsert
 open CheckInsert Carrier deq
@@ -127,14 +128,6 @@ theorem-1 get s = begin
 lemma-<$>-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
 lemma-<$>-just {ma = just x}  f<$>ma≡just-b = x , refl
 lemma-<$>-just {ma = nothing} ()
-
-∷-injective : {A : Set} {n : ℕ} {x y : A} {xs ys : Vec A n} → (x ∷ xs) ≡ (y ∷ ys) → x ≡ y × xs ≡ ys
-∷-injective refl = refl , refl
-
-map-just-injective : {A : Set} {n : ℕ} {xs ys : Vec A n} → map Maybe.just xs ≡ map Maybe.just ys → xs ≡ ys
-map-just-injective {xs = []}      {ys = []}       p  = refl
-map-just-injective {xs = x ∷ xs'} {ys = y ∷ ys'}  p with ∷-injective p
-map-just-injective {xs = x ∷ xs'} {ys = .x ∷ ys'} p | refl , p' = cong (_∷_ x) (map-just-injective p')
 
 lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl

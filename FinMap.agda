@@ -15,6 +15,8 @@ open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
+open import Generic using (just-injective)
+
 FinMapMaybe : ℕ → Set → Set
 FinMapMaybe n A = Vec (Maybe A) n
 
@@ -76,9 +78,6 @@ lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
 lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (p ∘ cong suc)
-
-just-injective : {A : Set} → {x y : A} → _≡_ {_} {Maybe A} (just x) (just y) → x ≡ y
-just-injective refl = refl
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
 lemma-lookupM-restrict i f []        a p = lemma-just≢nothing p (lemma-lookupM-empty i)

@@ -12,6 +12,7 @@ open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; re
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 import FreeTheorems
+open import Generic using (length-replicate ; subst-cong ; subst-fromList ; subst-subst ; toList-fromList ; toList-subst)
 open FreeTheorems.ListList using (get-type ; free-theorem)
 open FreeTheorems.VecVec using () renaming (get-type to getV-type)
 
@@ -39,13 +40,6 @@ length-toList : {A : Set} {n : ℕ} → (v : Vec A n) → length (toList v) ≡ 
 length-toList []V = refl
 length-toList (x ∷V xs) = cong suc (length-toList xs) 
 
-toList-fromList : {A : Set} → (l : List A) → toList (fromList l) ≡ l
-toList-fromList []       = refl
-toList-fromList (x ∷ xs) = cong (_∷_ x) (toList-fromList xs)
-
-toList-subst : {A : Set} → {n m : ℕ} (v : Vec A n) → (p : n ≡ m) → toList (subst (Vec A) p v) ≡ toList v
-toList-subst v refl = refl
-
 getList-to-getVec-length-property : (get : get-type) → {C : Set} → {m : ℕ} → (v : Vec C m) → length (get (toList v)) ≡ length (get (replicate m tt))
 getList-to-getVec-length-property get {_} {m} v = begin
     length (get (toList v))
@@ -60,12 +54,6 @@ getList-to-getVec get = getlen , get'
         getlen = getList-to-getlen get
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
         get' {C} v = subst (Vec C) (getList-to-getVec-length-property get v) (fromList (get (toList v)))
-
-subst-subst : {A : Set} (T : A → Set) {a b c : A} → (p : a ≡ b) → (p' : b ≡ c) → (x : T a)→ subst T p' (subst T p x) ≡ subst T (trans p p') x
-subst-subst T refl p' x = refl
-
-subst-fromList : {A : Set} {x y : List A} → (p : y ≡ x) → subst (Vec A) (cong length p) (fromList y) ≡ fromList x
-subst-fromList refl = refl
 
 get-commut-1 : (get : get-type) {A : Set} → (l : List A) → fromList (get l) ≡ subst (Vec A) (sym (getList-length get l)) (proj₂ (getList-to-getVec get) (fromList l))
 get-commut-1 get {A} l = begin
@@ -99,13 +87,6 @@ get-trafo-1 get {B} l = begin
 
 vec-len : {A : Set} {n : ℕ} → Vec A n → ℕ
 vec-len {_} {n} _ = n
-
-length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) ≡ n
-length-replicate 0       = refl
-length-replicate (suc n) = cong suc (length-replicate n)
-
-subst-cong : {A : Set} → (T : A → Set) → {g : A → A} → {a b : A} → (f : {c : A} → T c → T (g c)) → (p : a ≡ b) → f ∘ subst T p ≗ subst T (cong g p) ∘ f
-subst-cong T f refl _ = refl
 
 fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≡ subst (Vec A) (sym (length-toList v)) v
 fromList-toList     []V       = refl
