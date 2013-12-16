@@ -17,28 +17,6 @@ open import FinMap
 import CheckInsert
 import FreeTheorems
 
-module ListBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
-  open FreeTheorems.ListList public using (get-type)
-  open CheckInsert Carrier deq
-
-  assoc : {n : ℕ} → List (Fin n) → List Carrier → Maybe (FinMapMaybe n Carrier)
-  assoc []       []       = just empty
-  assoc (i ∷ is) (b ∷ bs) = (assoc is bs) >>= (checkInsert i b)
-  assoc _        _        = nothing
-
-  enumerate : (l : List Carrier) → List (Fin (length l))
-  enumerate l = toList (tabulate id)
-
-  denumerate : (l : List Carrier) → Fin (length l) → Carrier
-  denumerate l = flip lookupV (fromList l)
-
-  bff : get-type → (List Carrier → List Carrier → Maybe (List Carrier))
-  bff get s v = let s′ = enumerate s
-                    g  = fromFunc (denumerate s)
-                    h  = assoc (get s′) v
-                    h′ = (flip union g) <$> h
-                in (flip map s′ ∘ flip lookup) <$> h′
-
 module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.VecVec public using (get-type)
   open CheckInsert Carrier deq
