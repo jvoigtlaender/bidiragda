@@ -35,7 +35,7 @@ module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
   bff get s v = let s′ = enumerate s
                     t′ = get s′
-                    g  = partialize (fromFunc (denumerate s))
+                    g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
                     h  = assoc t′ v
                     h′ = (flip union g′) <$> h

@@ -20,7 +20,7 @@ open import Function using (flip ; _∘_)
 open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-open import FinMap using (FinMap ; FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty)
+open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty)
 import CheckInsert
 open CheckInsert Carrier deq using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF

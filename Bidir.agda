@@ -113,20 +113,20 @@ theorem-1 get s = begin
     ≡⟨ cong (h′↦r ∘ h↦h′) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
   (h′↦r ∘ h↦h′ ∘ just) (restrict (denumerate s) (toList (get (enumerate s))))
     ≡⟨ refl ⟩
-  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (delete-many (get (enumerate s)) (partialize (fromFunc (denumerate s)))))
+  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (delete-many (get (enumerate s)) (fromFunc (denumerate s))))
     ≡⟨ cong (h′↦r ∘ just) (lemma-disjoint-union (denumerate s) (get (enumerate s))) ⟩
-  (h′↦r ∘ just) (partialize (fromFunc (denumerate s)))
+  (h′↦r ∘ just) (fromFunc (denumerate s))
     ≡⟨ refl ⟩
-  mapMV (flip lookupVec (partialize (fromFunc (denumerate s)))) (enumerate s)
-    ≡⟨ cong (flip mapMV (enumerate s) ∘ flip lookupVec) (lemma-partialize-fromFunc (denumerate s)) ⟩
-  mapMV (flip lookupVec (fromFunc (Maybe.just ∘ denumerate s))) (enumerate s)
+  mapMV (flip lookupVec (fromFunc (denumerate s))) (enumerate s)
+    ≡⟨ cong (flip mapMV (enumerate s) ∘ flip lookupVec) (lemma-fromFunc-tabulate (denumerate s)) ⟩
+  mapMV (flip lookupVec (tabulate (Maybe.just ∘ denumerate s))) (enumerate s)
     ≡⟨ mapMV-cong (lookup∘tabulate (Maybe.just ∘ denumerate s)) (enumerate s) ⟩
   mapMV (Maybe.just ∘ denumerate s) (enumerate s)
     ≡⟨ mapMV-purity (denumerate s) (enumerate s) ⟩
   just (map (denumerate s) (enumerate s))
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
-    where h↦h′ = _<$>_ (flip union (delete-many (get (enumerate s)) (partialize (fromFunc (denumerate s)))))
+    where h↦h′ = _<$>_ (flip union (delete-many (get (enumerate s)) (fromFunc (denumerate s))))
           h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupVec)
 
 
