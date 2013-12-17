@@ -4,7 +4,7 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Props using (_≟_)
-open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate ; foldr) renaming (lookup to lookupVec ; map to mapV)
+open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate ; foldr ; toList) renaming (lookup to lookupVec ; map to mapV)
 open import Data.Vec.Properties using (lookup∘tabulate)
 open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
@@ -42,8 +42,8 @@ lookup = lookupVec
 fromFunc : {A : Set} {n : ℕ} → (Fin n → A) → FinMap n A
 fromFunc = tabulate
 
-union : {A : Set} {n : ℕ} → FinMapMaybe n A → FinMap n  A → FinMap n A
-union m1 m2 = fromFunc (λ f → maybe′ id (lookup f m2) (lookupM f m1))
+union : {A : Set} {n : ℕ} → FinMapMaybe n A → FinMapMaybe n A → FinMapMaybe n A
+union m1 m2 = fromFunc (λ f → maybe′ just (lookupM f m2) (lookupM f m1))
 
 restrict : {A : Set} {n : ℕ} → (Fin n → A) → List (Fin n) → FinMapMaybe n A
 restrict f is = fromAscList (zip is (map f is))
@@ -110,23 +110,24 @@ lemma-lookupM-delete {i = zero}  {j = suc j} (_ ∷ _)  p = refl
 lemma-lookupM-delete {i = suc i} {j = zero}  (x ∷ xs) p = refl
 lemma-lookupM-delete {i = suc i} {j = suc j} (x ∷ xs) p = lemma-lookupM-delete xs (p ∘ cong suc)
 
-lemma-union-restrict : {n : ℕ} {A : Set} → (f : Fin n → A) → (is : List (Fin n)) → union (restrict f is) (fromFunc f) ≡ fromFunc f
-lemma-union-restrict {n} f is = lemma-tabulate-∘ (lemma-inner is)
-    where lemma-inner : (is : List (Fin n)) → (j : Fin n) → maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is)) ≡ f j
-          lemma-inner []       j = begin
-            maybe′ id (lookup j (fromFunc f)) (lookupM j empty)
-              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (lemma-lookupM-empty j) ⟩
-            maybe′ id (lookup j (fromFunc f)) nothing
-              ≡⟨ refl ⟩
-            lookup j (fromFunc f)
-              ≡⟨ lookup∘tabulate f j ⟩
-            f j ∎
-          lemma-inner (i ∷ is)  j with j ≟ i
-          lemma-inner (.j ∷ is) j | yes refl = cong (maybe′ id (lookup j (fromFunc f)))
-                                                    (lemma-lookupM-insert j (f j) (restrict f is))
-          lemma-inner (i ∷ is)  j | no j≢i = begin
-            maybe′ id (lookup j (fromFunc f)) (lookupM j (insert i (f i) (restrict f is)))
-              ≡⟨ cong (maybe′ id (lookup j (fromFunc f))) (sym (lemma-lookupM-insert-other j i (f i) (restrict f is) j≢i)) ⟩
-            maybe′ id (lookup j (fromFunc f)) (lookupM j (restrict f is))
-              ≡⟨ lemma-inner is j ⟩
-            f j ∎
+lemma-disjoint-union : {n m : ℕ} {A : Set} → (f : Fin n → A) → (t : Vec (Fin n) m) → union (restrict f (toList t)) (delete-many t (partialize (fromFunc f))) ≡ partialize (fromFunc f)
+lemma-disjoint-union {n} {m} f t = trans (lemma-tabulate-∘ (lemma-inner t)) (sym (lemma-partialize-fromFunc f))
+    where lemma-inner : {m : ℕ} → (t : Vec (Fin n) m) → (x : Fin n) → maybe′ just (lookupM x (delete-many t (partialize (fromFunc f)))) (lookupM x (restrict f (toList t))) ≡ just (f x)
+          lemma-inner [] x = begin
+            maybe′ just (lookupM x (partialize (fromFunc f))) (lookupM x empty)
+              ≡⟨ cong (maybe′ just (lookupM x (partialize (fromFunc f)))) (lemma-lookupM-empty x) ⟩
+            lookupM x (partialize (fromFunc f))
+              ≡⟨ cong (lookupM x) (lemma-partialize-fromFunc f) ⟩
+            lookupM x (fromFunc (just ∘ f))
+              ≡⟨ lookup∘tabulate (just ∘ f) x ⟩
+            just (f x) ∎
+          lemma-inner (t ∷ ts) x with x ≟ t
+          lemma-inner (.x ∷ ts) x | yes refl = cong (maybe′ just (lookupM x (delete-many (x ∷ ts) (partialize (fromFunc f))))) (lemma-lookupM-insert x (f x) (restrict f (toList ts)))
+          lemma-inner (t ∷ ts) x | no ¬p = begin
+            maybe′ just (lookupM x (delete-many (t ∷ ts) (partialize (fromFunc f)))) (lookupM x (restrict f (toList (t ∷ ts))))
+              ≡⟨ cong (maybe′ just (lookupM x (delete-many (t ∷ ts) (partialize (fromFunc f))))) (sym (lemma-lookupM-insert-other x t (f t) (restrict f (toList ts)) ¬p)) ⟩
+            maybe′ just (lookupM x (delete-many (t ∷ ts) (partialize (fromFunc f)))) (lookupM x (restrict f (toList ts)))
+              ≡⟨ cong (flip (maybe′ just) (lookupM x (restrict f (toList ts)))) (lemma-lookupM-delete (delete-many ts (partialize (fromFunc f))) ¬p) ⟩
+            maybe′ just (lookupM x (delete-many ts (partialize (fromFunc f)))) (lookupM x (restrict f (toList ts)))
+              ≡⟨ lemma-inner ts x ⟩
+            just (f x) ∎

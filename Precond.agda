@@ -28,11 +28,13 @@ import Bidir
 
 open BFF.VecBFF Carrier deq using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
+{-
 assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
 assoc-enough get s v (h , p) = u , cong (_<$>_ (flip map s′ ∘ flip lookup) ∘ (_<$>_ (flip union g))) p
     where s′ = enumerate s
           g  = fromFunc (denumerate s)
           u  = map (flip lookup (union h g)) s′
+-}
 
 data All-different {A : Set} : List A → Set where
   different-[] : All-different []

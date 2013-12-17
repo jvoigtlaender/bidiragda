@@ -22,7 +22,7 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
-open import Generic using (just-injective ; map-just-injective)
+open import Generic using (just-injective ; map-just-injective ; mapMV ; mapMV-cong ; mapMV-purity)
 open import FinMap
 import CheckInsert
 open CheckInsert Carrier deq
@@ -113,22 +113,28 @@ theorem-1 get s = begin
     ≡⟨ cong (h′↦r ∘ h↦h′) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
   (h′↦r ∘ h↦h′ ∘ just) (restrict (denumerate s) (toList (get (enumerate s))))
     ≡⟨ refl ⟩
-  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (fromFunc (denumerate s)))
-    ≡⟨ cong (h′↦r ∘ just) (lemma-union-restrict (denumerate s) (toList (get (enumerate s)))) ⟩
-  (h′↦r ∘ just) (fromFunc (denumerate s))
+  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (delete-many (get (enumerate s)) (partialize (fromFunc (denumerate s)))))
+    ≡⟨ cong (h′↦r ∘ just) (lemma-disjoint-union (denumerate s) (get (enumerate s))) ⟩
+  (h′↦r ∘ just) (partialize (fromFunc (denumerate s)))
     ≡⟨ refl ⟩
-  just (map (flip lookup (fromFunc (denumerate s))) (enumerate s))
-    ≡⟨ cong just (map-cong (lookup∘tabulate (denumerate s)) (enumerate s)) ⟩
+  mapMV (flip lookupVec (partialize (fromFunc (denumerate s)))) (enumerate s)
+    ≡⟨ cong (flip mapMV (enumerate s) ∘ flip lookupVec) (lemma-partialize-fromFunc (denumerate s)) ⟩
+  mapMV (flip lookupVec (fromFunc (Maybe.just ∘ denumerate s))) (enumerate s)
+    ≡⟨ mapMV-cong (lookup∘tabulate (Maybe.just ∘ denumerate s)) (enumerate s) ⟩
+  mapMV (Maybe.just ∘ denumerate s) (enumerate s)
+    ≡⟨ mapMV-purity (denumerate s) (enumerate s) ⟩
   just (map (denumerate s) (enumerate s))
     ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
   just s ∎
-    where h↦h′ = _<$>_ (flip union (fromFunc (denumerate s)))
-          h′↦r = _<$>_ (flip map (enumerate s) ∘ flip lookupVec)
+    where h↦h′ = _<$>_ (flip union (delete-many (get (enumerate s)) (partialize (fromFunc (denumerate s)))))
+          h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupVec)
+
 
 lemma-<$>-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
 lemma-<$>-just {ma = just x}  f<$>ma≡just-b = x , refl
 lemma-<$>-just {ma = nothing} ()
 
+{-
 lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl
 lemma-union-not-used h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
@@ -166,3 +172,4 @@ theorem-2 get v s u p | h , ph = begin
           g    = fromFunc (denumerate s)
           h↦h′ = flip union g
           h′↦r = flip map s′ ∘ flip lookupVec
+-}
