@@ -5,15 +5,19 @@ module CheckInsert (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Fin.Props using (_≟_)
-open import Data.Maybe using (Maybe ; nothing ; just)
+open import Data.Maybe using (Maybe ; nothing ; just) renaming (setoid to MaybeEq)
 open import Data.List using (List ; [] ; _∷_)
+open import Data.Vec using () renaming (_∷_ to _∷V_)
+open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
+open import Relation.Binary using (Setoid)
 open import Relation.Binary.Core using (refl ; _≢_)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans) renaming (setoid to PropEq)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap
+open import Generic using (maybeEq-from-≡ ; vecIsSetoid)
 
 checkInsert : {n : ℕ} → Fin n → Carrier → FinMapMaybe n Carrier → Maybe (FinMapMaybe n Carrier)
 checkInsert i b m with lookupM i m
@@ -50,9 +54,14 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') with deq x x'
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
+vecSetoidToProp : {A : Set} {n : ℕ} {x y : Setoid.Carrier (vecIsSetoid (MaybeEq (PropEq A)) n)} → Setoid._≈_ (vecIsSetoid (MaybeEq (PropEq A)) n) x y → x ≡ y
+vecSetoidToProp VecEq.[]-cong              = refl
+vecSetoidToProp (just refl VecEq.∷-cong p) = cong (_∷V_ _) (vecSetoidToProp p)
+vecSetoidToProp (nothing VecEq.∷-cong p)   = cong (_∷V_ _) (vecSetoidToProp p)
+
 lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
-lemma-checkInsert-restrict f i is | ._ | same p = cong just (lemma-insert-same _ i (f i) p)
+lemma-checkInsert-restrict f i is | ._ | same p = cong just (vecSetoidToProp (lemma-insert-same _ i (f i) (maybeEq-from-≡ p)))
 lemma-checkInsert-restrict f i is | ._ | new _ = refl
 lemma-checkInsert-restrict f i is | ._ | wrong x fi≢x p = contradiction (lemma-lookupM-restrict i f is x p) fi≢x
 
