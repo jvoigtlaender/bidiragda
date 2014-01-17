@@ -12,6 +12,7 @@ open import Function using (_∘_)
 open import Level using () renaming (zero to ℓ₀)
 open import Relation.Binary using (Setoid ; module Setoid)
 open import Relation.Binary.Core using (_≡_ ; refl)
+open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans) renaming (setoid to PropEq)
 
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
@@ -76,14 +77,16 @@ toList-subst : {A : Set} → {n m : ℕ} (v : Vec A n) → (p : n ≡ m) →
                toList (subst (Vec A) p v) ≡ toList v
 toList-subst v refl = refl
 
-vecIsSetoid : Setoid ℓ₀ ℓ₀ → ℕ → Setoid ℓ₀ ℓ₀
-vecIsSetoid S n = record
-  { Carrier       = Vec S.Carrier n
-  ; _≈_           = λ x y → VecEq._≈_ S {n} x {n} y
+vecIsISetoid : Setoid ℓ₀ ℓ₀ → ISetoid ℕ ℓ₀ ℓ₀
+vecIsISetoid S = record
+  { Carrier = Vec (Setoid.Carrier S)
+  ; _≈_ = λ x → S VecEq.≈ x
   ; isEquivalence = record
     { refl = VecEq.refl S _
     ; sym = VecEq.sym S
     ; trans = VecEq.trans S }
   }
-  where
-  module S = Setoid S
+
+
+vecIsSetoid : Setoid ℓ₀ ℓ₀ → ℕ → Setoid ℓ₀ ℓ₀
+vecIsSetoid S n = (vecIsISetoid S) at n
