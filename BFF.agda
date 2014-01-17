@@ -12,6 +12,7 @@ open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (Decidable ; _≡_)
+open import Relation.Binary.PropositionalEquality using (decSetoid)
 
 open import FinMap
 import CheckInsert
@@ -19,7 +20,7 @@ import FreeTheorems
 
 module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
   open FreeTheorems.VecVec public using (get-type)
-  open CheckInsert Carrier deq
+  open CheckInsert (decSetoid deq)
 
   assoc : {n m : ℕ} → Vec (Fin n) m → Vec Carrier m → Maybe (FinMapMaybe n Carrier)
   assoc []V       []V       = just empty

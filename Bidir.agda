@@ -7,27 +7,41 @@ open import Data.Fin using (Fin)
 import Level
 import Category.Monad
 import Category.Functor
-open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
+open import Data.Maybe using (Maybe ; nothing ; just ; maybe′) renaming (setoid to MaybeSetoid)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List)
 open import Data.List.All using (All)
 open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
 open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (refl)
-open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans ; cong₂)
+open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans ; cong₂ ; decSetoid) renaming (setoid to ≡-setoid)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
+open import Relation.Binary using (module Setoid)
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
-open import Generic using (just-injective ; map-just-injective)
+open import Generic using (just-injective ; map-just-injective ; vecIsSetoid)
 open import FinMap
 import CheckInsert
-open CheckInsert Carrier deq
+open CheckInsert (decSetoid deq)
 import BFF
 open BFF.VecBFF Carrier deq using (assoc ; enumerate ; denumerate ; bff)
+
+maybeSetoid-to-≡ : {A : Set} {x y : Setoid.Carrier (MaybeSetoid (≡-setoid A))} → Setoid._≈_ (MaybeSetoid (≡-setoid A)) x y → x ≡ y
+maybeSetoid-to-≡ (just refl) = refl
+maybeSetoid-to-≡ nothing = refl
+
+vecMaybeSetoid-to-≡ : {A : Set} {n : ℕ} {x y : Setoid.Carrier (vecIsSetoid (MaybeSetoid (≡-setoid A)) n)} → Setoid._≈_ (vecIsSetoid (MaybeSetoid (≡-setoid A)) n) x y → x ≡ y
+vecMaybeSetoid-to-≡ VecEq.[]-cong        = refl
+vecMaybeSetoid-to-≡ (p₁ VecEq.∷-cong p₂) = cong₂ _∷_ (maybeSetoid-to-≡ p₁) (vecMaybeSetoid-to-≡ p₂)
+
+maybeVecMaybeSetoid-to-≡ : {A : Set} {n : ℕ} {x y : Setoid.Carrier (MaybeSetoid (vecIsSetoid (MaybeSetoid (≡-setoid A)) n))} → Setoid._≈_ (MaybeSetoid (vecIsSetoid (MaybeSetoid (≡-setoid A)) n)) x y → x ≡ y
+maybeVecMaybeSetoid-to-≡ (just p) rewrite vecMaybeSetoid-to-≡ p = refl
+maybeVecMaybeSetoid-to-≡ nothing = refl
 
 lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
 lemma-1 f []        = refl
@@ -35,14 +49,14 @@ lemma-1 f (i ∷ is′) = begin
   (assoc is′ (map f is′) >>= checkInsert i (f i))
     ≡⟨ cong (λ m → m >>= checkInsert i (f i)) (lemma-1 f is′) ⟩
   checkInsert i (f i) (restrict f (toList is′))
-    ≡⟨ lemma-checkInsert-restrict f i (toList is′) ⟩
+    ≡⟨ maybeVecMaybeSetoid-to-≡ (lemma-checkInsert-restrict f i (toList is′)) ⟩
   just (restrict f (toList (i ∷ is′))) ∎
 
 lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x
 lemma-lookupM-assoc i is x xs h    p with assoc is xs
 lemma-lookupM-assoc i is x xs h    () | nothing
 lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | insertionresult i x h'
-lemma-lookupM-assoc i is x xs .h refl | just h | ._ | same pl = pl
+lemma-lookupM-assoc i is x xs .h refl | just h | ._ | same x' x≡x' pl = trans pl (cong just (sym x≡x'))
 lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | new _ = lemma-lookupM-insert i x h'
 lemma-lookupM-assoc i is x xs h () | just h' | ._ | wrong _ _ _
 
@@ -54,7 +68,7 @@ lemma-assoc-domain []         []         h ph = Data.List.All.[]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] with checkInsert i' x' h' | inspect (checkInsert i' x') h' | insertionresult i' x' h'
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | same pl = All._∷_ (x' , pl) (lemma-assoc-domain is' xs' h ph')
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | same x _ pl = All._∷_ (x , pl) (lemma-assoc-domain is' xs' h ph')
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | [ cI≡ ] | new _ = All._∷_
   (x' , lemma-lookupM-insert i' x' h')
   (Data.List.All.map
