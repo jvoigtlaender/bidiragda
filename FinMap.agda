@@ -64,18 +64,10 @@ partialize = mapV just
 lemma-just≢nothing : {A Whatever : Set} {a : A} {ma : Maybe A} → ma ≡ just a → ma ≡ nothing  → Whatever
 lemma-just≢nothing refl ()
 
-module Private {S : Setoid ℓ₀ ℓ₀} where
-  private
-    open Setoid S
-    reflMaybe = Setoid.refl (MaybeEq S)
-    _≈Maybe_ = Setoid._≈_ (MaybeEq S)
-
-  lemma-insert-same : {n : ℕ} → (m : FinMapMaybe n Carrier) → (f : Fin n) → (a : Carrier) → lookupM f m ≈Maybe just a → Setoid._≈_ (vecIsSetoid (MaybeEq S) n) m (insert f a m)
-  lemma-insert-same         []       ()      a p
-  lemma-insert-same {suc n} (x ∷ xs) zero    a p = p ∷-cong Setoid.refl (vecIsSetoid (MaybeEq S) n)
-  lemma-insert-same         (x ∷ xs) (suc i) a p = reflMaybe ∷-cong lemma-insert-same xs i a p
-
-open Private public
+lemma-insert-same : {n : ℕ} {A : Set} → (m : FinMapMaybe n A) → (f : Fin n) → (a : A) → lookupM f m ≡ just a → m ≡ insert f a m
+lemma-insert-same         []       ()      a p
+lemma-insert-same {suc n} (x ∷ xs) zero    a p = cong (flip _∷_ xs) p
+lemma-insert-same         (x ∷ xs) (suc i) a p = cong (_∷_ x) (lemma-insert-same xs i a p)
 
 lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → lookupM {A} i empty ≡ nothing
 lemma-lookupM-empty zero    = refl

@@ -31,25 +31,13 @@ open CheckInsert (decSetoid deq)
 import BFF
 open BFF.VecBFF Carrier deq using (assoc ; enumerate ; denumerate ; bff)
 
-maybeSetoid-to-≡ : {A : Set} {x y : Setoid.Carrier (MaybeSetoid (≡-setoid A))} → Setoid._≈_ (MaybeSetoid (≡-setoid A)) x y → x ≡ y
-maybeSetoid-to-≡ (just refl) = refl
-maybeSetoid-to-≡ nothing = refl
-
-vecMaybeSetoid-to-≡ : {A : Set} {n : ℕ} {x y : Setoid.Carrier (vecIsSetoid (MaybeSetoid (≡-setoid A)) n)} → Setoid._≈_ (vecIsSetoid (MaybeSetoid (≡-setoid A)) n) x y → x ≡ y
-vecMaybeSetoid-to-≡ VecEq.[]-cong        = refl
-vecMaybeSetoid-to-≡ (p₁ VecEq.∷-cong p₂) = cong₂ _∷_ (maybeSetoid-to-≡ p₁) (vecMaybeSetoid-to-≡ p₂)
-
-maybeVecMaybeSetoid-to-≡ : {A : Set} {n : ℕ} {x y : Setoid.Carrier (MaybeSetoid (vecIsSetoid (MaybeSetoid (≡-setoid A)) n))} → Setoid._≈_ (MaybeSetoid (vecIsSetoid (MaybeSetoid (≡-setoid A)) n)) x y → x ≡ y
-maybeVecMaybeSetoid-to-≡ (just p) rewrite vecMaybeSetoid-to-≡ p = refl
-maybeVecMaybeSetoid-to-≡ nothing = refl
-
 lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
   (assoc is′ (map f is′) >>= checkInsert i (f i))
     ≡⟨ cong (λ m → m >>= checkInsert i (f i)) (lemma-1 f is′) ⟩
   checkInsert i (f i) (restrict f (toList is′))
-    ≡⟨ maybeVecMaybeSetoid-to-≡ (lemma-checkInsert-restrict f i (toList is′)) ⟩
+    ≡⟨ lemma-checkInsert-restrict f i (toList is′) ⟩
   just (restrict f (toList (i ∷ is′))) ∎
 
 lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → lookupM i h ≡ just x

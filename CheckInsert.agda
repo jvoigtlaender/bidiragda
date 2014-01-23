@@ -58,16 +58,10 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') with deq x x'
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
-lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → Setoid._≈_ (MaybeSetoid (vecIsSetoid (MaybeSetoid A.setoid) n)) (checkInsert i (f i) (restrict f is)) (just (restrict f (i ∷ is)))
+lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
-lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = MaybeEq.just (lemma-insert-same _ i (f i) (begin
-  lookupM i (restrict f is)
-    ≡⟨ p ⟩
-  just x
-    ≈⟨ MaybeEq.just (Setoid.sym A.setoid fi≈x) ⟩
-  just (f i) ∎))
-  where open EqR (MaybeSetoid A.setoid)
-lemma-checkInsert-restrict f i is | ._ | new _ = Setoid.refl (MaybeSetoid (vecIsSetoid (MaybeSetoid A.setoid) _))
+lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = cong just (lemma-insert-same _ i (f i) (trans p (cong just (sym (lemma-lookupM-restrict i f is x p)))))
+lemma-checkInsert-restrict f i is | ._ | new _ = refl
 lemma-checkInsert-restrict f i is | ._ | wrong x fi≉x p = contradiction (IsPreorder.reflexive (Setoid.isPreorder A.setoid) (lemma-lookupM-restrict i f is x p)) fi≉x
 
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
