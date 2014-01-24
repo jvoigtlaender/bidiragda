@@ -7,7 +7,7 @@ open import Data.Maybe using (Maybe ; just ; nothing)
 open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Product using (_×_ ; _,_)
 open import Data.Vec using (Vec ; toList ; fromList ; map) renaming ([] to []V ; _∷_ to _∷V_)
-open import Function using (_∘_)
+open import Function using (_∘_ ; id)
 import Level
 open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans)
@@ -23,7 +23,7 @@ just-injective : {A : Set} → {x y : A} → Maybe.just x ≡ Maybe.just y → x
 just-injective refl = refl
 
 length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) ≡ n
-length-replicate zero       = refl
+length-replicate zero    = refl
 length-replicate (suc n) = cong suc (length-replicate n)
 
 map-just-injective : {A : Set} {n : ℕ} {xs ys : Vec A n} →
@@ -45,6 +45,15 @@ mapMV-cong f≗g (x ∷V xs) | nothing | .nothing | refl = refl
 mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (just ∘ f) v ≡ just (map f v)
 mapMV-purity f []V = refl
 mapMV-purity f (x ∷V xs) rewrite mapMV-purity f xs = refl
+
+sequenceV : {A : Set} {n : ℕ} → Vec (Maybe A) n → Maybe (Vec A n)
+sequenceV = mapMV id
+
+sequence-map : {A B : Set} {n : ℕ} → (f : A → Maybe B) → sequenceV {n = n} ∘ map f ≗ mapMV f
+sequence-map f []V = refl
+sequence-map f (x ∷V xs) with f x
+sequence-map f (x ∷V xs) | just y = cong (_<$>_ (_∷V_ y)) (sequence-map f xs)
+sequence-map f (x ∷V xs) | nothing = refl
 
 subst-cong : {A : Set} → (T : A → Set) → {g : A → A} → {a b : A} → (f : {c : A} → T c → T (g c)) → (p : a ≡ b) →
              f ∘ subst T p ≗ subst T (cong g p) ∘ f

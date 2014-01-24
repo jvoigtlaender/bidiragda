@@ -22,7 +22,7 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
-open import Generic using (just-injective ; map-just-injective ; mapMV ; mapMV-cong ; mapMV-purity)
+open import Generic using (just-injective ; map-just-injective ; mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map)
 open import FinMap
 import CheckInsert
 open CheckInsert Carrier deq
@@ -130,46 +130,88 @@ theorem-1 get s = begin
           h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupVec)
 
 
-lemma-<$>-just : {A B : Set} {f : A → B} {b : B} {ma : Maybe A} → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
-lemma-<$>-just {ma = just x}  f<$>ma≡just-b = x , refl
-lemma-<$>-just {ma = nothing} ()
+lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
+lemma-<$>-just (just x) f<$>ma≡just-b = x , refl
+lemma-<$>-just nothing  ()
 
-{-
-lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMap n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map just (map (flip lookup (union h h')) is) ≡ map (flip lookupM h) is
+lemma-union-not-used : {m n : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMapMaybe n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map (flip lookupM (union h h')) is ≡ map (flip lookupM h) is
 lemma-union-not-used h h' []        p = refl
 lemma-union-not-used h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
-      just (lookup i (union h h'))
-        ≡⟨ cong just (lookup∘tabulate (λ j → maybe′ id (lookup j h') (lookupM j h)) i) ⟩
-      just (maybe′ id (lookup i h') (lookupM i h))
-        ≡⟨ cong just (cong (maybe′ id (lookup i h')) px) ⟩
-      just (maybe′ id (lookup i h') (just x))
+      lookupM i (union h h')
+        ≡⟨ lookup∘tabulate (λ j → maybe′ just (lookupM j h') (lookupM j h)) i ⟩
+      maybe′ just (lookupM i h') (lookupM i h)
+        ≡⟨ cong (maybe′ just (lookupM i h')) px ⟩
+      maybe′ just (lookupM i h') (just x)
         ≡⟨ sym px ⟩
       lookupM i h ∎)
   (lemma-union-not-used h h' is' p')
 
+lemma->>=-just : {A B : Set} (ma : Maybe A) {f : A → Maybe B} {b : B} → (ma >>= f) ≡ just b → ∃ λ a → ma ≡ just a
+lemma->>=-just (just a) p = a , refl
+lemma->>=-just nothing  ()
+
+lemma-mapMV-just : {A B : Set} {n : ℕ} {f : A → Maybe B} {s : Vec A n} {v : Vec B n} → mapMV f s ≡ just v → All (λ x → ∃ λ y → f x ≡ just y) (toList s)
+lemma-mapMV-just         {s = []}     p = Data.List.All.[]
+lemma-mapMV-just {f = f} {s = x ∷ xs} p with f x | inspect f x
+lemma-mapMV-just         {s = x ∷ xs} () | nothing | _
+lemma-mapMV-just {f = f} {s = x ∷ xs} p  | just y  | [ py ] with mapMV f xs | inspect (mapMV f) xs
+lemma-mapMV-just         {s = x ∷ xs} () | just y  | [ py ] | nothing | _
+lemma-mapMV-just         {s = x ∷ xs} p  | just y  | [ py ] | just ys | [ pys ] = (y , py) Data.List.All.∷ (lemma-mapMV-just pys)
+
+lemma-just-sequence : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map just v) ≡ just v
+lemma-just-sequence [] = refl
+lemma-just-sequence (x ∷ xs) rewrite lemma-just-sequence xs = refl
+
+lemma-mapM-successful : {A B : Set} {f : A → Maybe B} {n : ℕ} → (v : Vec A n) → {r : Vec B n} → mapMV f v ≡ just r → ∃ λ w → map f v ≡ map just w
+lemma-mapM-successful         []      p = [] , refl
+lemma-mapM-successful {f = f} (x ∷ xs) p with f x | mapMV f xs | inspect (mapMV f) xs
+lemma-mapM-successful         (x ∷ xs) () | nothing | _ | _
+lemma-mapM-successful         (x ∷ xs) () | just y | nothing | _
+lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] with lemma-mapM-successful xs p′
+lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] | w , pw = y ∷ w , cong (_∷_ (just y)) pw
+
+
+lemma-get-mapMV : {A B : Set} {f : A → Maybe B} {n : ℕ} {v : Vec A n} {r : Vec B n} → mapMV f v ≡ just r → {getlen : ℕ → ℕ} (get : get-type getlen) → get <$> mapMV f v ≡ mapMV f (get v)
+lemma-get-mapMV {f = f} {v = v} p get = let w , pw = lemma-mapM-successful v p in begin
+  get <$> mapMV f v
+    ≡⟨ cong (_<$>_ get) (sym (sequence-map f v)) ⟩
+  get <$> (sequenceV (map f v))
+    ≡⟨ cong (_<$>_ get ∘ sequenceV) pw ⟩
+  get <$> (sequenceV (map just w))
+    ≡⟨ cong (_<$>_ get) (lemma-just-sequence w) ⟩
+  get <$> just w
+    ≡⟨ sym (lemma-just-sequence (get w)) ⟩
+  sequenceV (map just (get w))
+    ≡⟨ cong sequenceV (sym (free-theorem get just w)) ⟩
+  sequenceV (get (map just w))
+    ≡⟨ cong (sequenceV ∘ get) (sym pw) ⟩
+  sequenceV (get (map f v))
+    ≡⟨ cong sequenceV (free-theorem get f v) ⟩
+  sequenceV (map f (get v))
+    ≡⟨ sequence-map f (get v) ⟩
+  mapMV f (get v) ∎
+
 theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → get u ≡ v
-theorem-2 get v s u p with lemma-<$>-just (proj₂ (lemma-<$>-just p))
-theorem-2 get v s u p | h , ph = begin
-  get u
-    ≡⟨ just-injective (begin
-      get <$> (just u)
-        ≡⟨ cong (_<$>_ get) (sym p) ⟩
-      get <$> (bff get s v)
-        ≡⟨ cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
-      get <$> (h′↦r <$> (h↦h′ <$> just h)) ∎) ⟩
-  get (map (flip lookup (h↦h′ h)) s′)
-    ≡⟨ free-theorem get (flip lookup (h↦h′ h)) s′ ⟩
-  map (flip lookup (h↦h′ h)) (get s′)
-     ≡⟨ map-just-injective (begin
-       map just (map (flip lookup (union h g)) (get s′))
-         ≡⟨ lemma-union-not-used h g (get s′) (lemma-assoc-domain (get s′) v h ph) ⟩
-       map (flip lookupM h) (get s′)
-         ≡⟨ lemma-2 (get s′) v h ph ⟩
-       map just v
-         ∎) ⟩
-  v ∎
+theorem-2 get v s u p with (lemma->>=-just ((flip union (delete-many (get (enumerate s)) (fromFunc (denumerate s)))) <$> (assoc (get (enumerate s)) v)) p)
+theorem-2 get v s u p | h′ , ph′ with (lemma-<$>-just (assoc (get (enumerate s)) v) ph′)
+theorem-2 get v s u p | h′ , ph′ | h , ph = just-injective (begin
+  get <$> (just u)
+    ≡⟨ cong (_<$>_ get) (sym p) ⟩
+  get <$> (bff get s v)
+    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
+  get <$> mapMV (flip lookupM (h↦h′ h)) s′
+    ≡⟨ lemma-get-mapMV (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) get ⟩
+  mapMV (flip lookupM (h↦h′ h)) (get s′)
+    ≡⟨ sym (sequence-map (flip lookupM (h↦h′ h)) (get s′)) ⟩
+  sequenceV (map (flip lookupM (h↦h′ h)) (get s′))
+    ≡⟨ cong sequenceV (lemma-union-not-used h g′ (get s′) (lemma-assoc-domain (get s′) v h ph)) ⟩
+  sequenceV (map (flip lookupM h) (get s′))
+    ≡⟨ cong sequenceV (lemma-2 (get s′) v h ph) ⟩
+  sequenceV (map just v)
+    ≡⟨ lemma-just-sequence v ⟩
+  just v ∎)
     where s′   = enumerate s
           g    = fromFunc (denumerate s)
-          h↦h′ = flip union g
-          h′↦r = flip map s′ ∘ flip lookupVec
--}
+          g′   = delete-many (get s′) g
+          h↦h′ = flip union g′
+          h′↦r = flip mapMV s′ ∘ flip lookupM
