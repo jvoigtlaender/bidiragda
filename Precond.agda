@@ -18,7 +18,7 @@ import Data.List.All
 open import Data.List.Any using (here ; there)
 open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Maybe using (just)
-open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
+open import Data.Product using (∃ ; _,_ ; proj₂)
 open import Function using (flip ; _∘_ ; id)
 open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
@@ -37,9 +37,6 @@ lemma-lookup-map-just : {n : ℕ} (f : Fin n) {A : Set} (v : Vec A n) → lookup
 lemma-lookup-map-just zero    (x ∷ xs) = refl
 lemma-lookup-map-just (suc f) (x ∷ xs) = lemma-lookup-map-just f xs
 
-fromMaybe : {A : Set} → A → Maybe A → A
-fromMaybe a ma = maybe′ id a ma
-
 lemma-maybe-just : {A : Set} → (a : A) → (ma : Maybe A) → maybe′ Maybe.just (just a) ma ≡ Maybe.just (maybe′ id a ma)
 lemma-maybe-just a (just x) = refl
 lemma-maybe-just a nothing = refl
@@ -52,16 +49,13 @@ lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
         ≡⟨ cong (flip (maybe′ just) (lookup f h)) (lemma-lookup-map-just f g) ⟩
       maybe′ just (just (lookup f g)) (lookup f h)
         ≡⟨ lemma-maybe-just (lookup f g) (lookup f h) ⟩
-      just (fromMaybe (lookup f g) (lookup f h)) ∎) ⟩
-  tabulate (λ f → just (fromMaybe (lookup f g) (lookup f h)))
-    ≡⟨ tabulate-∘ just (λ f → fromMaybe (lookup f g) (lookup f h)) ⟩
-  map just (tabulate (λ f → fromMaybe (lookup f g) (lookup f h))) ∎)
-lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (p Data.List.All.∷ ps) = _ , (begin
+      just (maybe′ id (lookup f g) (lookup f h)) ∎) ⟩
+  tabulate (λ f → just (maybe′ id (lookup f g) (lookup f h)))
+    ≡⟨ tabulate-∘ just (λ f → maybe′ id (lookup f g) (lookup f h)) ⟩
+  map just (tabulate (λ f → maybe′ id (lookup f g) (lookup f h))) ∎)
+lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Data.List.All.∷ ps) = _ , (begin
   union h (delete i (delete-many is (map just g)))
-    ≡⟨ lemma-tabulate-∘ (λ f → (begin
-      maybe′ just (lookupM f (delete i (delete-many is (map just g)))) (lookup f h)
-        ≡⟨ inner f ⟩
-      maybe′ just (lookupM f (delete-many is (map just g))) (lookup f h) ∎)) ⟩
+    ≡⟨ lemma-tabulate-∘ inner ⟩
   union h (delete-many is (map just g))
     ≡⟨ proj₂ (lemma-union-delete-fromFunc ps) ⟩
   map just _ ∎)
@@ -69,9 +63,9 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (p Data.List
         inner f with f ≟ i
         inner .i | yes refl = begin
           maybe′ just (lookupM i (delete i (delete-many is (map just g)))) (lookup i h)
-            ≡⟨ cong (maybe′ just _) (proj₂ p) ⟩
-          just (proj₁ p)
-            ≡⟨ cong (maybe′ just _) (sym (proj₂ p)) ⟩
+            ≡⟨ cong (maybe′ just _) px ⟩
+          just x
+            ≡⟨ cong (maybe′ just _) (sym px) ⟩
           maybe′ just (lookupM i (delete-many is (map just g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
 

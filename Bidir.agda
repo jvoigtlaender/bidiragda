@@ -22,7 +22,7 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
-open import Generic using (just-injective ; map-just-injective ; mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map)
+open import Generic using (just-injective ; mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map)
 open import FinMap
 import CheckInsert
 open CheckInsert Carrier deq
@@ -149,14 +149,6 @@ lemma-union-not-used h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong�
 lemma->>=-just : {A B : Set} (ma : Maybe A) {f : A → Maybe B} {b : B} → (ma >>= f) ≡ just b → ∃ λ a → ma ≡ just a
 lemma->>=-just (just a) p = a , refl
 lemma->>=-just nothing  ()
-
-lemma-mapMV-just : {A B : Set} {n : ℕ} {f : A → Maybe B} {s : Vec A n} {v : Vec B n} → mapMV f s ≡ just v → All (λ x → ∃ λ y → f x ≡ just y) (toList s)
-lemma-mapMV-just         {s = []}     p = Data.List.All.[]
-lemma-mapMV-just {f = f} {s = x ∷ xs} p with f x | inspect f x
-lemma-mapMV-just         {s = x ∷ xs} () | nothing | _
-lemma-mapMV-just {f = f} {s = x ∷ xs} p  | just y  | [ py ] with mapMV f xs | inspect (mapMV f) xs
-lemma-mapMV-just         {s = x ∷ xs} () | just y  | [ py ] | nothing | _
-lemma-mapMV-just         {s = x ∷ xs} p  | just y  | [ py ] | just ys | [ pys ] = (y , py) Data.List.All.∷ (lemma-mapMV-just pys)
 
 lemma-just-sequence : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map just v) ≡ just v
 lemma-just-sequence [] = refl
