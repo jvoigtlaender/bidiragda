@@ -2,7 +2,7 @@ module BFF where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
-import Level
+open import Level using () renaming (zero to ℓ₀)
 import Category.Monad
 import Category.Functor
 open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
@@ -11,15 +11,16 @@ open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Binary.Core using (Decidable ; _≡_)
+open import Relation.Binary using (DecSetoid ; module DecSetoid)
 
 open import FinMap
 import CheckInsert
 import FreeTheorems
 
-module VecBFF (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
+module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open FreeTheorems.VecVec public using (get-type)
-  open CheckInsert Carrier deq
+  open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
+  open CheckInsert A
 
   assoc : {n m : ℕ} → Vec (Fin n) m → Vec Carrier m → Maybe (FinMapMaybe n Carrier)
   assoc []V       []V       = just empty

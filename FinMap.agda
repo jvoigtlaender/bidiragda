@@ -1,21 +1,25 @@
 module FinMap where
 
+open import Level using () renaming (zero to ℓ₀)
 open import Data.Nat using (ℕ ; zero ; suc)
-open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
+open import Data.Maybe using (Maybe ; just ; nothing ; maybe′) renaming (setoid to MaybeEq)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Props using (_≟_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; _[_]≔_ ; replicate ; tabulate ; foldr) renaming (lookup to lookupVec ; map to mapV)
+open import Data.Vec.Equality using ()
+open Data.Vec.Equality.Equality using (_∷-cong_)
 open import Data.Vec.Properties using (lookup∘tabulate)
 open import Data.List using (List ; [] ; _∷_ ; map ; zip)
 open import Data.Product using (_×_ ; _,_)
 open import Function using (id ; _∘_ ; flip ; const)
 open import Relation.Nullary using (yes ; no)
 open import Relation.Nullary.Negation using (contradiction)
+open import Relation.Binary using (Setoid ; module Setoid)
 open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-open import Generic using (just-injective)
+open import Generic using (just-injective ; vecIsSetoid)
 
 FinMapMaybe : ℕ → Set → Set
 FinMapMaybe n A = Vec (Maybe A) n
@@ -60,10 +64,10 @@ partialize = mapV just
 lemma-just≢nothing : {A Whatever : Set} {a : A} {ma : Maybe A} → ma ≡ just a → ma ≡ nothing  → Whatever
 lemma-just≢nothing refl ()
 
-lemma-insert-same : {τ : Set} {n : ℕ} → (m : FinMapMaybe n τ) → (f : Fin n) → (a : τ) → lookupM f m ≡ just a → m ≡ insert f a m
-lemma-insert-same []               ()      a p
-lemma-insert-same (.(just a) ∷ xs) zero    a refl = refl
-lemma-insert-same (x ∷ xs)         (suc i) a p    = cong (_∷_ x) (lemma-insert-same xs i a p)
+lemma-insert-same : {n : ℕ} {A : Set} → (m : FinMapMaybe n A) → (f : Fin n) → (a : A) → lookupM f m ≡ just a → m ≡ insert f a m
+lemma-insert-same         []       ()      a p
+lemma-insert-same {suc n} (x ∷ xs) zero    a p = cong (flip _∷_ xs) p
+lemma-insert-same         (x ∷ xs) (suc i) a p = cong (_∷_ x) (lemma-insert-same xs i a p)
 
 lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → lookupM {A} i empty ≡ nothing
 lemma-lookupM-empty zero    = refl

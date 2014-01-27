@@ -17,16 +17,16 @@ open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Maybe using (just)
 open import Data.Product using (∃ ; _,_)
 open import Function using (flip ; _∘_)
-open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym)
+open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym ; decSetoid)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
 open import FinMap using (FinMap ; FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty)
 import CheckInsert
-open CheckInsert Carrier deq using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
+open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF
 import Bidir
 
-open BFF.VecBFF Carrier deq using (get-type ; assoc ; enumerate ; denumerate ; bff)
+open BFF.VecBFF (decSetoid deq) using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
 assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
 assoc-enough get s v (h , p) = u , cong (_<$>_ (flip map s′ ∘ flip lookup) ∘ (_<$>_ (flip union g))) p
