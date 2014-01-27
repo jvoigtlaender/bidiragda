@@ -14,6 +14,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary using (DecSetoid ; module DecSetoid)
 
 open import FinMap
+open import Generic using (mapMV)
 import CheckInsert
 import FreeTheorems
 
@@ -34,7 +35,9 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
 
   bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
   bff get s v = let s′ = enumerate s
+                    t′ = get s′
                     g  = fromFunc (denumerate s)
-                    h  = assoc (get s′) v
-                    h′ = (flip union g) <$> h
-                in (flip mapV s′ ∘ flip lookupV) <$> h′
+                    g′ = delete-many t′ g
+                    h  = assoc t′ v
+                    h′ = (flip union g′) <$> h
+                in h′ >>= flip mapMV s′ ∘ flip lookupV

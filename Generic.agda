@@ -8,7 +8,7 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Product using (_×_ ; _,_)
 open import Data.Vec using (Vec ; toList ; fromList ; map) renaming ([] to []V ; _∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
-open import Function using (_∘_)
+open import Function using (_∘_ ; id)
 open import Level using () renaming (zero to ℓ₀)
 open import Relation.Binary using (Setoid ; module Setoid)
 open import Relation.Binary.Core using (_≡_ ; refl)
@@ -18,22 +18,12 @@ open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; 
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 
-∷-injective : {A : Set} {n : ℕ} {x y : A} {xs ys : Vec A n} →
-              (x ∷V xs) ≡ (y ∷V ys) → x ≡ y × xs ≡ ys
-∷-injective refl = refl , refl
-
 just-injective : {A : Set} → {x y : A} → Maybe.just x ≡ Maybe.just y → x ≡ y
 just-injective refl = refl
 
 length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) ≡ n
-length-replicate zero       = refl
+length-replicate zero    = refl
 length-replicate (suc n) = cong suc (length-replicate n)
-
-map-just-injective : {A : Set} {n : ℕ} {xs ys : Vec A n} →
-                     map Maybe.just xs ≡ map Maybe.just ys → xs ≡ ys
-map-just-injective {xs = []V}      {ys = []V}       p  = refl
-map-just-injective {xs = x ∷V xs′} {ys = y ∷V ys′}  p with ∷-injective p
-map-just-injective {xs = x ∷V xs′} {ys = .x ∷V ys′} p | refl , p′ = cong (_∷V_ x) (map-just-injective p′)
 
 mapMV : {A B : Set} {n : ℕ} → (A → Maybe B) → Vec A n → Maybe (Vec B n)
 mapMV f []V = just []V
@@ -56,6 +46,15 @@ maybeEq-from-≡ {a = nothing} {b = .nothing}  refl = nothing
 maybeEq-to-≡ : {A : Set} {a b : Maybe A} → Setoid._≈_ (MaybeEq (PropEq A)) a b → Setoid._≈_ (PropEq (Maybe A)) a b
 maybeEq-to-≡ (just refl) = refl
 maybeEq-to-≡ nothing     = refl
+
+sequenceV : {A : Set} {n : ℕ} → Vec (Maybe A) n → Maybe (Vec A n)
+sequenceV = mapMV id
+
+sequence-map : {A B : Set} {n : ℕ} → (f : A → Maybe B) → sequenceV {n = n} ∘ map f ≗ mapMV f
+sequence-map f []V = refl
+sequence-map f (x ∷V xs) with f x
+sequence-map f (x ∷V xs) | just y = cong (_<$>_ (_∷V_ y)) (sequence-map f xs)
+sequence-map f (x ∷V xs) | nothing = refl
 
 subst-cong : {A : Set} → (T : A → Set) → {g : A → A} → {a b : A} → (f : {c : A} → T c → T (g c)) → (p : a ≡ b) →
              f ∘ subst T p ≗ subst T (cong g p) ∘ f
