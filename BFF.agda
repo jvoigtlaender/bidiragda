@@ -11,7 +11,11 @@ open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Binary using (DecSetoid ; module DecSetoid)
+open import Function.Equality using (_⟶_ ; _⟨$⟩_)
+open import Function.Injection using (module Injection) renaming (Injection to _↪_)
+open import Relation.Binary using (Setoid ; DecSetoid ; module DecSetoid)
+open import Relation.Binary.PropositionalEquality using () renaming (setoid to EqSetoid)
+open Injection using (to)
 
 open import FinMap
 open import Generic using (mapMV)
@@ -34,6 +38,22 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate = flip lookupV
 
   bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
+  bff get s v = let s′ = enumerate s
+                    t′ = get s′
+                    g  = fromFunc (denumerate s)
+                    g′ = delete-many t′ g
+                    h  = assoc t′ v
+                    h′ = (flip union g′) <$> h
+                in h′ >>= flip mapMV s′ ∘ flip lookupV
+
+module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
+  open FreeTheorems.PartialVecVec public using (get-type)
+  open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
+  open CheckInsert A
+
+  open VecBFF A public using (assoc ; enumerate ; denumerate)
+
+  bff : {I : Setoid ℓ₀ ℓ₀} {gl₁ : I ↪ (EqSetoid ℕ)} {gl₂ : I ⟶ EqSetoid ℕ} → get-type gl₁ gl₂ → ({i : Setoid.Carrier I} → Vec Carrier (to gl₁ ⟨$⟩ i) → Vec Carrier (gl₂ ⟨$⟩ i) → Maybe (Vec Carrier (to gl₁ ⟨$⟩ i)))
   bff get s v = let s′ = enumerate s
                     t′ = get s′
                     g  = fromFunc (denumerate s)
