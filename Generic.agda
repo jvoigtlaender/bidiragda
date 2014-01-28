@@ -76,8 +76,8 @@ toList-subst : {A : Set} → {n m : ℕ} (v : Vec A n) → (p : n ≡ m) →
                toList (subst (Vec A) p v) ≡ toList v
 toList-subst v refl = refl
 
-vecIsISetoid : Setoid ℓ₀ ℓ₀ → ISetoid ℕ ℓ₀ ℓ₀
-vecIsISetoid S = record
+VecISetoid : Setoid ℓ₀ ℓ₀ → ISetoid ℕ ℓ₀ ℓ₀
+VecISetoid S = record
   { Carrier = Vec (Setoid.Carrier S)
   ; _≈_ = λ x → S VecEq.≈ x
   ; isEquivalence = record
@@ -85,7 +85,3 @@ vecIsISetoid S = record
     ; sym = VecEq.sym S
     ; trans = VecEq.trans S }
   }
-
-
-vecIsSetoid : Setoid ℓ₀ ℓ₀ → ℕ → Setoid ℓ₀ ℓ₀
-vecIsSetoid S n = (vecIsISetoid S) at n

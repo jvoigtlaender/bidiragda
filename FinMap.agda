@@ -19,7 +19,7 @@ open import Relation.Binary.Core using (_≡_ ; refl ; _≢_)
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; _≗_ ; trans ; cong₂)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 
-open import Generic using (just-injective ; vecIsSetoid)
+open import Generic using (just-injective)
 
 FinMapMaybe : ℕ → Set → Set
 FinMapMaybe n A = Vec (Maybe A) n

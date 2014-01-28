@@ -18,7 +18,6 @@ import Relation.Binary.EqReasoning as EqR
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans)
 
 open import FinMap
-open import Generic using (vecIsSetoid)
 
 private
   open module A = DecSetoid A using (Carrier ; _≈_) renaming (_≟_ to deq)
