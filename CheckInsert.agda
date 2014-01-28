@@ -12,7 +12,7 @@ open import Data.Vec using () renaming (_∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
-open import Relation.Binary using (Setoid ; IsPreorder ; module DecSetoid)
+open import Relation.Binary using (Setoid ; module DecSetoid)
 open import Relation.Binary.Core using (refl ; _≡_ ; _≢_)
 import Relation.Binary.EqReasoning as EqR
 open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; [_] ; trans)
@@ -61,7 +61,7 @@ lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin 
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
 lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = cong just (lemma-insert-same _ i (f i) (trans p (cong just (sym (lemma-lookupM-restrict i f is x p)))))
 lemma-checkInsert-restrict f i is | ._ | new _ = refl
-lemma-checkInsert-restrict f i is | ._ | wrong x fi≉x p = contradiction (IsPreorder.reflexive (Setoid.isPreorder A.setoid) (lemma-lookupM-restrict i f is x p)) fi≉x
+lemma-checkInsert-restrict f i is | ._ | wrong x fi≉x p = contradiction (Setoid.reflexive A.setoid (lemma-lookupM-restrict i f is x p)) fi≉x
 
 lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
 lemma-lookupM-checkInsert i j x y h h' pl ph' with checkInsert j y h | insertionresult j y h
