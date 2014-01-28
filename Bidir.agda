@@ -25,7 +25,7 @@ import Relation.Binary.EqReasoning as EqR
 
 import FreeTheorems
 open FreeTheorems.VecVec using (get-type ; free-theorem)
-open import Generic using (just-injective ; vecIsSetoid ; mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map)
+open import Generic using (vecIsSetoid ; mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map)
 open import FinMap
 import CheckInsert
 open CheckInsert A
@@ -169,10 +169,6 @@ lemma-union-not-used h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong�
       lookupM i h ∎)
   (lemma-union-not-used h h' is' p')
   where open ≡-Reasoning
-
-map-just-≈-injective : {n : ℕ} {x y : Vec Carrier n} → Setoid._≈_ (vecIsSetoid (MaybeSetoid A.setoid) n) (map just x) (map just y) → Setoid._≈_ (vecIsSetoid A.setoid n) x y
-map-just-≈-injective {x = []}    {y = []}    VecEq.[]-cong              = VecEq.[]-cong
-map-just-≈-injective {x = _ ∷ _} {y = _ ∷ _} (just x≈y VecEq.∷-cong ps) = x≈y VecEq.∷-cong map-just-≈-injective ps
 
 lemma->>=-just : {A B : Set} (ma : Maybe A) {f : A → Maybe B} {b : B} → (ma >>= f) ≡ just b → ∃ λ a → ma ≡ just a
 lemma->>=-just (just a) p = a , refl
