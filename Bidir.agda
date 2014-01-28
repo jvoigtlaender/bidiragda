@@ -32,17 +32,18 @@ import CheckInsert
 open CheckInsert A
 import BFF
 open BFF.VecBFF A using (assoc ; enumerate ; denumerate ; bff)
+open Setoid using () renaming (_≈_ to _∋_≈_)
 open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
 
 module SetoidReasoning where
  infix 1 begin⟨_⟩_
  infixr 2 _≈⟨_⟩_ _≡⟨_⟩_
  infix 2 _∎
- begin⟨_⟩_ : (X : Setoid ℓ₀ ℓ₀) → {x y : Setoid.Carrier X} → EqR._IsRelatedTo_ X x y → Setoid._≈_ X x y
+ begin⟨_⟩_ : (X : Setoid ℓ₀ ℓ₀) → {x y : Setoid.Carrier X} → EqR._IsRelatedTo_ X x y → X ∋ x ≈ y
  begin⟨_⟩_ X p = EqR.begin_ X p
  _∎ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → EqR._IsRelatedTo_ X x x
  _∎ {X} = EqR._∎ X
- _≈⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → Setoid._≈_ X x y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
+ _≈⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → X ∋ x ≈ y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
  _≈⟨_⟩_ {X} = EqR._≈⟨_⟩_ X
 
  _≡⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → x ≡ y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
@@ -58,7 +59,7 @@ lemma-1 f (i ∷ is′) = begin
   just (restrict f (toList (i ∷ is′))) ∎
   where open ≡-Reasoning
 
-lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → Setoid._≈_ (MaybeSetoid A.setoid) (lookupM i h) (just x)
+lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → MaybeSetoid A.setoid ∋ lookupM i h ≈ just x
 lemma-lookupM-assoc i is x xs h    p with assoc is xs
 lemma-lookupM-assoc i is x xs h    () | nothing
 lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | insertionresult i x h'
@@ -94,7 +95,7 @@ lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (Data.List.All._∷_ (x' , pl) pj
   (trans (lemma-lookupM-checkInsert j i x' x h' h pl ph) (sym pl))
   (lemma-map-lookupM-assoc i x h h' ph js pj)
 
-lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → ISetoid._≈_ (VecISetoid (MaybeSetoid A.setoid)) (map (flip lookupM h) is) (map just v)
+lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → VecISetoid (MaybeSetoid A.setoid) at _ ∋ map (flip lookupM h) is ≈ map just v
 lemma-2 []       []       h p = ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))
 lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
@@ -209,14 +210,14 @@ lemma-get-mapMV {f = f} {v = v} p get = let w , pw = lemma-mapM-successful v p i
   mapMV f (get v) ∎
   where open ≡-Reasoning
 
-sequence-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → ISetoid._≈_ (VecISetoid (MaybeSetoid S)) m₁ m₂ → Setoid._≈_ (MaybeSetoid (VecISetoid S at n)) (sequenceV m₁) (sequenceV m₂)
+sequence-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → VecISetoid (MaybeSetoid S) at _ ∋ m₁ ≈ m₂ → MaybeSetoid (VecISetoid S at n) ∋ sequenceV m₁ ≈ sequenceV m₂
 sequence-cong {S}                                       VecEq.[]-cong = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) with sequenceV xs | sequenceV ys | sequence-cong xs≈ys
 sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) | just sxs | just sys | just p = MaybeEq.just (x≈y VecEq.∷-cong p)
 sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) | nothing | nothing | nothing = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 sequence-cong {S}                                       (nothing VecEq.∷-cong xs≈ys) = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 
-theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → ISetoid._≈_ (VecISetoid A.setoid) (get u) v
+theorem-2 : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (v : Vec Carrier (getlen m)) → (s u : Vec Carrier m) → bff get s v ≡ just u → VecISetoid A.setoid at _ ∋ get u ≈ v
 theorem-2 get v s u p with (lemma->>=-just ((flip union (delete-many (get (enumerate s)) (fromFunc (denumerate s)))) <$> (assoc (get (enumerate s)) v)) p)
 theorem-2 get v s u p | h′ , ph′ with (lemma-<$>-just (assoc (get (enumerate s)) v) ph′)
 theorem-2 get v s u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid (VecISetoid A.setoid at _) ⟩

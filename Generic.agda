@@ -15,6 +15,7 @@ open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans) renaming (setoid to PropEq)
 
+open Setoid using () renaming (_≈_ to _∋_≈_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 
@@ -39,11 +40,11 @@ mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → map
 mapMV-purity f []V = refl
 mapMV-purity f (x ∷V xs) rewrite mapMV-purity f xs = refl
 
-maybeEq-from-≡ : {A : Set} {a b : Maybe A} → Setoid._≈_ (PropEq (Maybe A)) a b → Setoid._≈_ (MaybeEq (PropEq A)) a b
+maybeEq-from-≡ : {A : Set} {a b : Maybe A} → a ≡ b → MaybeEq (PropEq A) ∋ a ≈ b
 maybeEq-from-≡ {a = just x}  {b = .(just x)} refl = just refl
 maybeEq-from-≡ {a = nothing} {b = .nothing}  refl = nothing
 
-maybeEq-to-≡ : {A : Set} {a b : Maybe A} → Setoid._≈_ (MaybeEq (PropEq A)) a b → Setoid._≈_ (PropEq (Maybe A)) a b
+maybeEq-to-≡ : {A : Set} {a b : Maybe A} → MaybeEq (PropEq A) ∋ a ≈ b → a ≡ b
 maybeEq-to-≡ (just refl) = refl
 maybeEq-to-≡ nothing     = refl
 
