@@ -37,8 +37,9 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : {I : Setoid ℓ₀ ℓ₀} {gl₁ : I ↪ (EqSetoid ℕ)} {gl₂ : I ⟶ EqSetoid ℕ} → get-type gl₁ gl₂ → ({i : Setoid.Carrier I} → Vec Carrier (to gl₁ ⟨$⟩ i) → Vec Carrier (gl₂ ⟨$⟩ i) → Maybe (Vec Carrier (to gl₁ ⟨$⟩ i)))
-  bff get s v = let s′ = enumerate s
+  bff : {I : Setoid ℓ₀ ℓ₀} → (gl₁ : I ↪ (EqSetoid ℕ)) → (gl₂ : I ⟶ EqSetoid ℕ) → get-type gl₁ gl₂ → ({i : Setoid.Carrier I} → Vec Carrier (to gl₁ ⟨$⟩ i) → Vec Carrier (gl₂ ⟨$⟩ i) → Maybe (Vec Carrier (to gl₁ ⟨$⟩ i)))
+  bff gl₁ gl₂ get s v =
+                let s′ = enumerate s
                     t′ = get s′
                     g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
@@ -54,4 +55,4 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open PartialVecBFF A public using (assoc ; enumerate ; denumerate)
 
   bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
-  bff {getlen} get s v = PartialVecBFF.bff A {_} {id↪} {≡-to-Π getlen} get {_} s v
+  bff {getlen} get s v = PartialVecBFF.bff A id↪ (≡-to-Π getlen) get {_} s v
