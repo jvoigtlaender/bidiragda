@@ -11,6 +11,8 @@ open import Relation.Binary.PropositionalEquality using (_≗_ ; cong) renaming 
 open import Relation.Binary using (Setoid)
 open Injection using (to)
 
+open import Generic using (≡-to-Π)
+
 module ListList where
   get-type : Set₁
   get-type = {A : Set} → List A → List A
@@ -36,9 +38,6 @@ module PartialVecVec where
     free-theorem : {I : Setoid ℓ₀ ℓ₀} → (gl₁ : I ↪ (EqSetoid ℕ)) → (gl₂ : I ⟶ (EqSetoid ℕ)) (get : get-type gl₁ gl₂)  → {α β : Set} → (f : α → β) → {i : Setoid.Carrier I} → get {_} {i} ∘ mapV f ≗ mapV f ∘ get
 
   open VecVec using () renaming (free-theorem-type to VecVec-free-theorem-type)
-
-  ≡-to-Π : {A B : Set} → (A → B) → EqSetoid A ⟶ EqSetoid B
-  ≡-to-Π f = record { _⟨$⟩_ = f; cong = cong f }
 
   VecVec-free-theorem : VecVec-free-theorem-type
   VecVec-free-theorem {getlen} get = free-theorem Function.Injection.id (≡-to-Π getlen) get

@@ -9,15 +9,19 @@ open import Data.Product using (_×_ ; _,_)
 open import Data.Vec using (Vec ; toList ; fromList ; map) renaming ([] to []V ; _∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Function using (_∘_ ; id)
+open import Function.Equality using (_⟶_)
 open import Level using () renaming (zero to ℓ₀)
 open import Relation.Binary using (Setoid ; module Setoid)
 open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
-open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans) renaming (setoid to PropEq)
+open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans) renaming (setoid to EqSetoid)
 
 open Setoid using () renaming (_≈_ to _∋_≈_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
+
+≡-to-Π : {A B : Set} → (A → B) → EqSetoid A ⟶ EqSetoid B
+≡-to-Π f = record { _⟨$⟩_ = f; cong = cong f }
 
 just-injective : {A : Set} → {x y : A} → Maybe.just x ≡ Maybe.just y → x ≡ y
 just-injective refl = refl
@@ -40,11 +44,11 @@ mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → map
 mapMV-purity f []V = refl
 mapMV-purity f (x ∷V xs) rewrite mapMV-purity f xs = refl
 
-maybeEq-from-≡ : {A : Set} {a b : Maybe A} → a ≡ b → MaybeEq (PropEq A) ∋ a ≈ b
+maybeEq-from-≡ : {A : Set} {a b : Maybe A} → a ≡ b → MaybeEq (EqSetoid A) ∋ a ≈ b
 maybeEq-from-≡ {a = just x}  {b = .(just x)} refl = just refl
 maybeEq-from-≡ {a = nothing} {b = .nothing}  refl = nothing
 
-maybeEq-to-≡ : {A : Set} {a b : Maybe A} → MaybeEq (PropEq A) ∋ a ≈ b → a ≡ b
+maybeEq-to-≡ : {A : Set} {a b : Maybe A} → MaybeEq (EqSetoid A) ∋ a ≈ b → a ≡ b
 maybeEq-to-≡ (just refl) = refl
 maybeEq-to-≡ nothing     = refl
 
