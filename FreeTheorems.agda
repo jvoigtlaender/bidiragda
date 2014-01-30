@@ -6,14 +6,13 @@ open import Data.Vec using (Vec) renaming (map to mapV)
 open import Function using (_∘_)
 open import Relation.Binary.PropositionalEquality using (_≗_)
 
+import GetTypes
+
 module ListList where
   get-type : Set₁
   get-type = {A : Set} → List A → List A
 
-  record Get : Set₁ where
-    field
-      get : {A : Set} → List A → List A
-      free-theorem : {α β : Set} → (f : α → β) → get ∘ map f ≗ map f ∘ get
+  open GetTypes.ListList public
 
   postulate
     free-theorem : (get : get-type) → {α β : Set} → (f : α → β) → get ∘ map f ≗ map f ∘ get
@@ -25,11 +24,7 @@ module VecVec where
   get-type : (ℕ → ℕ) → Set₁
   get-type getlen = {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
 
-  record Get : Set₁ where
-    field
-      getlen : ℕ → ℕ
-      get : {A : Set} {n : ℕ} → Vec A n → Vec A (getlen n)
-      free-theorem : {α β : Set} (f : α → β) {n : ℕ} → get {_} {n} ∘ mapV f ≗ mapV f ∘ get
+  open GetTypes.VecVec public
 
   postulate
     free-theorem : {getlen : ℕ → ℕ} → (get : get-type getlen) → {α β : Set} → (f : α → β) → {n : ℕ} → get {_} {n} ∘ mapV f ≗ mapV f ∘ get

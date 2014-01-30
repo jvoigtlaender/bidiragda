@@ -30,8 +30,8 @@ import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF
 open import Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain ; lemma-just-sequence)
-import FreeTheorems
-open FreeTheorems.VecVec using (Get ; module Get)
+import GetTypes
+open GetTypes.VecVec using (Get ; module Get)
 open BFF.VecBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-lookup-map-just : {n : ℕ} (f : Fin n) {A : Set} (v : Vec A n) → lookup f (map Maybe.just v) ≡ Maybe.just (lookup f v)

@@ -24,8 +24,8 @@ open import Relation.Binary.PropositionalEquality using (cong ; sym ; inspect ; 
 open import Relation.Binary using (Setoid ; module Setoid ; module DecSetoid)
 import Relation.Binary.EqReasoning as EqR
 
-import FreeTheorems
-open FreeTheorems.VecVec using (Get ; module Get)
+import GetTypes
+open GetTypes.VecVec using (Get ; module Get)
 open import Generic using (mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map ; VecISetoid)
 open import FinMap
 import CheckInsert

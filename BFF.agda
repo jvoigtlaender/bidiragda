@@ -16,10 +16,10 @@ open import Relation.Binary using (DecSetoid ; module DecSetoid)
 open import FinMap
 open import Generic using (mapMV)
 import CheckInsert
-import FreeTheorems
+import GetTypes
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open FreeTheorems.VecVec public using (Get)
+  open GetTypes.VecVec public using (Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
