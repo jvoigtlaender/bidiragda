@@ -13,8 +13,8 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open import Generic using (length-replicate ; subst-cong ; subst-fromList ; subst-subst ; toList-fromList ; toList-subst)
-open FreeTheorems.ListList using (get-type ; free-theorem)
-open FreeTheorems.VecVec using () renaming (get-type to getV-type)
+open FreeTheorems.ListList using (get-type ; free-theorem) renaming (Get to GetL)
+open FreeTheorems.VecVec using () renaming (get-type to getV-type ; Get to GetV)
 
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
