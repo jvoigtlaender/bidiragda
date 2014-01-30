@@ -6,7 +6,7 @@ open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin ; zero ; suc)
 open import Data.Fin.Props using (_≟_)
 open import Data.List using (List ; [] ; _∷_)
-import Level
+open import Level using () renaming (zero to ℓ₀)
 import Category.Monad
 import Category.Functor
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
@@ -20,7 +20,11 @@ open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Maybe using (just)
 open import Data.Product using (∃ ; _,_ ; proj₂)
 open import Function using (flip ; _∘_ ; id)
-open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym ; decSetoid)
+open import Function.Equality using (_⟶_ ; _⟨$⟩_)
+open import Function.Injection using (module Injection) renaming (Injection to _↪_)
+open Injection using (to)
+open import Relation.Binary using (Setoid)
+open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym ; decSetoid) renaming (setoid to EqSetoid)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 open import Relation.Nullary using (yes ; no)
 
@@ -31,7 +35,7 @@ open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; le
 import BFF
 open import Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain ; lemma-just-sequence)
 
-open BFF.VecBFF (decSetoid deq) using (get-type ; assoc ; enumerate ; denumerate ; bff)
+open BFF.PartialVecBFF (decSetoid deq) using (get-type ; assoc ; enumerate ; denumerate ; bff)
 
 lemma-lookup-map-just : {n : ℕ} (f : Fin n) {A : Set} (v : Vec A n) → lookup f (map Maybe.just v) ≡ Maybe.just (lookup f v)
 lemma-lookup-map-just zero    (x ∷ xs) = refl
@@ -69,9 +73,9 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Da
           maybe′ just (lookupM i (delete-many is (map just g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
 
-assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
-assoc-enough get s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
-  bff get s v
+assoc-enough : {I : Setoid ℓ₀ ℓ₀} → (gl₁ : I ↪ EqSetoid ℕ) → (gl₂ : I ⟶ EqSetoid ℕ) → (get : get-type gl₁ gl₂) → {i : Setoid.Carrier I} → (s : Vec Carrier (to gl₁ ⟨$⟩ i)) → (v : Vec Carrier (gl₂ ⟨$⟩ i)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff gl₁ gl₂ get s v ≡ just u
+assoc-enough gl₁ gl₂ get s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
+  bff gl₁ gl₂ get s v
     ≡⟨ cong (flip _>>=_ (flip mapMV s′ ∘ flip lookupM) ∘ _<$>_ (flip union g′)) p ⟩
   mapMV (flip lookupM (union h g′)) s′
     ≡⟨ sym (sequence-map (flip lookupM (union h g′)) s′) ⟩
