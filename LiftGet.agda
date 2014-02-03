@@ -2,7 +2,7 @@ module LiftGet where
 
 open import Data.Unit using (⊤ ; tt)
 open import Data.Nat using (ℕ ; suc)
-open import Data.Vec using (Vec ; toList ; fromList) renaming ([] to []V ; _∷_ to _∷V_)
+open import Data.Vec using (Vec ; toList ; fromList) renaming ([] to []V ; _∷_ to _∷V_ ; map to mapV)
 open import Data.List using (List ; [] ; _∷_ ; length ; replicate ; map)
 open import Data.List.Properties using (length-map)
 open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
@@ -13,11 +13,38 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 
 import FreeTheorems
 open import Generic using (length-replicate ; subst-cong ; subst-fromList ; subst-subst ; toList-fromList ; toList-subst)
-open FreeTheorems.ListList using (get-type ; free-theorem) renaming (Get to GetL)
-open FreeTheorems.VecVec using () renaming (get-type to getV-type ; Get to GetV)
+open FreeTheorems.ListList using (get-type) renaming (free-theorem to free-theoremL ; Get to GetL ; module Get to GetL)
+open FreeTheorems.VecVec using () renaming (get-type to getV-type ; Get to GetV ; module Get to GetV)
 
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
+
+fromList∘map : {α β : Set} → (f : α → β) → (l : List α) → fromList (map f l) ≡ subst (Vec β) (sym (length-map f l)) (mapV f (fromList l))
+fromList∘map f []       = refl
+fromList∘map f (x ∷ xs) rewrite fromList∘map f xs = trans (subst-cong (Vec _) (_∷V_ (f x)) (sym (length-map f xs)) (mapV f (fromList xs)))
+                                                          (cong (flip (subst (Vec _)) (f x ∷V mapV f (fromList xs))) (proof-irrelevance (cong suc (sym (length-map f xs)))
+                                                                                                                                        (sym (cong suc (length-map f xs)))))
+
+toList∘map : {α β : Set} {n : ℕ} → (f : α → β) → (v : Vec α n) → toList (mapV f v) ≡ map f (toList v)
+toList∘map f []V       = refl
+toList∘map f (x ∷V xs) = cong (_∷_ (f x)) (toList∘map f xs)
+
+GetV-to-GetL : GetV → GetL
+GetV-to-GetL getrecord = record { get = toList ∘ get ∘ fromList; free-theorem = ft }
+  where open GetV getrecord
+        ft : {α β : Set} → (f : α → β) → (xs : List α) → toList (get (fromList (map f xs))) ≡ map f (toList (get (fromList xs)))
+        ft f xs = begin
+          toList (get (fromList (map f xs)))
+            ≡⟨ cong (toList ∘ get) (fromList∘map f xs) ⟩
+          toList (get (subst (Vec _) (sym (length-map f xs)) (mapV f (fromList xs))))
+            ≡⟨ cong toList (subst-cong (Vec _) get (sym (length-map f xs)) (mapV f (fromList xs))) ⟩
+          toList (subst (Vec _) (cong getlen (sym (length-map f xs))) (get (mapV f (fromList xs))))
+            ≡⟨ toList-subst (get (mapV f (fromList xs))) (cong getlen (sym (length-map f xs))) ⟩
+          toList (get (mapV f (fromList xs)))
+            ≡⟨ cong toList (free-theorem f (fromList xs)) ⟩
+          toList (mapV f (get (fromList xs)))
+            ≡⟨ toList∘map f (get (fromList xs)) ⟩
+          map f (toList (get (fromList xs))) ∎
 
 getList-to-getlen : get-type → ℕ → ℕ
 getList-to-getlen get = length ∘ get ∘ flip replicate tt
@@ -31,7 +58,7 @@ getList-length get l = begin
   length (get l)
     ≡⟨ sym (length-map (const tt) (get l)) ⟩
   length (map (const tt) (get l))
-    ≡⟨ cong length (sym (free-theorem get (const tt) l)) ⟩
+    ≡⟨ cong length (sym (free-theoremL get (const tt) l)) ⟩
   length (get (map (const tt) l))
     ≡⟨ cong (length ∘ get) (replicate-length l) ⟩
   length (get (replicate (length l) tt)) ∎
