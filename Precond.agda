@@ -30,8 +30,9 @@ import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF
 open import Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain ; lemma-just-sequence)
-
-open BFF.VecBFF (decSetoid deq) using (get-type ; assoc ; enumerate ; denumerate ; bff)
+import GetTypes
+open GetTypes.VecVec using (Get ; module Get)
+open BFF.VecBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-lookup-map-just : {n : ℕ} (f : Fin n) {A : Set} (v : Vec A n) → lookup f (map Maybe.just v) ≡ Maybe.just (lookup f v)
 lemma-lookup-map-just zero    (x ∷ xs) = refl
@@ -69,9 +70,9 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Da
           maybe′ just (lookupM i (delete-many is (map just g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
 
-assoc-enough : {getlen : ℕ → ℕ} (get : get-type getlen) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (getlen m)) → ∃ (λ h → assoc (get (enumerate s)) v ≡ just h) → ∃ λ u → bff get s v ≡ just u
-assoc-enough get s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
-  bff get s v
+assoc-enough : (G : Get) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (Get.getlen G m)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G s v ≡ just u
+assoc-enough G s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
+  bff G s v
     ≡⟨ cong (flip _>>=_ (flip mapMV s′ ∘ flip lookupM) ∘ _<$>_ (flip union g′)) p ⟩
   mapMV (flip lookupM (union h g′)) s′
     ≡⟨ sym (sequence-map (flip lookupM (union h g′)) s′) ⟩
@@ -84,7 +85,8 @@ assoc-enough get s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-a
   sequenceV (map Maybe.just (map (flip lookup w) s′))
     ≡⟨ lemma-just-sequence (map (flip lookup w) s′) ⟩
   just (map (flip lookup w) s′) ∎)
-  where s′ = enumerate s
+  where open Get G
+        s′ = enumerate s
         g  = fromFunc (denumerate s)
         g′ = delete-many (get s′) g
 

@@ -4,6 +4,7 @@ module Everything where
 import Generic
 import FinMap
 import CheckInsert
+import GetTypes
 import FreeTheorems
 import BFF
 import Bidir

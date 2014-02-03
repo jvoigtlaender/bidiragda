@@ -2,22 +2,50 @@ module LiftGet where
 
 open import Data.Unit using (⊤ ; tt)
 open import Data.Nat using (ℕ ; suc)
-open import Data.Vec using (Vec ; toList ; fromList) renaming ([] to []V ; _∷_ to _∷V_)
+open import Data.Vec using (Vec ; toList ; fromList) renaming ([] to []V ; _∷_ to _∷V_ ; map to mapV)
 open import Data.List using (List ; [] ; _∷_ ; length ; replicate ; map)
 open import Data.List.Properties using (length-map)
 open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (_∘_ ; flip ; const)
 open import Relation.Binary.Core using (_≡_)
-open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; trans ; proof-irrelevance)
-open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
+open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; trans ; proof-irrelevance ; module ≡-Reasoning)
+open import Relation.Binary.HeterogeneousEquality using (module ≅-Reasoning ; _≅_ ; ≅-to-≡ ; ≡-subst-removable) renaming (refl to het-refl ; sym to het-sym ; cong to het-cong ; reflexive to het-reflexive)
 
 import FreeTheorems
 open import Generic using (length-replicate ; subst-cong ; subst-fromList ; subst-subst ; toList-fromList ; toList-subst)
-open FreeTheorems.ListList using (get-type ; free-theorem)
-open FreeTheorems.VecVec using () renaming (get-type to getV-type)
+open FreeTheorems.ListList using (get-type) renaming (free-theorem to free-theoremL ; Get to GetL ; module Get to GetL)
+open FreeTheorems.VecVec using () renaming (get-type to getV-type ; Get to GetV ; module Get to GetV)
 
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
+
+fromList∘map : {α β : Set} → (f : α → β) → (l : List α) → fromList (map f l) ≡ subst (Vec β) (sym (length-map f l)) (mapV f (fromList l))
+fromList∘map f []       = refl
+fromList∘map f (x ∷ xs) rewrite fromList∘map f xs = trans (subst-cong (Vec _) (_∷V_ (f x)) (sym (length-map f xs)) (mapV f (fromList xs)))
+                                                          (cong (flip (subst (Vec _)) (f x ∷V mapV f (fromList xs))) (proof-irrelevance (cong suc (sym (length-map f xs)))
+                                                                                                                                        (sym (cong suc (length-map f xs)))))
+
+toList∘map : {α β : Set} {n : ℕ} → (f : α → β) → (v : Vec α n) → toList (mapV f v) ≡ map f (toList v)
+toList∘map f []V       = refl
+toList∘map f (x ∷V xs) = cong (_∷_ (f x)) (toList∘map f xs)
+
+GetV-to-GetL : GetV → GetL
+GetV-to-GetL getrecord = record { get = toList ∘ get ∘ fromList; free-theorem = ft }
+  where open GetV getrecord
+        open ≡-Reasoning
+        ft : {α β : Set} → (f : α → β) → (xs : List α) → toList (get (fromList (map f xs))) ≡ map f (toList (get (fromList xs)))
+        ft f xs = begin
+          toList (get (fromList (map f xs)))
+            ≡⟨ cong (toList ∘ get) (fromList∘map f xs) ⟩
+          toList (get (subst (Vec _) (sym (length-map f xs)) (mapV f (fromList xs))))
+            ≡⟨ cong toList (subst-cong (Vec _) get (sym (length-map f xs)) (mapV f (fromList xs))) ⟩
+          toList (subst (Vec _) (cong getlen (sym (length-map f xs))) (get (mapV f (fromList xs))))
+            ≡⟨ toList-subst (get (mapV f (fromList xs))) (cong getlen (sym (length-map f xs))) ⟩
+          toList (get (mapV f (fromList xs)))
+            ≡⟨ cong toList (free-theorem f (fromList xs)) ⟩
+          toList (mapV f (get (fromList xs)))
+            ≡⟨ toList∘map f (get (fromList xs)) ⟩
+          map f (toList (get (fromList xs))) ∎
 
 getList-to-getlen : get-type → ℕ → ℕ
 getList-to-getlen get = length ∘ get ∘ flip replicate tt
@@ -31,10 +59,11 @@ getList-length get l = begin
   length (get l)
     ≡⟨ sym (length-map (const tt) (get l)) ⟩
   length (map (const tt) (get l))
-    ≡⟨ cong length (sym (free-theorem get (const tt) l)) ⟩
+    ≡⟨ cong length (sym (free-theoremL get (const tt) l)) ⟩
   length (get (map (const tt) l))
     ≡⟨ cong (length ∘ get) (replicate-length l) ⟩
   length (get (replicate (length l) tt)) ∎
+  where open ≡-Reasoning
 
 length-toList : {A : Set} {n : ℕ} → (v : Vec A n) → length (toList v) ≡ n
 length-toList []V = refl
@@ -47,6 +76,7 @@ getList-to-getVec-length-property get {_} {m} v = begin
     length (get (replicate (length (toList v)) tt))
       ≡⟨ cong (length ∘ get ∘ flip replicate tt) (length-toList v) ⟩
     length (get (replicate m tt)) ∎
+    where open ≡-Reasoning
 
 getList-to-getVec : get-type → ∃ λ (getlen : ℕ → ℕ) → (getV-type getlen)
 getList-to-getVec get = getlen , get'
@@ -54,6 +84,54 @@ getList-to-getVec get = getlen , get'
         getlen = getList-to-getlen get
         get' : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
         get' {C} v = subst (Vec C) (getList-to-getVec-length-property get v) (fromList (get (toList v)))
+
+ind-cong : {I : Set} → (X Y : I → Set) → (f : {i : I} → X i → Y i) → {i j : I} → (i ≡ j) → {x : X i} → {y : X j} → x ≅ y → f x ≅ f y
+ind-cong X Y f refl het-refl = het-refl
+
+private
+  module GetV-Implementation (getrecord : GetL) where
+
+    open GetL getrecord
+
+    getlen = length ∘ get ∘ flip replicate tt
+
+
+    length-property : {C : Set} {m : ℕ} → (s : Vec C m) → length (get (toList s)) ≡ getlen m
+    length-property {m = m} s = begin
+      length (get (toList s))
+        ≡⟨ sym (length-map (const tt) (get (toList s))) ⟩
+      length (map (const tt) (get (toList s)))
+        ≡⟨ cong length (sym (free-theorem (const tt) (toList s))) ⟩
+      length (get (map (const tt) (toList s)))
+        ≡⟨ cong (length ∘ get) (replicate-length (toList s)) ⟩
+      length (get (replicate (length (toList s)) tt))
+        ≡⟨ cong getlen (length-toList s) ⟩
+      getlen m ∎
+      where open ≡-Reasoning
+
+    getV : {C : Set} {m : ℕ} → Vec C m → Vec C (getlen m)
+    getV s = subst (Vec _) (length-property s) (fromList (get (toList s)))
+
+    ft : {α β : Set} (f : α → β) {n : ℕ} (v : Vec α n) → getV (mapV f v) ≡ mapV f (getV v)
+    ft f v = ≅-to-≡ (begin
+      subst (Vec _) (length-property (mapV f v)) (fromList (get (toList (mapV f v))))
+        ≅⟨ ≡-subst-removable (Vec _) (length-property (mapV f v)) (fromList (get (toList (mapV f v)))) ⟩
+      fromList (get (toList (mapV f v)))
+        ≅⟨ het-cong (fromList ∘ get) (het-reflexive (toList∘map f v)) ⟩
+      fromList (get (map f (toList v)))
+        ≅⟨ het-cong fromList (het-reflexive (free-theorem f (toList v))) ⟩
+      fromList (map f (get (toList v)))
+        ≡⟨ fromList∘map f (get (toList v)) ⟩
+      subst (Vec _) (sym (length-map f (get (toList v)))) (mapV f (fromList (get (toList v))))
+        ≅⟨ ≡-subst-removable (Vec _) (sym (length-map f (get (toList v)))) (mapV f (fromList (get (toList v)))) ⟩
+      mapV f (fromList (get (toList v)))
+        ≅⟨ ind-cong (Vec _) (Vec _) (mapV f) (length-property v) (het-sym (≡-subst-removable (Vec _) (length-property v) (fromList (get (toList v))))) ⟩
+      mapV f (subst (Vec _) (length-property v) (fromList (get (toList v)))) ∎)
+      where open ≅-Reasoning
+
+GetL-to-GetV : GetL → GetV
+GetL-to-GetV getrecord = record { getlen = getlen; get = getV; free-theorem = ft }
+  where open GetV-Implementation getrecord
 
 get-commut-1 : (get : get-type) {A : Set} → (l : List A) → fromList (get l) ≡ subst (Vec A) (sym (getList-length get l)) (proj₂ (getList-to-getVec get) (fromList l))
 get-commut-1 get {A} l = begin
@@ -66,7 +144,8 @@ get-commut-1 get {A} l = begin
   subst (Vec A) p' (subst (Vec A) p (fromList (get (toList (fromList l)))))
     ≡⟨ refl ⟩
   subst (Vec A) p' (proj₂ (getList-to-getVec get) (fromList l)) ∎
-    where p : length (get (toList (fromList l))) ≡ length (get (replicate (length l) tt))
+    where open ≡-Reasoning
+          p : length (get (toList (fromList l))) ≡ length (get (replicate (length l) tt))
           p = getList-to-getVec-length-property get (fromList l)
           p' : length (get (replicate (length l) tt)) ≡ length (get l)
           p' = sym (getList-length get l)
@@ -84,6 +163,7 @@ get-trafo-1 get {B} l = begin
   get (toList (fromList l))
     ≡⟨ cong get (toList-fromList l) ⟩
   get l ∎
+  where open ≡-Reasoning
 
 vec-len : {A : Set} {n : ℕ} → Vec A n → ℕ
 vec-len {_} {n} _ = n
@@ -98,6 +178,7 @@ fromList-toList {A} (x ∷V xs) = begin
   subst (Vec A) (cong suc (sym (length-toList xs))) (x ∷V xs)
     ≡⟨ cong (λ p →  subst (Vec A) p (x ∷V xs)) (proof-irrelevance (cong suc (sym (length-toList xs))) (sym (cong suc (length-toList xs)))) ⟩
   subst (Vec A) (sym (length-toList (x ∷V xs))) (x ∷V xs) ∎
+  where open ≡-Reasoning
 
 get-commut-2 : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → (toList ∘ get {B} {n}) ≗ (getVec-to-getList get) ∘ toList
 get-commut-2 getlen get {B} v = begin
@@ -108,6 +189,7 @@ get-commut-2 getlen get {B} v = begin
   toList (get (subst (Vec B) (sym (length-toList v)) v))
     ≡⟨ cong (toList ∘ get) (sym (fromList-toList v)) ⟩
   toList (get (fromList (toList v))) ∎
+  where open ≡-Reasoning
 
 get-trafo-2-getlen : (getlen : ℕ → ℕ) → (get : getV-type getlen) → proj₁ (getList-to-getVec (getVec-to-getList get)) ≗ getlen
 get-trafo-2-getlen getlen get n = begin
@@ -118,6 +200,7 @@ get-trafo-2-getlen getlen get n = begin
   vec-len (get (fromList (replicate n tt)))
     ≡⟨ cong getlen (length-replicate n) ⟩
   getlen n ∎
+  where open ≡-Reasoning
 
 get-trafo-2-get : (getlen : ℕ → ℕ) → (get : getV-type getlen) → {B : Set} {n : ℕ} → proj₂ (getList-to-getVec (getVec-to-getList get)) ≗ subst (Vec B) (sym (get-trafo-2-getlen getlen get n)) ∘ get
 get-trafo-2-get getlen get {B} {n} v = begin
@@ -136,7 +219,8 @@ get-trafo-2-get getlen get {B} {n} v = begin
   subst (Vec B) (trans (cong getlen (sym (length-toList v))) (trans p' p)) (get v)
     ≡⟨ cong (flip (subst (Vec B)) (get v)) (proof-irrelevance (trans (cong getlen (sym (length-toList v))) (trans p' p)) p'') ⟩
   subst (Vec B) p'' (get v) ∎
-    where n' : ℕ
+    where open ≡-Reasoning
+          n' : ℕ
           n' = length (toList (get (fromList (replicate n tt))))
           p : length (toList (get (fromList (toList v)))) ≡ n'
           p = getList-to-getVec-length-property (getVec-to-getList get) v

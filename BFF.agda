@@ -16,10 +16,10 @@ open import Relation.Binary using (DecSetoid ; module DecSetoid)
 open import FinMap
 open import Generic using (mapMV)
 import CheckInsert
-import FreeTheorems
+import GetTypes
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open FreeTheorems.VecVec public using (get-type)
+  open GetTypes.VecVec public using (Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
@@ -33,9 +33,9 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
-  bff get s v = let s′ = enumerate s
-                    t′ = get s′
+  bff : (G : Get) → ({n : ℕ} → Vec Carrier n → Vec Carrier (Get.getlen G n) → Maybe (Vec Carrier n))
+  bff G s v = let   s′ = enumerate s
+                    t′ = Get.get G s′
                     g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
                     h  = assoc t′ v
