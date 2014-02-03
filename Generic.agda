@@ -36,7 +36,7 @@ mapMV-cong {f = f} {g = g} f≗g (x ∷V xs) with f x | g x | f≗g x
 mapMV-cong f≗g (x ∷V xs) | just y | .(just y) | refl = cong (_<$>_ (_∷V_ y)) (mapMV-cong f≗g xs)
 mapMV-cong f≗g (x ∷V xs) | nothing | .nothing | refl = refl
 
-mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (just ∘ f) v ≡ just (map f v)
+mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (Maybe.just ∘ f) v ≡ just (map f v)
 mapMV-purity f []V = refl
 mapMV-purity f (x ∷V xs) rewrite mapMV-purity f xs = refl
 
@@ -80,7 +80,7 @@ toList-subst v refl = refl
 VecISetoid : Setoid ℓ₀ ℓ₀ → ISetoid ℕ ℓ₀ ℓ₀
 VecISetoid S = record
   { Carrier = Vec (Setoid.Carrier S)
-  ; _≈_ = λ x → S VecEq.≈ x
+  ; _≈_ = λ x → VecEq._≈_ S x
   ; isEquivalence = record
     { refl = VecEq.refl S _
     ; sym = VecEq.sym S

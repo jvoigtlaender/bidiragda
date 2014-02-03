@@ -18,7 +18,7 @@ import Data.List.All
 open import Data.List.Any using (here ; there)
 open Data.List.Any.Membership-≡ using (_∉_)
 open import Data.Maybe using (just)
-open import Data.Product using (∃ ; _,_ ; proj₂)
+open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (flip ; _∘_ ; id)
 open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ; [_] ; sym ; decSetoid)
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
@@ -29,7 +29,8 @@ open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; ins
 import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF
-open import Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain ; lemma-just-sequence)
+import Bidir
+open Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain ; lemma-just-sequence)
 import GetTypes
 open GetTypes.VecVec using (Get ; module Get)
 open BFF.VecBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff)
@@ -54,7 +55,7 @@ lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
   tabulate (λ f → just (maybe′ id (lookup f g) (lookup f h)))
     ≡⟨ tabulate-∘ just (λ f → maybe′ id (lookup f g) (lookup f h)) ⟩
   map just (tabulate (λ f → maybe′ id (lookup f g) (lookup f h))) ∎)
-lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Data.List.All.∷ ps) = _ , (begin
+lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.All._∷_ (x , px) ps) = _ , (begin
   union h (delete i (delete-many is (map just g)))
     ≡⟨ lemma-tabulate-∘ inner ⟩
   union h (delete-many is (map just g))
@@ -71,24 +72,25 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Da
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
 
 assoc-enough : (G : Get) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (Get.getlen G m)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G s v ≡ just u
-assoc-enough G s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
+assoc-enough G s v (h , p) = _ , (begin
   bff G s v
     ≡⟨ cong (flip _>>=_ (flip mapMV s′ ∘ flip lookupM) ∘ _<$>_ (flip union g′)) p ⟩
   mapMV (flip lookupM (union h g′)) s′
     ≡⟨ sym (sequence-map (flip lookupM (union h g′)) s′) ⟩
   sequenceV (map (flip lookupM (union h g′)) s′)
-    ≡⟨ cong (sequenceV ∘ flip map s′ ∘ flip lookupM) pw ⟩
-  sequenceV (map (flip lookupM (map just w)) s′)
-    ≡⟨ cong sequenceV (map-cong (λ f → lemma-lookup-map-just f w) s′) ⟩
-  sequenceV (map (Maybe.just ∘ flip lookup w) s′)
-    ≡⟨ cong sequenceV (map-∘ just (flip lookup w) s′) ⟩
-  sequenceV (map Maybe.just (map (flip lookup w) s′))
-    ≡⟨ lemma-just-sequence (map (flip lookup w) s′) ⟩
-  just (map (flip lookup w) s′) ∎)
+    ≡⟨ cong (sequenceV ∘ flip map s′ ∘ flip lookupM) (proj₂ wp) ⟩
+  sequenceV (map (flip lookupM (map just (proj₁ wp))) s′)
+    ≡⟨ cong sequenceV (map-cong (λ f → lemma-lookup-map-just f (proj₁ wp)) s′) ⟩
+  sequenceV (map (Maybe.just ∘ flip lookup (proj₁ wp)) s′)
+    ≡⟨ cong sequenceV (map-∘ just (flip lookup (proj₁ wp)) s′) ⟩
+  sequenceV (map Maybe.just (map (flip lookup (proj₁ wp)) s′))
+    ≡⟨ lemma-just-sequence (map (flip lookup (proj₁ wp)) s′) ⟩
+  just (map (flip lookup (proj₁ wp)) s′) ∎)
   where open Get G
         s′ = enumerate s
         g  = fromFunc (denumerate s)
         g′ = delete-many (get s′) g
+        wp = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p)
 
 data All-different {A : Set} : List A → Set where
   different-[] : All-different []

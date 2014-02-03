@@ -101,11 +101,11 @@ lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
 lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   lookupM i h ∷ map (flip lookupM h) is
-    ≈⟨ lemma-lookupM-assoc i is x xs h (trans (cong (flip _>>=_ (checkInsert i x)) ir) p) VecEq.∷-cong ISetoid.refl (VecISetoid (MaybeSetoid A.setoid)) ⟩
+    ≈⟨ VecEq._∷-cong_ (lemma-lookupM-assoc i is x xs h (trans (cong (flip _>>=_ (checkInsert i x)) ir) p)) (ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))) ⟩
   just x ∷ map (flip lookupM h) is
     ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc i x h h' p is (lemma-assoc-domain is xs h' ir)) ⟩
   just x ∷ map (flip lookupM h') is
-    ≈⟨ Setoid.refl (MaybeSetoid A.setoid) VecEq.∷-cong (lemma-2 is xs h' ir) ⟩
+    ≈⟨ VecEq._∷-cong_ (Setoid.refl (MaybeSetoid A.setoid)) (lemma-2 is xs h' ir) ⟩
   just x ∷ map just xs ∎
   where open EqR (VecISetoid (MaybeSetoid A.setoid) at _)
 
@@ -191,19 +191,19 @@ lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] | w , 
 
 
 lemma-get-mapMV : {A B : Set} {f : A → Maybe B} {n : ℕ} {v : Vec A n} {r : Vec B n} → mapMV f v ≡ just r → (get : Get) → Get.get get <$> mapMV f v ≡ mapMV f (Get.get get v)
-lemma-get-mapMV {f = f} {v = v} p G = let w , pw = lemma-mapM-successful v p in begin
+lemma-get-mapMV {f = f} {v = v} p G = begin
   get <$> mapMV f v
     ≡⟨ cong (_<$>_ get) (sym (sequence-map f v)) ⟩
   get <$> (sequenceV (map f v))
-    ≡⟨ cong (_<$>_ get ∘ sequenceV) pw ⟩
-  get <$> (sequenceV (map just w))
-    ≡⟨ cong (_<$>_ get) (lemma-just-sequence w) ⟩
-  get <$> just w
-    ≡⟨ sym (lemma-just-sequence (get w)) ⟩
-  sequenceV (map just (get w))
-    ≡⟨ cong sequenceV (sym (free-theorem just w)) ⟩
-  sequenceV (get (map just w))
-    ≡⟨ cong (sequenceV ∘ get) (sym pw) ⟩
+    ≡⟨ cong (_<$>_ get ∘ sequenceV) (proj₂ wp) ⟩
+  get <$> (sequenceV (map just (proj₁ wp)))
+    ≡⟨ cong (_<$>_ get) (lemma-just-sequence (proj₁ wp)) ⟩
+  get <$> just (proj₁ wp)
+    ≡⟨ sym (lemma-just-sequence (get (proj₁ wp))) ⟩
+  sequenceV (map just (get (proj₁ wp)))
+    ≡⟨ cong sequenceV (sym (free-theorem just (proj₁ wp))) ⟩
+  sequenceV (get (map just (proj₁ wp)))
+    ≡⟨ cong (sequenceV ∘ get) (sym (proj₂ wp)) ⟩
   sequenceV (get (map f v))
     ≡⟨ cong sequenceV (free-theorem f v) ⟩
   sequenceV (map f (get v))
@@ -211,13 +211,16 @@ lemma-get-mapMV {f = f} {v = v} p G = let w , pw = lemma-mapM-successful v p in 
   mapMV f (get v) ∎
   where open ≡-Reasoning
         open Get G
+        wp = lemma-mapM-successful v p
 
 sequence-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → VecISetoid (MaybeSetoid S) at _ ∋ m₁ ≈ m₂ → MaybeSetoid (VecISetoid S at n) ∋ sequenceV m₁ ≈ sequenceV m₂
 sequence-cong {S}                                       VecEq.[]-cong = Setoid.refl (MaybeSetoid (VecISetoid S at _))
-sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) with sequenceV xs | sequenceV ys | sequence-cong xs≈ys
-sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) | just sxs | just sys | just p = MaybeEq.just (x≈y VecEq.∷-cong p)
-sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (just x≈y VecEq.∷-cong xs≈ys) | nothing | nothing | nothing = Setoid.refl (MaybeSetoid (VecISetoid S at _))
-sequence-cong {S}                                       (nothing VecEq.∷-cong xs≈ys) = Setoid.refl (MaybeSetoid (VecISetoid S at _))
+sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) with sequenceV xs | sequenceV ys | sequence-cong xs≈ys
+sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | just sxs | just sys | just p = MaybeEq.just (VecEq._∷-cong_ x≈y p)
+sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | nothing | just sys | ()
+sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | just sxs | nothing | ()
+sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | nothing | nothing | nothing = Setoid.refl (MaybeSetoid (VecISetoid S at _))
+sequence-cong {S}                                       (VecEq._∷-cong_ nothing xs≈ys) = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 
 theorem-2 : (G : Get) → {m : ℕ} → (v : Vec Carrier (Get.getlen G m)) → (s u : Vec Carrier m) → bff G s v ≡ just u → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
 theorem-2 G v s u p with (lemma->>=-just ((flip union (delete-many (Get.get G (enumerate s)) (fromFunc (denumerate s)))) <$> (assoc (Get.get G (enumerate s)) v)) p)
