@@ -74,7 +74,7 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} ((x , px) Da
           maybe′ just (lookupM i (delete-many is (map just g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
 
-assoc-enough : (G : Get) → {i : Setoid.Carrier (Get.I G)} → (s : Vec Carrier (to (Get.gl₁ G) ⟨$⟩ i)) → (v : Vec Carrier (Get.gl₂ G ⟨$⟩ i)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G s v ≡ just u
+assoc-enough : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G i)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G s v ≡ just u
 assoc-enough G s v (h , p) = let w , pw = lemma-union-delete-fromFunc (lemma-assoc-domain (get s′) v h p) in _ , (begin
   bff G s v
     ≡⟨ cong (flip _>>=_ (flip mapMV s′ ∘ flip lookupM) ∘ _<$>_ (flip union g′)) p ⟩

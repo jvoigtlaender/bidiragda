@@ -38,7 +38,7 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate = flip lookupV
 
 
-  bff : (G : Get) → ({i : Setoid.Carrier (Get.I G)} → Vec Carrier (to (Get.gl₁ G) ⟨$⟩ i) → Vec Carrier ((Get.gl₂ G) ⟨$⟩ i) → Maybe (Vec Carrier (to (Get.gl₁ G) ⟨$⟩ i)))
+  bff : (G : Get) → ({i : Get.|I| G} → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G i) → Maybe (Vec Carrier (Get.|gl₁| G i)))
   bff G s v = let   s′ = enumerate s
                     t′ = Get.get G s′
                     g  = fromFunc (denumerate s)

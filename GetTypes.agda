@@ -32,8 +32,14 @@ module PartialVecVec where
       I : Setoid ℓ₀ ℓ₀
       gl₁ : I ↪ EqSetoid ℕ
       gl₂ : I ⟶ EqSetoid ℕ
-      get : {A : Set} {i : Setoid.Carrier I} → Vec A (to gl₁ ⟨$⟩ i) → Vec A (gl₂ ⟨$⟩ i)
-      free-theorem : {α β : Set} → (f : α → β) → {i : Setoid.Carrier I} → get {_} {i} ∘ mapV f ≗ mapV f ∘ get
+
+    |I|   = Setoid.Carrier I
+    |gl₁| = _⟨$⟩_ (to gl₁)
+    |gl₂| = _⟨$⟩_ gl₂
+
+    field
+      get : {A : Set} {i : |I|} → Vec A (|gl₁| i) → Vec A (|gl₂| i)
+      free-theorem : {α β : Set} → (f : α → β) → {i : |I|} → get {_} {i} ∘ mapV f ≗ mapV f ∘ get
 
 VecVec-to-PartialVecVec : VecVec.Get → PartialVecVec.Get
 VecVec-to-PartialVecVec G = record
