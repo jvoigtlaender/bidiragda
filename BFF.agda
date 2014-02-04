@@ -11,11 +11,7 @@ open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
-open import Function.Equality using (_⟶_ ; _⟨$⟩_)
-open import Function.Injection using (module Injection) renaming (Injection to _↪_ ; id to id↪)
 open import Relation.Binary using (Setoid ; DecSetoid ; module DecSetoid)
-open import Relation.Binary.PropositionalEquality using (cong) renaming (setoid to EqSetoid)
-open Injection using (to)
 
 open import FinMap
 open import Generic using (mapMV ; ≡-to-Π)

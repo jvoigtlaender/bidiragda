@@ -11,8 +11,6 @@ open import Relation.Binary.PropositionalEquality using (_≗_ ; cong) renaming 
 open import Relation.Binary using (Setoid)
 open Injection using (to)
 
-open import Generic using (≡-to-Π)
-
 import GetTypes
 
 module ListList where
