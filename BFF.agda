@@ -20,10 +20,10 @@ open Injection using (to)
 open import FinMap
 open import Generic using (mapMV ; ≡-to-Π)
 import CheckInsert
-import FreeTheorems
+open import GetTypes using (VecVec-to-PartialVecVec)
 
 module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open FreeTheorems.PartialVecVec public using (get-type)
+  open GetTypes.PartialVecVec public using (Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
@@ -37,10 +37,10 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : {I : Setoid ℓ₀ ℓ₀} → (gl₁ : I ↪ (EqSetoid ℕ)) → (gl₂ : I ⟶ EqSetoid ℕ) → get-type gl₁ gl₂ → ({i : Setoid.Carrier I} → Vec Carrier (to gl₁ ⟨$⟩ i) → Vec Carrier (gl₂ ⟨$⟩ i) → Maybe (Vec Carrier (to gl₁ ⟨$⟩ i)))
-  bff gl₁ gl₂ get s v =
-                let s′ = enumerate s
-                    t′ = get s′
+
+  bff : (G : Get) → ({i : Setoid.Carrier (Get.I G)} → Vec Carrier (to (Get.gl₁ G) ⟨$⟩ i) → Vec Carrier ((Get.gl₂ G) ⟨$⟩ i) → Maybe (Vec Carrier (to (Get.gl₁ G) ⟨$⟩ i)))
+  bff G s v = let   s′ = enumerate s
+                    t′ = Get.get G s′
                     g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
                     h  = assoc t′ v
@@ -48,11 +48,11 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
                 in h′ >>= flip mapMV s′ ∘ flip lookupV
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open FreeTheorems.VecVec public using (get-type)
+  open GetTypes.VecVec public using (Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
   open PartialVecBFF A public using (assoc ; enumerate ; denumerate)
 
-  bff : {getlen : ℕ → ℕ} → (get-type getlen) → ({n : ℕ} → Vec Carrier n → Vec Carrier (getlen n) → Maybe (Vec Carrier n))
-  bff {getlen} get s v = PartialVecBFF.bff A id↪ (≡-to-Π getlen) get {_} s v
+  bff : (G : Get) → ({n : ℕ} → Vec Carrier n → Vec Carrier (Get.getlen G n) → Maybe (Vec Carrier n))
+  bff G = PartialVecBFF.bff A (VecVec-to-PartialVecVec G)
