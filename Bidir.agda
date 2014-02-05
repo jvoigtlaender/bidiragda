@@ -141,7 +141,7 @@ theorem-1 G s = begin
     ≡⟨ cong (h′↦r ∘ just) (lemma-disjoint-union (denumerate s) (get (enumerate s))) ⟩
   (h′↦r ∘ just) (fromFunc (denumerate s))
     ≡⟨ refl ⟩
-  mapMV (flip lookupVec (fromFunc (denumerate s))) (enumerate s)
+  mapMV (flip lookupM (fromFunc (denumerate s))) (enumerate s)
     ≡⟨ mapMV-cong (lemma-lookupM-fromFunc (denumerate s)) (enumerate s) ⟩
   mapMV (Maybe.just ∘ denumerate s) (enumerate s)
     ≡⟨ mapMV-purity (denumerate s) (enumerate s) ⟩
@@ -151,7 +151,7 @@ theorem-1 G s = begin
     where open ≡-Reasoning
           open Get G
           h↦h′ = _<$>_ (flip union (delete-many (get (enumerate s)) (fromFunc (denumerate s))))
-          h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupVec)
+          h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupM)
 
 
 lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a

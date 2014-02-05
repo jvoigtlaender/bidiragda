@@ -40,4 +40,4 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
                     g′ = delete-many t′ g
                     h  = assoc t′ v
                     h′ = (flip union g′) <$> h
-                in h′ >>= flip mapMV s′ ∘ flip lookupV
+                in h′ >>= flip mapMV s′ ∘ flip lookupM

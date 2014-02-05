@@ -43,11 +43,11 @@ lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : Fi
 lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
   union h (fromFunc g)
     ≡⟨ lemma-tabulate-∘ (λ f → begin
-      maybe′ just (lookup f (fromFunc g)) (lookup f h)
-        ≡⟨ cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-fromFunc g f) ⟩
-      maybe′ just (just (g f)) (lookup f h)
-        ≡⟨ lemma-maybe-just (g f) (lookup f h) ⟩
-      just (maybe′ id (g f) (lookup f h)) ∎) ⟩
+      maybe′ just (lookupM f (fromFunc g)) (lookupM f h)
+        ≡⟨ cong (flip (maybe′ just) (lookupM f h)) (lemma-lookupM-fromFunc g f) ⟩
+      maybe′ just (just (g f)) (lookupM f h)
+        ≡⟨ lemma-maybe-just (g f) (lookupM f h) ⟩
+      just (maybe′ id (g f) (lookupM f h)) ∎) ⟩
   tabulate (λ f → just (maybe′ id (g f) (lookup f h)))
     ≡⟨ tabulate-∘ just (λ f → maybe′ id (g f) (lookup f h)) ⟩
   map just (tabulate (λ f → maybe′ id (g f) (lookup f h))) ∎)
