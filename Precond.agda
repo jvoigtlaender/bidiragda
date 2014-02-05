@@ -35,15 +35,11 @@ import GetTypes
 open GetTypes.VecVec using (Get ; module Get)
 open BFF.VecBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff)
 
-lemma-lookup-map-just : {n : ℕ} (f : Fin n) {A : Set} (v : Vec A n) → lookup f (map Maybe.just v) ≡ Maybe.just (lookup f v)
-lemma-lookup-map-just zero    (x ∷ xs) = refl
-lemma-lookup-map-just (suc f) (x ∷ xs) = lemma-lookup-map-just f xs
-
 lemma-maybe-just : {A : Set} → (a : A) → (ma : Maybe A) → maybe′ Maybe.just (just a) ma ≡ Maybe.just (maybe′ id a ma)
 lemma-maybe-just a (just x) = refl
 lemma-maybe-just a nothing = refl
 
-lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ map just v
+lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ fromFunc v
 lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
   union h (fromFunc g)
     ≡⟨ lemma-tabulate-∘ (λ f → begin
@@ -79,13 +75,13 @@ assoc-enough G s v (h , p) = _ , (begin
     ≡⟨ sym (sequence-map (flip lookupM (union h g′)) s′) ⟩
   sequenceV (map (flip lookupM (union h g′)) s′)
     ≡⟨ cong (sequenceV ∘ flip map s′ ∘ flip lookupM) (proj₂ wp) ⟩
-  sequenceV (map (flip lookupM (map just (proj₁ wp))) s′)
-    ≡⟨ cong sequenceV (map-cong (λ f → lemma-lookup-map-just f (proj₁ wp)) s′) ⟩
-  sequenceV (map (Maybe.just ∘ flip lookup (proj₁ wp)) s′)
-    ≡⟨ cong sequenceV (map-∘ just (flip lookup (proj₁ wp)) s′) ⟩
-  sequenceV (map Maybe.just (map (flip lookup (proj₁ wp)) s′))
-    ≡⟨ lemma-just-sequence (map (flip lookup (proj₁ wp)) s′) ⟩
-  just (map (flip lookup (proj₁ wp)) s′) ∎)
+  sequenceV (map (flip lookupM (fromFunc (proj₁ wp))) s′)
+    ≡⟨ cong sequenceV (map-cong (lemma-lookupM-fromFunc (proj₁ wp)) s′) ⟩
+  sequenceV (map (Maybe.just ∘ proj₁ wp) s′)
+    ≡⟨ cong sequenceV (map-∘ just (proj₁ wp) s′) ⟩
+  sequenceV (map Maybe.just (map (proj₁ wp) s′))
+    ≡⟨ lemma-just-sequence (map (proj₁ wp) s′) ⟩
+  just (map (proj₁ wp) s′) ∎)
   where open Get G
         s′ = enumerate s
         g  = fromFunc (denumerate s)
