@@ -25,7 +25,7 @@ open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨
 open import Relation.Nullary using (yes ; no)
 
 open import Generic using (mapMV ; sequenceV ; sequence-map)
-open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty ; delete-many ; lemma-tabulate-∘ ; delete ; lemma-lookupM-delete)
+open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty ; delete-many ; lemma-tabulate-∘ ; delete ; lemma-lookupM-delete ; lemma-lookupM-fromFunc)
 import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
 import BFF
@@ -43,33 +43,33 @@ lemma-maybe-just : {A : Set} → (a : A) → (ma : Maybe A) → maybe′ Maybe.j
 lemma-maybe-just a (just x) = refl
 lemma-maybe-just a nothing = refl
 
-lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Vec A n} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (map just g)) ≡ map just v
+lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ map just v
 lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
-  union h (map just g)
+  union h (fromFunc g)
     ≡⟨ lemma-tabulate-∘ (λ f → begin
-      maybe′ just (lookup f (map just g)) (lookup f h)
-        ≡⟨ cong (flip (maybe′ just) (lookup f h)) (lemma-lookup-map-just f g) ⟩
-      maybe′ just (just (lookup f g)) (lookup f h)
-        ≡⟨ lemma-maybe-just (lookup f g) (lookup f h) ⟩
-      just (maybe′ id (lookup f g) (lookup f h)) ∎) ⟩
-  tabulate (λ f → just (maybe′ id (lookup f g) (lookup f h)))
-    ≡⟨ tabulate-∘ just (λ f → maybe′ id (lookup f g) (lookup f h)) ⟩
-  map just (tabulate (λ f → maybe′ id (lookup f g) (lookup f h))) ∎)
+      maybe′ just (lookup f (fromFunc g)) (lookup f h)
+        ≡⟨ cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-fromFunc g f) ⟩
+      maybe′ just (just (g f)) (lookup f h)
+        ≡⟨ lemma-maybe-just (g f) (lookup f h) ⟩
+      just (maybe′ id (g f) (lookup f h)) ∎) ⟩
+  tabulate (λ f → just (maybe′ id (g f) (lookup f h)))
+    ≡⟨ tabulate-∘ just (λ f → maybe′ id (g f) (lookup f h)) ⟩
+  map just (tabulate (λ f → maybe′ id (g f) (lookup f h))) ∎)
 lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.All._∷_ (x , px) ps) = _ , (begin
-  union h (delete i (delete-many is (map just g)))
+  union h (delete i (delete-many is (fromFunc g)))
     ≡⟨ lemma-tabulate-∘ inner ⟩
-  union h (delete-many is (map just g))
+  union h (delete-many is (fromFunc g))
     ≡⟨ proj₂ (lemma-union-delete-fromFunc ps) ⟩
   map just _ ∎)
-  where inner : (f : Fin n) → maybe′ just (lookupM f (delete i (delete-many is (map just g)))) (lookup f h) ≡ maybe′ just (lookupM f (delete-many is (map just g))) (lookup f h)
+  where inner : (f : Fin n) → maybe′ just (lookupM f (delete i (delete-many is (fromFunc g)))) (lookup f h) ≡ maybe′ just (lookupM f (delete-many is (fromFunc g))) (lookup f h)
         inner f with f ≟ i
         inner .i | yes refl = begin
-          maybe′ just (lookupM i (delete i (delete-many is (map just g)))) (lookup i h)
+          maybe′ just (lookupM i (delete i (delete-many is (fromFunc g)))) (lookup i h)
             ≡⟨ cong (maybe′ just _) px ⟩
           just x
             ≡⟨ cong (maybe′ just _) (sym px) ⟩
-          maybe′ just (lookupM i (delete-many is (map just g))) (lookup i h) ∎
-        inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (map just g)) f≢i)
+          maybe′ just (lookupM i (delete-many is (fromFunc g))) (lookup i h) ∎
+        inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (fromFunc g)) f≢i)
 
 assoc-enough : (G : Get) → {m : ℕ} → (s : Vec Carrier m) → (v : Vec Carrier (Get.getlen G m)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G s v ≡ just u
 assoc-enough G s v (h , p) = _ , (begin
