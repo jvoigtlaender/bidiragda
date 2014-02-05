@@ -142,9 +142,7 @@ theorem-1 G s = begin
   (h′↦r ∘ just) (fromFunc (denumerate s))
     ≡⟨ refl ⟩
   mapMV (flip lookupVec (fromFunc (denumerate s))) (enumerate s)
-    ≡⟨ cong (flip mapMV (enumerate s) ∘ flip lookupVec) (lemma-fromFunc-tabulate (denumerate s)) ⟩
-  mapMV (flip lookupVec (tabulate (Maybe.just ∘ denumerate s))) (enumerate s)
-    ≡⟨ mapMV-cong (lookup∘tabulate (Maybe.just ∘ denumerate s)) (enumerate s) ⟩
+    ≡⟨ mapMV-cong (lemma-lookupM-fromFunc (denumerate s)) (enumerate s) ⟩
   mapMV (Maybe.just ∘ denumerate s) (enumerate s)
     ≡⟨ mapMV-purity (denumerate s) (enumerate s) ⟩
   just (map (denumerate s) (enumerate s))

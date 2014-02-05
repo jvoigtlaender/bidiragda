@@ -94,6 +94,10 @@ lemma-tabulate-∘ : {n : ℕ} {A : Set} → {f g : Fin n → A} → f ≗ g →
 lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
 lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = cong₂ _∷_ (f≗g zero) (lemma-tabulate-∘ (f≗g ∘ suc))
 
+lemma-lookupM-fromFunc : {n : ℕ} {A : Set} → (f : Fin n → A) → flip lookupM (fromFunc f) ≗ just ∘ f
+lemma-lookupM-fromFunc f zero = refl
+lemma-lookupM-fromFunc f (suc i) = lemma-lookupM-fromFunc (f ∘ suc) i
+
 lemma-fromFunc-tabulate : {n : ℕ} {A : Set} → (f : Fin n → A) → fromFunc f ≡ tabulate (Maybe.just ∘ f)
 lemma-fromFunc-tabulate {zero}  f = refl
 lemma-fromFunc-tabulate {suc _} f = cong (_∷_ (just (f zero))) (lemma-fromFunc-tabulate (f ∘ suc))
@@ -112,9 +116,7 @@ lemma-disjoint-union {n} {m} f t = trans (lemma-tabulate-∘ (lemma-inner t)) (s
             maybe′ just (lookupM x (fromFunc f)) (lookupM x empty)
               ≡⟨ cong (maybe′ just (lookupM x (fromFunc f))) (lemma-lookupM-empty x) ⟩
             lookupM x (fromFunc f)
-              ≡⟨ cong (lookupM x) (lemma-fromFunc-tabulate f) ⟩
-            lookupM x (tabulate (Maybe.just ∘ f))
-              ≡⟨ lookup∘tabulate (Maybe.just ∘ f) x ⟩
+              ≡⟨ lemma-lookupM-fromFunc f x ⟩
             just (f x) ∎
           lemma-inner (t ∷ ts) x with x ≟ t
           lemma-inner (.x ∷ ts) x | yes refl = cong (maybe′ just (lookupM x (delete-many (x ∷ ts) (fromFunc f)))) (lemma-lookupM-insert x (f x) (restrict f (toList ts)))
