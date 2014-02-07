@@ -176,8 +176,8 @@ lemma->>=-just (just a) p = a , refl
 lemma->>=-just nothing  ()
 
 lemma-just-sequence : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map just v) ≡ just v
-lemma-just-sequence [] = refl
-lemma-just-sequence (x ∷ xs) rewrite lemma-just-sequence xs = refl
+lemma-just-sequence []       = refl
+lemma-just-sequence (x ∷ xs) = cong (_<$>_ (_∷_ x)) (lemma-just-sequence xs)
 
 lemma-mapM-successful : {A B : Set} {f : A → Maybe B} {n : ℕ} → (v : Vec A n) → {r : Vec B n} → mapMV f v ≡ just r → ∃ λ w → map f v ≡ map just w
 lemma-mapM-successful         []      p = [] , refl

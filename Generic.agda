@@ -37,8 +37,8 @@ mapMV-cong f≗g (x ∷V xs) | just y | .(just y) | refl = cong (_<$>_ (_∷V_ y
 mapMV-cong f≗g (x ∷V xs) | nothing | .nothing | refl = refl
 
 mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (Maybe.just ∘ f) v ≡ just (map f v)
-mapMV-purity f []V = refl
-mapMV-purity f (x ∷V xs) rewrite mapMV-purity f xs = refl
+mapMV-purity f []V       = refl
+mapMV-purity f (x ∷V xs) = cong (_<$>_ (_∷V_ (f x))) (mapMV-purity f xs)
 
 maybeEq-from-≡ : {A : Set} {a b : Maybe A} → a ≡ b → MaybeEq (PropEq A) ∋ a ≈ b
 maybeEq-from-≡ {a = just x}  {b = .(just x)} refl = just refl
