@@ -8,12 +8,12 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Product using (_×_ ; _,_)
 open import Data.Vec using (Vec ; toList ; fromList ; map) renaming ([] to []V ; _∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
-open import Function using (_∘_ ; id)
+open import Function using (_∘_ ; id ; flip)
 open import Level using () renaming (zero to ℓ₀)
 open import Relation.Binary using (Setoid ; module Setoid)
 open import Relation.Binary.Core using (_≡_ ; refl)
 open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
-open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans) renaming (setoid to PropEq)
+open import Relation.Binary.PropositionalEquality using (_≗_ ; cong ; subst ; trans ; cong₂) renaming (setoid to PropEq)
 
 open Setoid using () renaming (_≈_ to _∋_≈_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
@@ -31,10 +31,8 @@ mapMV f []V = just []V
 mapMV f (x ∷V xs) = (f x) >>= (λ y → (_∷V_ y) <$> (mapMV f xs))
 
 mapMV-cong : {A B : Set} {f g : A → Maybe B} → f ≗ g → {n : ℕ} → mapMV {n = n} f ≗ mapMV g
-mapMV-cong f≗g []V = refl
-mapMV-cong {f = f} {g = g} f≗g (x ∷V xs) with f x | g x | f≗g x
-mapMV-cong f≗g (x ∷V xs) | just y | .(just y) | refl = cong (_<$>_ (_∷V_ y)) (mapMV-cong f≗g xs)
-mapMV-cong f≗g (x ∷V xs) | nothing | .nothing | refl = refl
+mapMV-cong f≗g []V       = refl
+mapMV-cong f≗g (x ∷V xs) = cong₂ _>>=_ (f≗g x) (cong (flip (_<$>_ ∘ _∷V_)) (mapMV-cong f≗g xs))
 
 mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (Maybe.just ∘ f) v ≡ just (map f v)
 mapMV-purity f []V       = refl
