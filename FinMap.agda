@@ -108,8 +108,7 @@ lemma-fromFunc-tabulate {zero}  f = refl
 lemma-fromFunc-tabulate {suc _} f = cong (_∷_ (just (f zero))) (lemma-fromFunc-tabulate (f ∘ suc))
 
 lemma-lookupM-delete : {n : ℕ} {A : Set} {i j : Fin n} → (f : FinMapMaybe n A) → i ≢ j → lookupM i (delete j f) ≡ lookupM i f
-lemma-lookupM-delete {i = zero}  {j = zero}  (_ ∷ _)  p with p refl
-...                                                      | ()
+lemma-lookupM-delete {i = zero}  {j = zero}  (_ ∷ _)  p = contradiction refl p
 lemma-lookupM-delete {i = zero}  {j = suc j} (_ ∷ _)  p = refl
 lemma-lookupM-delete {i = suc i} {j = zero}  (x ∷ xs) p = refl
 lemma-lookupM-delete {i = suc i} {j = suc j} (x ∷ xs) p = lemma-lookupM-delete xs (p ∘ cong suc)

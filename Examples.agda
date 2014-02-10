@@ -1,6 +1,6 @@
 module Examples where
 
-open import Data.Nat using (ℕ ; zero ; suc ; _⊓_ ; _∸_)
+open import Data.Nat using (ℕ ; zero ; suc ; _⊓_ ; _∸_ ; ⌈_/2⌉)
 open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_)
 
 import GetTypes
@@ -37,3 +37,10 @@ drop' n = assume-get (f n)
         f zero    xs       = xs
         f (suc n) []       = []
         f (suc n) (x ∷ xs) = f n xs
+
+sieve' : Get
+sieve' = assume-get f
+  where f : {A : Set} {n : ℕ} → Vec A n → Vec A ⌈ n /2⌉
+        f []           = []
+        f (x ∷ [])     = x ∷ []
+        f (x ∷ _ ∷ xs) = x ∷ f xs
