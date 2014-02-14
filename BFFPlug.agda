@@ -23,6 +23,9 @@ open DecSetoid A using (Carrier)
 open GetTypes.VecVec public using (Get)
 open BFF.VecBFF A public
 
+bffsameshape : (G : Get) → {n : ℕ} → Vec Carrier n → Vec Carrier (Get.getlen G n) → Maybe (Vec Carrier n)
+bffsameshape G {n} = bff G n
+
 bffplug : (G : Get) → (ℕ → ℕ → Maybe ℕ) → {n m : ℕ} → Vec Carrier n → Vec Carrier m → Maybe (∃ λ l → Vec Carrier l)
 bffplug G sput {n} {m} s v with sput n m
 ...                        | nothing = nothing
