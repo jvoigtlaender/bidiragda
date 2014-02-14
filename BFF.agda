@@ -30,14 +30,18 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   enumerate : {n : ℕ} → Vec Carrier n → Vec (Fin n) n
   enumerate _ = tabulate id
 
+  enumeratel : (n : ℕ) → Vec (Fin n) n
+  enumeratel _ = tabulate id
+
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : (G : Get) → ({n : ℕ} → Vec Carrier n → Vec Carrier (Get.getlen G n) → Maybe (Vec Carrier n))
-  bff G s v = let   s′ = enumerate s
+  bff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec Carrier m)
+  bff G m s v = let s′ = enumerate s
                     t′ = Get.get G s′
                     g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
-                    h  = assoc t′ v
-                    h′ = (flip union g′) <$> h
-                in h′ >>= flip mapMV s′ ∘ flip lookupM
+                    t  = enumeratel m
+                    h  = assoc (Get.get G t) v
+                    h′ = (flip union (reshape g′ m)) <$> h
+                in h′ >>= flip mapMV t ∘ flip lookupM
