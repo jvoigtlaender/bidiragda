@@ -11,15 +11,15 @@ open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
 open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
 open import Function using (id ; _∘_ ; flip)
-open import Relation.Binary using (DecSetoid ; module DecSetoid)
+open import Relation.Binary using (Setoid ; DecSetoid ; module DecSetoid)
 
 open import FinMap
-open import Generic using (mapMV)
+open import Generic using (mapMV ; ≡-to-Π)
 import CheckInsert
-import GetTypes
+open import GetTypes using (VecVec-to-PartialVecVec)
 
-module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open GetTypes.VecVec public using (Get)
+module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
+  open GetTypes.PartialVecVec public using (Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
@@ -36,12 +36,22 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec Carrier m)
-  bff G m s v = let s′ = enumerate s
+  bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec Carrier (Get.|gl₁| G j))
+  bff G i s v = let s′ = enumerate s
                     t′ = Get.get G s′
                     g  = fromFunc (denumerate s)
                     g′ = delete-many t′ g
-                    t  = enumeratel m
+                    t  = enumeratel (Get.|gl₁| G i)
                     h  = assoc (Get.get G t) v
-                    h′ = (flip union (reshape g′ m)) <$> h
+                    h′ = (flip union (reshape g′ (Get.|gl₁| G i))) <$> h
                 in h′ >>= flip mapMV t ∘ flip lookupM
+
+module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
+  open GetTypes.VecVec public using (Get)
+  open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
+  open CheckInsert A
+
+  open PartialVecBFF A public using (assoc ; enumerate ; denumerate)
+
+  bff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec Carrier m)
+  bff G = PartialVecBFF.bff A (VecVec-to-PartialVecVec G)
