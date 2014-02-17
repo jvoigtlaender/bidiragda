@@ -99,7 +99,7 @@ lemma-tabulate-∘ : {n : ℕ} {A : Set} → {f g : Fin n → A} → f ≗ g →
 lemma-tabulate-∘ {zero}  {_} {f} {g} f≗g = refl
 lemma-tabulate-∘ {suc n} {_} {f} {g} f≗g = cong₂ _∷_ (f≗g zero) (lemma-tabulate-∘ (f≗g ∘ suc))
 
-lemma-lookupM-fromFunc : {n : ℕ} {A : Set} → (f : Fin n → A) → flip lookupM (fromFunc f) ≗ just ∘ f
+lemma-lookupM-fromFunc : {n : ℕ} {A : Set} → (f : Fin n → A) → flip lookupM (fromFunc f) ≗ Maybe.just ∘ f
 lemma-lookupM-fromFunc f zero = refl
 lemma-lookupM-fromFunc f (suc i) = lemma-lookupM-fromFunc (f ∘ suc) i
 
