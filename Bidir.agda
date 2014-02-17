@@ -248,4 +248,4 @@ theorem-2 G n s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
           g′   = delete-many (get s′) g
           t    = enumeratel n
           h↦h′ = flip union (reshape g′ n)
-          h′↦r = flip mapMV (enumeratel n) ∘ flip lookupM
+          h′↦r = flip mapMV t ∘ flip lookupM
