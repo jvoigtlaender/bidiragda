@@ -1,9 +1,14 @@
 module Examples where
 
-open import Data.Nat using (ℕ ; zero ; suc ; _⊓_ ; _∸_ ; ⌈_/2⌉)
-open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_)
+open import Data.Nat using (ℕ ; zero ; suc ; _+_ ; ⌈_/2⌉)
+open import Data.Nat.Properties using (cancel-+-left)
+import Algebra.Structures
+open Algebra.Structures.IsCommutativeSemiring Data.Nat.Properties.isCommutativeSemiring using (+-isCommutativeMonoid)
+open Algebra.Structures.IsCommutativeMonoid +-isCommutativeMonoid using () renaming (comm to +-comm)
+open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_ ; tail ; take ; drop)
 open import Function using (id)
-open import Function.Injection using () renaming (id to id↪)
+open import Function.Injection using () renaming (Injection to _↪_ ; id to id↪)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl) renaming (setoid to EqSetoid)
 
 open import Generic using (≡-to-Π)
 import GetTypes
@@ -27,19 +32,23 @@ double' = assume-get id↪ (≡-to-Π g) f
 double'' : Get
 double'' = assume-get id↪ (≡-to-Π _) (λ v → v ++ v)
 
+drop-suc : {n m : ℕ} → suc n ≡ suc m → n ≡ m
+drop-suc refl = refl
+
+suc-injection : EqSetoid ℕ ↪ EqSetoid ℕ
+suc-injection = record { to = ≡-to-Π suc; injective = drop-suc }
+
+tail' : Get
+tail' = assume-get suc-injection (≡-to-Π id) tail
+
+n+-injection : ℕ → EqSetoid ℕ ↪ EqSetoid ℕ
+n+-injection n = record { to = ≡-to-Π (_+_ n); injective = cancel-+-left n }
+
 take' : ℕ → Get
-take' n = assume-get id↪ (≡-to-Π _) (f n)
-  where f : (n : ℕ) → {A : Set} {m : ℕ} → Vec A m → Vec A (m ⊓ n)
-        f n       []       = []
-        f zero    (x ∷ xs) = []
-        f (suc n) (x ∷ xs) = x ∷ f n xs
+take' n = assume-get (n+-injection n) (≡-to-Π _) (take n)
 
 drop' : ℕ → Get
-drop' n = assume-get id↪ (≡-to-Π _) (f n)
-  where f : (n : ℕ) → {A : Set} {m : ℕ} → Vec A m → Vec A (m ∸ n)
-        f zero    xs       = xs
-        f (suc n) []       = []
-        f (suc n) (x ∷ xs) = f n xs
+drop' n = assume-get (n+-injection n) (≡-to-Π _) (drop n)
 
 sieve' : Get
 sieve' = assume-get id↪ (≡-to-Π _) f

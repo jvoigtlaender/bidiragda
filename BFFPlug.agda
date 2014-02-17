@@ -3,8 +3,7 @@ open import Relation.Binary using (DecSetoid)
 
 module BFFPlug (A : DecSetoid ℓ₀ ℓ₀) where
 
-open import Data.Nat using (ℕ ; _≟_ ; _+_ ; _∸_ ; zero ; suc ; ⌈_/2⌉)
-open import Data.Nat.Properties using (m+n∸n≡m)
+open import Data.Nat using (ℕ ; _≟_ ; _+_ ; zero ; suc ; ⌈_/2⌉)
 open import Data.Maybe using (Maybe ; just ; nothing)
 open import Data.Vec using (Vec)
 open import Data.Product using (∃ ; _,_)
@@ -43,13 +42,13 @@ bffinv : (G : Get) → (nelteg : PropEq ℕ ⟶ Get.I G) → nelteg RightInverse
 bffinv G nelteg inv {m = m} s v = bff G (nelteg ⟨$⟩ m) s (subst (Vec Carrier) (sym (inv m)) v)
 
 module InvExamples where
-  open Examples using (reverse' ; drop' ; sieve')
+  open Examples using (reverse' ; drop' ; sieve' ; tail' ; take')
   
   reverse-put : {n m : ℕ} → Vec Carrier n → Vec Carrier m → Maybe (Vec Carrier m)
   reverse-put = bffinv reverse' (≡-to-Π id) (λ _ → refl)
 
-  drop-put : (k : ℕ) → {n m : ℕ} → Vec Carrier n → Vec Carrier m → Maybe (Vec Carrier (m + k))
-  drop-put k = bffinv (drop' k) (≡-to-Π (flip _+_ k)) (flip m+n∸n≡m k)
+  drop-put : (k : ℕ) → {n m : ℕ} → Vec Carrier (k + n) → Vec Carrier m → Maybe (Vec Carrier (k + m))
+  drop-put k = bffinv (drop' k) (≡-to-Π id) (λ _ → refl)
 
   double : ℕ → ℕ
   double zero    = zero
@@ -62,3 +61,9 @@ module InvExamples where
 
   sieve-put : {n m : ℕ} → Vec Carrier n → Vec Carrier m → Maybe (Vec Carrier (double m))
   sieve-put = bffinv sieve' (≡-to-Π double) sieve-inv-len
+
+  tail-put : {n m : ℕ} → Vec Carrier (suc n) → Vec Carrier m → Maybe (Vec Carrier (suc m))
+  tail-put = bffinv tail' (≡-to-Π id) (λ _ → refl)
+
+  take-put : (k : ℕ) → {n : ℕ}  → Vec Carrier (k + n) → Vec Carrier k → Maybe (Vec Carrier (k + n))
+  take-put k = bffsameshape (take' k)
