@@ -192,9 +192,9 @@ lemma-get-mapMV : {A B : Set} {f : A → Maybe B} → (G : Get) → {i : Get.|I|
 lemma-get-mapMV {f = f} G {v = v} p = begin
   get <$> mapMV f v
     ≡⟨ cong (_<$>_ get) (sym (sequence-map f v)) ⟩
-  get <$> (sequenceV (map f v))
+  get <$> sequenceV (map f v)
     ≡⟨ cong (_<$>_ get ∘ sequenceV) (proj₂ wp) ⟩
-  get <$> (sequenceV (map just (proj₁ wp)))
+  get <$> sequenceV (map just (proj₁ wp))
     ≡⟨ cong (_<$>_ get) (lemma-just-sequence (proj₁ wp)) ⟩
   get <$> just (proj₁ wp)
     ≡⟨ sym (lemma-just-sequence (get (proj₁ wp))) ⟩
@@ -228,7 +228,7 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
     ≡⟨ cong (_<$>_ get) (sym p) ⟩
   get <$> (bff G j s v)
     ≡⟨ cong (_<$>_ get ∘ flip _>>=_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
-  get <$> mapMV (flip lookupM (h↦h′ h)) t
+  get <$> h′↦r (h↦h′ h)
     ≡⟨ lemma-get-mapMV G (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) ⟩
   mapMV (flip lookupM (h↦h′ h)) (get t)
     ≡⟨ sym (sequence-map (flip lookupM (h↦h′ h)) (get t)) ⟩
