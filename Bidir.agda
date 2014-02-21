@@ -16,7 +16,7 @@ open import Data.List.All using (All)
 open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
-open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
+open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂) renaming (map to map-Σ)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (refl ; _≡_)
 open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
@@ -186,8 +186,7 @@ lemma-mapM-successful         []      p = [] , refl
 lemma-mapM-successful {f = f} (x ∷ xs) p with f x | mapMV f xs | inspect (mapMV f) xs
 lemma-mapM-successful         (x ∷ xs) () | nothing | _ | _
 lemma-mapM-successful         (x ∷ xs) () | just y | nothing | _
-lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] with lemma-mapM-successful xs p′
-lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] | w , pw = y ∷ w , cong (_∷_ (just y)) pw
+lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] = map-Σ (_∷_ y) (cong (_∷_ (just y))) (lemma-mapM-successful xs p′)
 
 lemma-get-mapMV : {A B : Set} {f : A → Maybe B} → (G : Get) → {i : Get.|I| G} {v : Vec A (Get.|gl₁| G i)} {r : Vec B (Get.|gl₁| G i)} → mapMV f v ≡ just r → Get.get G <$> mapMV f v ≡ mapMV f (Get.get G v)
 lemma-get-mapMV {f = f} G {v = v} p = begin
