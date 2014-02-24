@@ -215,7 +215,7 @@ sequence-cong {S}                                       (VecEq._∷-cong_ nothin
 theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just u → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
 theorem-2 G j s v u p with (lemma->>=-just ((flip union (reshape (delete-many (Get.get G (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G j))) <$> (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v)) p)
 theorem-2 G j s v u p | h′ , ph′ with (lemma-<$>-just (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v) ph′)
-theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid (VecISetoid A.setoid at _) ⟩
+theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin
   get <$> (just u)
     ≡⟨ cong (_<$>_ get) (sym p) ⟩
   get <$> (bff G j s v)
@@ -233,7 +233,7 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
   sequenceV (map just v)
     ≡⟨ lemma-just-sequence v ⟩
   just v ∎)
-    where open SetoidReasoning
+    where open EqR (MaybeSetoid (VecISetoid A.setoid at _))
           open Get G
           s′   = enumerate s
           g    = fromFunc (denumerate s)
