@@ -179,18 +179,16 @@ lemma-just-sequence : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map j
 lemma-just-sequence []       = refl
 lemma-just-sequence (x ∷ xs) = cong (_<$>_ (_∷_ x)) (lemma-just-sequence xs)
 
-lemma-mapM-successful : {A B : Set} {f : A → Maybe B} {n : ℕ} → (v : Vec A n) → {r : Vec B n} → mapMV f v ≡ just r → ∃ λ w → map f v ≡ map just w
-lemma-mapM-successful         []      p = [] , refl
-lemma-mapM-successful {f = f} (x ∷ xs) p with f x | mapMV f xs | inspect (mapMV f) xs
-lemma-mapM-successful         (x ∷ xs) () | nothing | _ | _
-lemma-mapM-successful         (x ∷ xs) () | just y | nothing | _
-lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] = map-Σ (_∷_ y) (cong (_∷_ (just y))) (lemma-mapM-successful xs p′)
+lemma-sequenceV-successful : {A : Set} {n : ℕ} → (v : Vec (Maybe A) n) → {r : Vec A n} → sequenceV v ≡ just r → ∃ λ w → v ≡ map just w
+lemma-sequenceV-successful []             p = [] , refl
+lemma-sequenceV-successful (just x ∷ xs)  p with sequenceV xs | inspect sequenceV xs
+lemma-sequenceV-successful (just x ∷ xs)  () | nothing | _
+lemma-sequenceV-successful (just x ∷ xs)  p  | just ys | [ p′ ] = map-Σ (_∷_ x) (cong (_∷_ (just x))) (lemma-sequenceV-successful xs p′)
+lemma-sequenceV-successful (nothing ∷ xs) ()
 
-lemma-get-mapMV : {A B : Set} {f : A → Maybe B} → (G : Get) → {i : Get.|I| G} {v : Vec A (Get.|gl₁| G i)} {r : Vec B (Get.|gl₁| G i)} → mapMV f v ≡ just r → Get.get G <$> mapMV f v ≡ mapMV f (Get.get G v)
-lemma-get-mapMV {f = f} G {v = v} p = begin
-  get <$> mapMV f v
-    ≡⟨ refl ⟩
-  get <$> sequenceV (map f v)
+lemma-get-sequenceV : {A : Set} → (G : Get) → {i : Get.|I| G} {v : Vec (Maybe A) (Get.|gl₁| G i)} {r : Vec A (Get.|gl₁| G i)} → sequenceV v ≡ just r → Get.get G <$> sequenceV v ≡ sequenceV (Get.get G v)
+lemma-get-sequenceV G {v = v} p = begin
+  get <$> sequenceV v
     ≡⟨ cong (_<$>_ get ∘ sequenceV) (proj₂ wp) ⟩
   get <$> sequenceV (map just (proj₁ wp))
     ≡⟨ cong (_<$>_ get) (lemma-just-sequence (proj₁ wp)) ⟩
@@ -200,14 +198,10 @@ lemma-get-mapMV {f = f} G {v = v} p = begin
     ≡⟨ cong sequenceV (sym (free-theorem just (proj₁ wp))) ⟩
   sequenceV (get (map just (proj₁ wp)))
     ≡⟨ cong (sequenceV ∘ get) (sym (proj₂ wp)) ⟩
-  sequenceV (get (map f v))
-    ≡⟨ cong sequenceV (free-theorem f v) ⟩
-  sequenceV (map f (get v))
-    ≡⟨ refl ⟩
-  mapMV f (get v) ∎
+  sequenceV (get v) ∎
   where open ≡-Reasoning
         open Get G
-        wp = lemma-mapM-successful v p
+        wp = lemma-sequenceV-successful v p
 
 sequence-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → VecISetoid (MaybeSetoid S) at _ ∋ m₁ ≈ m₂ → MaybeSetoid (VecISetoid S at n) ∋ sequenceV m₁ ≈ sequenceV m₂
 sequence-cong {S}                                       VecEq.[]-cong = Setoid.refl (MaybeSetoid (VecISetoid S at _))
@@ -227,9 +221,11 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
   get <$> (bff G j s v)
     ≡⟨ cong (_<$>_ get ∘ flip _>>=_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
   get <$> h′↦r (h↦h′ h)
-    ≡⟨ lemma-get-mapMV G (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) ⟩
-  mapMV (flip lookupM (h↦h′ h)) (get t)
     ≡⟨ refl ⟩
+  get <$> sequenceV (map (flip lookupM (h↦h′ h)) t)
+    ≡⟨ lemma-get-sequenceV G (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) ⟩
+  sequenceV (get (map (flip lookupM (h↦h′ h)) t))
+    ≡⟨ cong sequenceV (free-theorem (flip lookupM (h↦h′ h)) t) ⟩
   sequenceV (map (flip lookupM (h↦h′ h)) (get t))
     ≡⟨ cong sequenceV (lemma-union-not-used h g′ (get t) (lemma-assoc-domain (get t) v h ph)) ⟩
   sequenceV (map (flip lookupM h) (get t))
