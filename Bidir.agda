@@ -59,19 +59,17 @@ lemma-1 f (i ∷ is′) = begin
   just (restrict f (toList (i ∷ is′))) ∎
   where open ≡-Reasoning
 
-lemma-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (x : Carrier) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc (i ∷ is) (x ∷ xs) ≡ just h → MaybeSetoid A.setoid ∋ lookupM i h ≈ just x
-lemma-lookupM-assoc i is x xs h    p with assoc is xs
-lemma-lookupM-assoc i is x xs h    () | nothing
-lemma-lookupM-assoc i is x xs h    p | just h' with checkInsert i x h' | insertionresult i x h'
-lemma-lookupM-assoc i is x xs .h refl | just h | ._ | same x' x≈x' pl = begin
+lemma-lookupM-checkInserted : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert i x h ≡ just h' → MaybeSetoid A.setoid ∋ lookupM i h' ≈ just x
+lemma-lookupM-checkInserted i x h h' p with checkInsert i x h | insertionresult i x h
+lemma-lookupM-checkInserted i x h .h refl | ._ | same x' x≈x' pl = begin
   lookupM i h
     ≡⟨ pl ⟩
   just x'
     ≈⟨ MaybeEq.just (Setoid.sym A.setoid x≈x') ⟩
   just x ∎
   where open EqR (MaybeSetoid A.setoid)
-lemma-lookupM-assoc i is x xs ._ refl | just h' | ._ | new _ =  Setoid.reflexive (MaybeSetoid A.setoid) (lemma-lookupM-insert i x h')
-lemma-lookupM-assoc i is x xs h () | just h' | ._ | wrong _ _ _
+lemma-lookupM-checkInserted i x h ._ refl | ._ | new _ = Setoid.reflexive (MaybeSetoid A.setoid) (lemma-lookupM-insert i x h)
+lemma-lookupM-checkInserted i x h h' () | ._ | wrong _ _ _
 
 _in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
 _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
@@ -101,7 +99,7 @@ lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
 lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   lookupM i h ∷ map (flip lookupM h) is
-    ≈⟨ VecEq._∷-cong_ (lemma-lookupM-assoc i is x xs h (trans (cong (flip _>>=_ (checkInsert i x)) ir) p)) (ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))) ⟩
+    ≈⟨ VecEq._∷-cong_ (lemma-lookupM-checkInserted i x h' h p) (ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))) ⟩
   just x ∷ map (flip lookupM h) is
     ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc i x h h' p is (lemma-assoc-domain is xs h' ir)) ⟩
   just x ∷ map (flip lookupM h') is
