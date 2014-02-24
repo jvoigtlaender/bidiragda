@@ -25,7 +25,7 @@ open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ;
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 open import Relation.Nullary using (yes ; no)
 
-open import Generic using (mapMV ; sequenceV ; sequence-map)
+open import Generic using (mapMV ; sequenceV)
 open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty ; delete-many ; lemma-tabulate-∘ ; delete ; lemma-lookupM-delete ; lemma-lookupM-fromFunc ; reshape ; lemma-reshape-id)
 import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
@@ -73,7 +73,7 @@ assoc-enough G {i} s v (h , p) = _ , (begin
   bff G i s v
     ≡⟨ cong (flip _>>=_ (flip mapMV t ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (Get.|gl₁| G i)))) p ⟩
   mapMV (flip lookupM (union h (reshape g′ (Get.|gl₁| G i)))) t
-    ≡⟨ sym (sequence-map (flip lookupM (union h (reshape g′ (Get.|gl₁| G i)))) t) ⟩
+    ≡⟨ refl ⟩
   sequenceV (map (flip lookupM (union h (reshape g′ (Get.|gl₁| G i)))) t)
     ≡⟨ cong (sequenceV ∘ flip map t ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
   sequenceV (map (flip lookupM (union h g′)) t)

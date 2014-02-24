@@ -26,7 +26,7 @@ import Relation.Binary.EqReasoning as EqR
 
 import GetTypes
 open GetTypes.PartialVecVec using (Get ; module Get)
-open import Generic using (mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; sequence-map ; VecISetoid)
+open import Generic using (mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; VecISetoid)
 open import FinMap
 import CheckInsert
 open CheckInsert A
@@ -189,7 +189,7 @@ lemma-mapM-successful         (x ∷ xs) p  | just y | just ys | [ p′ ] = map-
 lemma-get-mapMV : {A B : Set} {f : A → Maybe B} → (G : Get) → {i : Get.|I| G} {v : Vec A (Get.|gl₁| G i)} {r : Vec B (Get.|gl₁| G i)} → mapMV f v ≡ just r → Get.get G <$> mapMV f v ≡ mapMV f (Get.get G v)
 lemma-get-mapMV {f = f} G {v = v} p = begin
   get <$> mapMV f v
-    ≡⟨ cong (_<$>_ get) (sym (sequence-map f v)) ⟩
+    ≡⟨ refl ⟩
   get <$> sequenceV (map f v)
     ≡⟨ cong (_<$>_ get ∘ sequenceV) (proj₂ wp) ⟩
   get <$> sequenceV (map just (proj₁ wp))
@@ -203,7 +203,7 @@ lemma-get-mapMV {f = f} G {v = v} p = begin
   sequenceV (get (map f v))
     ≡⟨ cong sequenceV (free-theorem f v) ⟩
   sequenceV (map f (get v))
-    ≡⟨ sequence-map f (get v) ⟩
+    ≡⟨ refl ⟩
   mapMV f (get v) ∎
   where open ≡-Reasoning
         open Get G
@@ -229,7 +229,7 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
   get <$> h′↦r (h↦h′ h)
     ≡⟨ lemma-get-mapMV G (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) ⟩
   mapMV (flip lookupM (h↦h′ h)) (get t)
-    ≡⟨ sym (sequence-map (flip lookupM (h↦h′ h)) (get t)) ⟩
+    ≡⟨ refl ⟩
   sequenceV (map (flip lookupM (h↦h′ h)) (get t))
     ≡⟨ cong sequenceV (lemma-union-not-used h g′ (get t) (lemma-assoc-domain (get t) v h ph)) ⟩
   sequenceV (map (flip lookupM h) (get t))

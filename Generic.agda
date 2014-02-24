@@ -8,6 +8,7 @@ open import Data.Nat using (ℕ ; zero ; suc)
 open import Data.Product using (_×_ ; _,_)
 open import Data.Vec using (Vec ; toList ; fromList ; map) renaming ([] to []V ; _∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
+open import Data.Vec.Properties using (map-cong)
 open import Function using (_∘_ ; id ; flip)
 open import Function.Equality using (_⟶_)
 open import Level using () renaming (zero to ℓ₀)
@@ -30,13 +31,15 @@ length-replicate : {A : Set} {a : A} → (n : ℕ) → length (replicate n a) �
 length-replicate zero    = refl
 length-replicate (suc n) = cong suc (length-replicate n)
 
+sequenceV : {A : Set} {n : ℕ} → Vec (Maybe A) n → Maybe (Vec A n)
+sequenceV []V       = just []V
+sequenceV (x ∷V xs) = x >>= (λ y → (_∷V_ y) <$> sequenceV xs)
+
 mapMV : {A B : Set} {n : ℕ} → (A → Maybe B) → Vec A n → Maybe (Vec B n)
-mapMV f []V = just []V
-mapMV f (x ∷V xs) = (f x) >>= (λ y → (_∷V_ y) <$> (mapMV f xs))
+mapMV f = sequenceV ∘ map f
 
 mapMV-cong : {A B : Set} {f g : A → Maybe B} → f ≗ g → {n : ℕ} → mapMV {n = n} f ≗ mapMV g
-mapMV-cong f≗g []V       = refl
-mapMV-cong f≗g (x ∷V xs) = cong₂ _>>=_ (f≗g x) (cong (flip (_<$>_ ∘ _∷V_)) (mapMV-cong f≗g xs))
+mapMV-cong f≗g v = cong sequenceV (map-cong f≗g v)
 
 mapMV-purity : {A B : Set} {n : ℕ} → (f : A → B) → (v : Vec A n) → mapMV (Maybe.just ∘ f) v ≡ just (map f v)
 mapMV-purity f []V       = refl
@@ -49,15 +52,6 @@ maybeEq-from-≡ {a = nothing} {b = .nothing}  refl = nothing
 maybeEq-to-≡ : {A : Set} {a b : Maybe A} → MaybeEq (EqSetoid A) ∋ a ≈ b → a ≡ b
 maybeEq-to-≡ (just refl) = refl
 maybeEq-to-≡ nothing     = refl
-
-sequenceV : {A : Set} {n : ℕ} → Vec (Maybe A) n → Maybe (Vec A n)
-sequenceV = mapMV id
-
-sequence-map : {A B : Set} {n : ℕ} → (f : A → Maybe B) → sequenceV {n = n} ∘ map f ≗ mapMV f
-sequence-map f []V = refl
-sequence-map f (x ∷V xs) with f x
-sequence-map f (x ∷V xs) | just y = cong (_<$>_ (_∷V_ y)) (sequence-map f xs)
-sequence-map f (x ∷V xs) | nothing = refl
 
 subst-cong : {A : Set} → (T : A → Set) → {g : A → A} → {a b : A} → (f : {c : A} → T c → T (g c)) → (p : a ≡ b) →
              f ∘ subst T p ≗ subst T (cong g p) ∘ f
