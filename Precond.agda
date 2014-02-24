@@ -41,23 +41,18 @@ lemma-maybe-just a (just x) = refl
 lemma-maybe-just a nothing = refl
 
 lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ fromFunc v
-lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (begin
-  union h (fromFunc g)
-    ≡⟨ lemma-tabulate-∘ (λ f → begin
+lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (lemma-tabulate-∘ (λ f → begin
       maybe′ just (lookupM f (fromFunc g)) (lookupM f h)
         ≡⟨ cong (flip (maybe′ just) (lookupM f h)) (lemma-lookupM-fromFunc g f) ⟩
       maybe′ just (just (g f)) (lookupM f h)
         ≡⟨ lemma-maybe-just (g f) (lookupM f h) ⟩
-      just (maybe′ id (g f) (lookupM f h)) ∎) ⟩
-  tabulate (λ f → just (maybe′ id (g f) (lookup f h)))
-    ≡⟨ tabulate-∘ just (λ f → maybe′ id (g f) (lookup f h)) ⟩
-  map just (tabulate (λ f → maybe′ id (g f) (lookup f h))) ∎)
+      just (maybe′ id (g f) (lookupM f h)) ∎))
 lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.All._∷_ (x , px) ps) = _ , (begin
   union h (delete i (delete-many is (fromFunc g)))
     ≡⟨ lemma-tabulate-∘ inner ⟩
   union h (delete-many is (fromFunc g))
     ≡⟨ proj₂ (lemma-union-delete-fromFunc ps) ⟩
-  map just _ ∎)
+  _ ∎)
   where inner : (f : Fin n) → maybe′ just (lookupM f (delete i (delete-many is (fromFunc g)))) (lookup f h) ≡ maybe′ just (lookupM f (delete-many is (fromFunc g))) (lookup f h)
         inner f with f ≟ i
         inner .i | yes refl = begin

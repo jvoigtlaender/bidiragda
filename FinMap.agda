@@ -38,7 +38,7 @@ fromAscList []             = empty
 fromAscList ((f , a) ∷ xs) = insert f a (fromAscList xs)
 
 fromFunc : {A : Set} {n : ℕ} → (Fin n → A) → FinMapMaybe n A
-fromFunc = mapV just ∘ tabulate
+fromFunc = tabulate ∘ _∘_ just
 
 reshape : {n : ℕ} {A : Set} → FinMapMaybe n A → (l : ℕ) → FinMapMaybe l A
 reshape m        zero    = []
@@ -103,10 +103,6 @@ lemma-lookupM-fromFunc : {n : ℕ} {A : Set} → (f : Fin n → A) → flip look
 lemma-lookupM-fromFunc f zero = refl
 lemma-lookupM-fromFunc f (suc i) = lemma-lookupM-fromFunc (f ∘ suc) i
 
-lemma-fromFunc-tabulate : {n : ℕ} {A : Set} → (f : Fin n → A) → fromFunc f ≡ tabulate (Maybe.just ∘ f)
-lemma-fromFunc-tabulate {zero}  f = refl
-lemma-fromFunc-tabulate {suc _} f = cong (_∷_ (just (f zero))) (lemma-fromFunc-tabulate (f ∘ suc))
-
 lemma-lookupM-delete : {n : ℕ} {A : Set} {i j : Fin n} → (f : FinMapMaybe n A) → i ≢ j → lookupM i (delete j f) ≡ lookupM i f
 lemma-lookupM-delete {i = zero}  {j = zero}  (_ ∷ _)  p = contradiction refl p
 lemma-lookupM-delete {i = zero}  {j = suc j} (_ ∷ _)  p = refl
@@ -118,7 +114,7 @@ lemma-reshape-id []       = refl
 lemma-reshape-id (x ∷ xs) = cong (_∷_ x) (lemma-reshape-id xs)
 
 lemma-disjoint-union : {n m : ℕ} {A : Set} → (f : Fin n → A) → (t : Vec (Fin n) m) → union (restrict f (toList t)) (delete-many t (fromFunc f)) ≡ fromFunc f
-lemma-disjoint-union {n} {m} f t = trans (lemma-tabulate-∘ (lemma-inner t)) (sym (lemma-fromFunc-tabulate f))
+lemma-disjoint-union {n} {m} f t = lemma-tabulate-∘ (lemma-inner t)
     where lemma-inner : {m : ℕ} → (t : Vec (Fin n) m) → (x : Fin n) → maybe′ just (lookupM x (delete-many t (fromFunc f))) (lookupM x (restrict f (toList t))) ≡ just (f x)
           lemma-inner [] x = begin
             maybe′ just (lookupM x (fromFunc f)) (lookupM x empty)
