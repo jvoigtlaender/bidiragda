@@ -56,3 +56,18 @@ sieve' = assume-get id↪ (≡-to-Π _) f
         f []           = []
         f (x ∷ [])     = x ∷ []
         f (x ∷ _ ∷ xs) = x ∷ f xs
+
+intersperse-len : ℕ → ℕ
+intersperse-len zero          = zero
+intersperse-len (suc zero)    = suc zero
+intersperse-len (suc (suc n)) = suc (suc (intersperse-len (suc n)))
+
+intersperse : {A : Set} {n : ℕ} → A → Vec A n → Vec A (intersperse-len n)
+intersperse s []          = []
+intersperse s (x ∷ [])    = x ∷ []
+intersperse s (x ∷ y ∷ v) = x ∷ s ∷ intersperse s (y ∷ v)
+
+intersperse' : Get
+intersperse' = assume-get suc-injection (≡-to-Π intersperse-len) f
+  where f : {A : Set} {n : ℕ} → Vec A (suc n) → Vec A (intersperse-len n)
+        f (s ∷ v)        = intersperse s v
