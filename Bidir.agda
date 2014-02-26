@@ -26,7 +26,7 @@ import Relation.Binary.EqReasoning as EqR
 
 import GetTypes
 open GetTypes.PartialVecVec using (Get ; module Get)
-open import Generic using (mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; VecISetoid)
+open import Generic using (mapMV ; mapMV-cong ; mapMV-purity ; sequenceV ; VecISetoid ; just-injective)
 open import FinMap
 import CheckInsert
 open CheckInsert A
@@ -212,36 +212,22 @@ sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong
 sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | nothing | nothing | nothing = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 sequence-cong {S}                                       (VecEq._∷-cong_ nothing xs≈ys) = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 
-theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just (map just u) → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
+theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec (Maybe Carrier) (Get.|gl₁| G j)) → bff G j s v ≡ just u → VecISetoid (MaybeSetoid A.setoid) at _ ∋ Get.get G u ≈ map just v
 theorem-2 G j s v u p with (lemma-<$>-just ((flip union (reshape (delete-many (Get.get G (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G j))) <$> (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v)) p)
 theorem-2 G j s v u p | h′ , ph′ with (lemma-<$>-just (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v) ph′)
-theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid (VecISetoid A.setoid at _) ⟩
-  get <$> (just u)
-    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence u)) ⟩
-  get <$> (just (map just u) >>= sequenceV)
-    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ sequenceV) (sym p) ⟩
-  get <$> (bff G j s v >>= sequenceV)
-    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ sequenceV ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
-  get <$> sequenceV (h′↦r (h↦h′ h))
-    ≡⟨ lemma-get-sequenceV G (begin⟨ EqSetoid _ ⟩
-      sequenceV (h′↦r (h↦h′ h))
-        ≡⟨ cong (flip _>>=_ sequenceV ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) (sym ph) ⟩
-      (h′↦r <$> (h↦h′ <$> assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v) >>= sequenceV)
-        ≡⟨ cong (flip _>>=_ sequenceV) p ⟩
-      sequenceV (map just u)
-        ≡⟨ lemma-just-sequence u ⟩
-      just u ∎) ⟩
-  sequenceV (get (h′↦r (h↦h′ h)))
+theorem-2 G j s v u p | h′ , ph′ | h , ph = begin⟨ VecISetoid (MaybeSetoid A.setoid) at _ ⟩
+  get u
+    ≡⟨ just-injective (trans (cong (_<$>_ get) (sym p))
+                             (cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph)) ⟩
+  get (h′↦r (h↦h′ h))
     ≡⟨ refl ⟩
-  sequenceV (get (map (flip lookupM (h↦h′ h)) t))
-    ≡⟨ cong sequenceV (free-theorem (flip lookupM (h↦h′ h)) t) ⟩
-  sequenceV (map (flip lookupM (h↦h′ h)) (get t))
-    ≡⟨ cong sequenceV (lemma-union-not-used h g′ (get t) (lemma-assoc-domain (get t) v h ph)) ⟩
-  sequenceV (map (flip lookupM h) (get t))
-    ≈⟨ sequence-cong (lemma-2 (get t) v h ph) ⟩
-  sequenceV (map just v)
-    ≡⟨ lemma-just-sequence v ⟩
-  just v ∎)
+  get (map (flip lookupM (h↦h′ h)) t)
+    ≡⟨ free-theorem (flip lookupM (h↦h′ h)) t ⟩
+  map (flip lookupM (h↦h′ h)) (get t)
+    ≡⟨ lemma-union-not-used h g′ (get t) (lemma-assoc-domain (get t) v h ph) ⟩
+  map (flip lookupM h) (get t)
+    ≈⟨ lemma-2 (get t) v h ph ⟩
+  map just v ∎
     where open SetoidReasoning
           open Get G
           s′   = enumerate s
@@ -250,3 +236,17 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid 
           t    = enumeratel (Get.|gl₁| G j)
           h↦h′ = flip union (reshape g′ (Get.|gl₁| G j))
           h′↦r = flip map t ∘ flip lookupM
+
+theorem-2′ : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just (map just u) → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
+theorem-2′ G j s v u p = drop-just (begin
+  get <$> just u
+    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence u)) ⟩
+  get <$> sequenceV (map just u)
+    ≡⟨ lemma-get-sequenceV G (lemma-just-sequence u) ⟩
+  sequenceV (get (map just u))
+    ≈⟨ sequence-cong (theorem-2 G j s v (map just u) p) ⟩
+  sequenceV (map just v)
+    ≡⟨ lemma-just-sequence v ⟩
+  just v ∎)
+  where open EqR (MaybeSetoid (VecISetoid A.setoid at _))
+        open Get G

@@ -62,19 +62,26 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.A
           maybe′ just (lookupM i (delete-many is (fromFunc g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (fromFunc g)) f≢i)
 
-assoc-enough : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G i)) → ∃ (λ h → assoc (Get.get G (enumerate s)) v ≡ just h) → ∃ λ u → bff G i s v ≡ just (map just u)
-assoc-enough G {i} s v (h , p) = _ , (begin
+assoc-enough : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → ∃ (λ h → assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v ≡ just h) → ∃ λ u → bff G j s v ≡ just u
+assoc-enough G {i} j s v (h , p) = _ , cong (_<$>_ (flip map t ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (|gl₁| j)))) p
+  where open Get G
+        g′ = delete-many (get (enumerate s)) (fromFunc (denumerate s))
+        t  = enumeratel (|gl₁| j)
+
+assoc-enough′ : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G i)) → ∃ (λ h → assoc (Get.get G (enumeratel (Get.|gl₁| G i))) v ≡ just h) → ∃ λ u → bff G i s v ≡ just (map just u)
+assoc-enough′ G {i} s v (h , p) = _ , (begin
   bff G i s v
-    ≡⟨ cong (_<$>_ (flip map t ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (Get.|gl₁| G i)))) p ⟩
-  just (map (flip lookupM (union h (reshape g′ (Get.|gl₁| G i)))) t)
-    ≡⟨ cong (Maybe.just ∘ flip map t ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
-  just (map (flip lookupM (union h g′)) t)
-    ≡⟨ cong (Maybe.just ∘ flip map t ∘ flip lookupM) (proj₂ wp) ⟩
-  just (map (flip lookupM (fromFunc (proj₁ wp))) t)
-    ≡⟨ cong Maybe.just (map-cong (lemma-lookupM-fromFunc (proj₁ wp)) t) ⟩
-  just (map (Maybe.just ∘ proj₁ wp) t)
-    ≡⟨ cong just (map-∘ just (proj₁ wp) t) ⟩
-  just (map Maybe.just (map (proj₁ wp) t)) ∎)
+    ≡⟨ proj₂ (assoc-enough G i s v (h , p)) ⟩
+  just (map (flip lookupM (union h (reshape g′ (|gl₁| i)))) t)
+    ≡⟨ cong just (begin _
+        ≡⟨ cong (flip map t ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
+      map (flip lookupM (union h g′)) t
+        ≡⟨ cong (flip map t ∘ flip lookupM) (proj₂ wp) ⟩
+      map (flip lookupM (fromFunc (proj₁ wp))) t
+        ≡⟨ map-cong (lemma-lookupM-fromFunc (proj₁ wp)) t ⟩
+      map (Maybe.just ∘ proj₁ wp) t
+        ≡⟨ map-∘ just (proj₁ wp) t ⟩
+      map Maybe.just (map (proj₁ wp) t) ∎) ⟩ _ ∎)
   where open Get G
         s′ = enumerate s
         g  = fromFunc (denumerate s)
