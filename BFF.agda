@@ -14,7 +14,7 @@ open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary using (Setoid ; DecSetoid ; module DecSetoid)
 
 open import FinMap
-open import Generic using (mapMV ; ≡-to-Π)
+open import Generic using (sequenceV ; ≡-to-Π)
 import CheckInsert
 open import GetTypes using (VecVec-to-PartialVecVec)
 
@@ -36,7 +36,7 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV
 
-  bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec Carrier (Get.|gl₁| G j))
+  bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec (Maybe Carrier) (Get.|gl₁| G j))
   bff G i s v = let s′ = enumerate s
                     t′ = Get.get G s′
                     g  = fromFunc (denumerate s)
@@ -44,7 +44,10 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
                     t  = enumeratel (Get.|gl₁| G i)
                     h  = assoc (Get.get G t) v
                     h′ = (flip union (reshape g′ (Get.|gl₁| G i))) <$> h
-                in h′ >>= flip mapMV t ∘ flip lookupM
+                in (flip mapV t ∘ flip lookupM) <$> h′
+
+  sbff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec Carrier (Get.|gl₁| G j))
+  sbff G j s v = bff G j s v >>= sequenceV
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open GetTypes.VecVec public using (Get)
@@ -53,5 +56,8 @@ module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
 
   open PartialVecBFF A public using (assoc ; enumerate ; denumerate)
 
-  bff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec Carrier m)
+  bff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec (Maybe Carrier) m)
   bff G = PartialVecBFF.bff A (VecVec-to-PartialVecVec G)
+
+  sbff : (G : Get) → {n : ℕ} → (m : ℕ) → Vec Carrier n → Vec Carrier (Get.getlen G m) → Maybe (Vec Carrier m)
+  sbff G = PartialVecBFF.sbff A (VecVec-to-PartialVecVec G)

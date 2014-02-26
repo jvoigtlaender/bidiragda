@@ -123,7 +123,7 @@ lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
   as ∎)
   where open ≡-Reasoning
 
-theorem-1 : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → bff G i s (Get.get G s) ≡ just s
+theorem-1 : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → bff G i s (Get.get G s) ≡ just (map just s)
 theorem-1 G {i} s = begin
   bff G i s (get s)
     ≡⟨ cong (bff G i s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
@@ -141,17 +141,17 @@ theorem-1 G {i} s = begin
     ≡⟨ cong (h′↦r ∘ just) (lemma-disjoint-union (denumerate s) (get (enumerate s))) ⟩
   (h′↦r ∘ just) (fromFunc (denumerate s))
     ≡⟨ refl ⟩
-  mapMV (flip lookupM (fromFunc (denumerate s))) (enumerate s)
-    ≡⟨ mapMV-cong (lemma-lookupM-fromFunc (denumerate s)) (enumerate s) ⟩
-  mapMV (Maybe.just ∘ denumerate s) (enumerate s)
-    ≡⟨ mapMV-purity (denumerate s) (enumerate s) ⟩
-  just (map (denumerate s) (enumerate s))
-    ≡⟨ cong just (lemma-map-denumerate-enumerate s) ⟩
-  just s ∎
+  just (map (flip lookupM (fromFunc (denumerate s))) (enumerate s))
+    ≡⟨ cong just (map-cong (lemma-lookupM-fromFunc (denumerate s)) (enumerate s)) ⟩
+  just (map (Maybe.just ∘ denumerate s) (enumerate s))
+    ≡⟨ cong just (map-∘ just (denumerate s) (enumerate s)) ⟩
+  just (map just (map (denumerate s) (enumerate s)))
+    ≡⟨ cong (Maybe.just ∘ map just) (lemma-map-denumerate-enumerate s) ⟩
+  just (map just s) ∎
     where open ≡-Reasoning
           open Get G
           h↦h′ = _<$>_ (flip union (reshape (delete-many (get (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G i)))
-          h′↦r = flip _>>=_ (flip mapMV (enumerate s) ∘ flip lookupM)
+          h′↦r = _<$>_ (flip map (enumerate s) ∘ flip lookupM)
 
 
 lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
@@ -212,18 +212,27 @@ sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong
 sequence-cong {S} {m₁ = just x ∷ xs} {m₂ = just y ∷ ys} (VecEq._∷-cong_ (just x≈y) xs≈ys) | nothing | nothing | nothing = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 sequence-cong {S}                                       (VecEq._∷-cong_ nothing xs≈ys) = Setoid.refl (MaybeSetoid (VecISetoid S at _))
 
-theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just u → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
-theorem-2 G j s v u p with (lemma->>=-just ((flip union (reshape (delete-many (Get.get G (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G j))) <$> (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v)) p)
+theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Vec Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just (map just u) → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
+theorem-2 G j s v u p with (lemma-<$>-just ((flip union (reshape (delete-many (Get.get G (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G j))) <$> (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v)) p)
 theorem-2 G j s v u p | h′ , ph′ with (lemma-<$>-just (assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v) ph′)
-theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin
+theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin⟨ MaybeSetoid (VecISetoid A.setoid at _) ⟩
   get <$> (just u)
-    ≡⟨ cong (_<$>_ get) (sym p) ⟩
-  get <$> (bff G j s v)
-    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
-  get <$> h′↦r (h↦h′ h)
+    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence u)) ⟩
+  get <$> (just (map just u) >>= sequenceV)
+    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ sequenceV) (sym p) ⟩
+  get <$> (bff G j s v >>= sequenceV)
+    ≡⟨ cong (_<$>_ get ∘ flip _>>=_ sequenceV ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph ⟩
+  get <$> sequenceV (h′↦r (h↦h′ h))
+    ≡⟨ lemma-get-sequenceV G (begin⟨ EqSetoid _ ⟩
+      sequenceV (h′↦r (h↦h′ h))
+        ≡⟨ cong (flip _>>=_ sequenceV ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) (sym ph) ⟩
+      (h′↦r <$> (h↦h′ <$> assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v) >>= sequenceV)
+        ≡⟨ cong (flip _>>=_ sequenceV) p ⟩
+      sequenceV (map just u)
+        ≡⟨ lemma-just-sequence u ⟩
+      just u ∎) ⟩
+  sequenceV (get (h′↦r (h↦h′ h)))
     ≡⟨ refl ⟩
-  get <$> sequenceV (map (flip lookupM (h↦h′ h)) t)
-    ≡⟨ lemma-get-sequenceV G (trans (cong (flip _>>=_ h′↦r ∘ _<$>_ h↦h′) (sym ph)) p) ⟩
   sequenceV (get (map (flip lookupM (h↦h′ h)) t))
     ≡⟨ cong sequenceV (free-theorem (flip lookupM (h↦h′ h)) t) ⟩
   sequenceV (map (flip lookupM (h↦h′ h)) (get t))
@@ -233,11 +242,11 @@ theorem-2 G j s v u p | h′ , ph′ | h , ph = drop-just (begin
   sequenceV (map just v)
     ≡⟨ lemma-just-sequence v ⟩
   just v ∎)
-    where open EqR (MaybeSetoid (VecISetoid A.setoid at _))
+    where open SetoidReasoning
           open Get G
           s′   = enumerate s
           g    = fromFunc (denumerate s)
           g′   = delete-many (get s′) g
           t    = enumeratel (Get.|gl₁| G j)
           h↦h′ = flip union (reshape g′ (Get.|gl₁| G j))
-          h′↦r = flip mapMV t ∘ flip lookupM
+          h′↦r = flip map t ∘ flip lookupM
