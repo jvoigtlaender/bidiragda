@@ -38,7 +38,7 @@ fromAscList []             = empty
 fromAscList ((f , a) ∷ xs) = insert f a (fromAscList xs)
 
 fromFunc : {A : Set} {n : ℕ} → (Fin n → A) → FinMapMaybe n A
-fromFunc = tabulate ∘ _∘_ just
+fromFunc = tabulate ∘ _∘_ Maybe.just
 
 reshape : {n : ℕ} {A : Set} → FinMapMaybe n A → (l : ℕ) → FinMapMaybe l A
 reshape m        zero    = []
