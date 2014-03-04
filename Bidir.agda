@@ -16,7 +16,7 @@ open import Data.List.All using (All)
 open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
-open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂) renaming (map to map-Σ)
+open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (refl ; _≡_)
 open import Relation.Binary.Indexed using (_at_) renaming (Setoid to ISetoid)
@@ -179,29 +179,28 @@ lemma-just-sequence : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map j
 lemma-just-sequence []       = refl
 lemma-just-sequence (x ∷ xs) = cong (_<$>_ (_∷_ x)) (lemma-just-sequence xs)
 
-lemma-sequenceV-successful : {A : Set} {n : ℕ} → (v : Vec (Maybe A) n) → {r : Vec A n} → sequenceV v ≡ just r → ∃ λ w → v ≡ map just w
-lemma-sequenceV-successful []             p = [] , refl
-lemma-sequenceV-successful (just x ∷ xs)  p with sequenceV xs | inspect sequenceV xs
-lemma-sequenceV-successful (just x ∷ xs)  () | nothing | _
-lemma-sequenceV-successful (just x ∷ xs)  p  | just ys | [ p′ ] = map-Σ (_∷_ x) (cong (_∷_ (just x))) (lemma-sequenceV-successful xs p′)
-lemma-sequenceV-successful (nothing ∷ xs) ()
+lemma-sequenceV-successful : {A : Set} {n : ℕ} → (v : Vec (Maybe A) n) → {r : Vec A n} → sequenceV v ≡ just r → v ≡ map just r
+lemma-sequenceV-successful []             {r = []}       p = refl
+lemma-sequenceV-successful (just x ∷ xs)                 p with sequenceV xs | inspect sequenceV xs
+lemma-sequenceV-successful (just x ∷ xs)                 () | nothing | _
+lemma-sequenceV-successful (just x ∷ xs)  {r = .x ∷ .ys} refl  | just ys | [ p′ ] = cong (_∷_ (just x)) (lemma-sequenceV-successful xs p′)
+lemma-sequenceV-successful (nothing ∷ xs)                ()
 
 lemma-get-sequenceV : {A : Set} → (G : Get) → {i : Get.|I| G} {v : Vec (Maybe A) (Get.|gl₁| G i)} {r : Vec A (Get.|gl₁| G i)} → sequenceV v ≡ just r → Get.get G <$> sequenceV v ≡ sequenceV (Get.get G v)
-lemma-get-sequenceV G {v = v} p = begin
+lemma-get-sequenceV G {v = v} {r = r} p = begin
   get <$> sequenceV v
-    ≡⟨ cong (_<$>_ get ∘ sequenceV) (proj₂ wp) ⟩
-  get <$> sequenceV (map just (proj₁ wp))
-    ≡⟨ cong (_<$>_ get) (lemma-just-sequence (proj₁ wp)) ⟩
-  get <$> just (proj₁ wp)
-    ≡⟨ sym (lemma-just-sequence (get (proj₁ wp))) ⟩
-  sequenceV (map just (get (proj₁ wp)))
-    ≡⟨ cong sequenceV (sym (free-theorem just (proj₁ wp))) ⟩
-  sequenceV (get (map just (proj₁ wp)))
-    ≡⟨ cong (sequenceV ∘ get) (sym (proj₂ wp)) ⟩
+    ≡⟨ cong (_<$>_ get ∘ sequenceV) (lemma-sequenceV-successful v p) ⟩
+  get <$> sequenceV (map just r)
+    ≡⟨ cong (_<$>_ get) (lemma-just-sequence r) ⟩
+  get <$> just r
+    ≡⟨ sym (lemma-just-sequence (get r)) ⟩
+  sequenceV (map just (get r))
+    ≡⟨ cong sequenceV (sym (free-theorem just r)) ⟩
+  sequenceV (get (map just r))
+    ≡⟨ cong (sequenceV ∘ get) (sym (lemma-sequenceV-successful v p)) ⟩
   sequenceV (get v) ∎
   where open ≡-Reasoning
         open Get G
-        wp = lemma-sequenceV-successful v p
 
 sequence-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → VecISetoid (MaybeSetoid S) at _ ∋ m₁ ≈ m₂ → MaybeSetoid (VecISetoid S at n) ∋ sequenceV m₁ ≈ sequenceV m₂
 sequence-cong {S}                                       VecEq.[]-cong = Setoid.refl (MaybeSetoid (VecISetoid S at _))
