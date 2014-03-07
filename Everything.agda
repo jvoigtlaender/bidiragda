@@ -2,6 +2,7 @@
 module Everything where
 
 import Generic
+import Structures
 import FinMap
 import CheckInsert
 import GetTypes
