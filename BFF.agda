@@ -9,8 +9,8 @@ open import Data.Maybe using (Maybe ; just ; nothing ; maybe′)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List ; [] ; _∷_ ; map ; length)
-open import Data.Vec using (Vec ; toList ; fromList ; tabulate ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
-open import Function using (id ; _∘_ ; flip)
+open import Data.Vec using (Vec ; toList ; fromList ; allFin) renaming (lookup to lookupV ; map to mapV ; [] to []V ; _∷_ to _∷V_)
+open import Function using (_∘_ ; flip)
 open import Relation.Binary using (Setoid ; DecSetoid ; module DecSetoid)
 
 open import FinMap
@@ -28,10 +28,10 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   assoc (i ∷V is) (b ∷V bs) = (assoc is bs) >>= (checkInsert i b)
 
   enumerate : {n : ℕ} → Vec Carrier n → Vec (Fin n) n
-  enumerate _ = tabulate id
+  enumerate {n} _ = allFin n
 
   enumeratel : (n : ℕ) → Vec (Fin n) n
-  enumeratel _ = tabulate id
+  enumeratel = allFin
 
   denumerate : {n : ℕ} → Vec Carrier n → Fin n → Carrier
   denumerate = flip lookupV

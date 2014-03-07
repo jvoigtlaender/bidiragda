@@ -13,9 +13,9 @@ open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
 open import Data.List using (List)
 open import Data.List.All using (All)
-open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map ; tabulate) renaming (lookup to lookupVec)
+open import Data.Vec using (Vec ; [] ; _∷_ ; toList ; map) renaming (lookup to lookupVec)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
-open import Data.Vec.Properties using (tabulate-∘ ; lookup∘tabulate ; map-cong ; map-∘)
+open import Data.Vec.Properties using (lookup∘tabulate ; map-cong ; map-∘ ; map-lookup-allFin)
 open import Data.Product using (∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Function using (id ; _∘_ ; flip)
 open import Relation.Binary.Core using (refl ; _≡_)
@@ -107,26 +107,10 @@ lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   just x ∷ map just xs ∎
   where open EqR (VecISetoid (MaybeSetoid A.setoid) at _)
 
-lemma-map-denumerate-enumerate : {m : ℕ} → (as : Vec Carrier m) → map (denumerate as) (enumerate as) ≡ as
-lemma-map-denumerate-enumerate []       = refl
-lemma-map-denumerate-enumerate (a ∷ as) = cong (_∷_ a) (begin
-  map (flip lookupVec (a ∷ as)) (tabulate Fin.suc)
-    ≡⟨ cong (map (flip lookupVec (a ∷ as))) (tabulate-∘ Fin.suc id) ⟩
-  map (flip lookupVec (a ∷ as)) (map Fin.suc (tabulate id))
-    ≡⟨ refl ⟩
-  map (flip lookupVec (a ∷ as)) (map Fin.suc (enumerate as))
-    ≡⟨ sym (map-∘ _ _ (enumerate as)) ⟩
-  map (flip lookupVec (a ∷ as) ∘ Fin.suc) (enumerate as)
-    ≡⟨ refl ⟩
-  map (denumerate as) (enumerate as)
-    ≡⟨ lemma-map-denumerate-enumerate as ⟩
-  as ∎)
-  where open ≡-Reasoning
-
 theorem-1 : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → bff G i s (Get.get G s) ≡ just (map just s)
 theorem-1 G {i} s = begin
   bff G i s (get s)
-    ≡⟨ cong (bff G i s ∘ get) (sym (lemma-map-denumerate-enumerate s)) ⟩
+    ≡⟨ cong (bff G i s ∘ get) (sym (map-lookup-allFin s)) ⟩
   bff G i s (get (map (denumerate s) (enumerate s)))
     ≡⟨ cong (bff G i s) (free-theorem (denumerate s) (enumerate s)) ⟩
   bff G i s (map (denumerate s) (get (enumerate s)))
@@ -146,7 +130,7 @@ theorem-1 G {i} s = begin
   just (map (Maybe.just ∘ denumerate s) (enumerate s))
     ≡⟨ cong just (map-∘ just (denumerate s) (enumerate s)) ⟩
   just (map just (map (denumerate s) (enumerate s)))
-    ≡⟨ cong (Maybe.just ∘ map just) (lemma-map-denumerate-enumerate s) ⟩
+    ≡⟨ cong (Maybe.just ∘ map just) (map-lookup-allFin s) ⟩
   just (map just s) ∎
     where open ≡-Reasoning
           open Get G

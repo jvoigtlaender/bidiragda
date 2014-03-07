@@ -12,7 +12,7 @@ import Category.Functor
 open import Data.Maybe using (Maybe ; nothing ; just ; maybe′)
 open Category.Monad.RawMonad {Level.zero} Data.Maybe.monad using (_>>=_)
 open Category.Functor.RawFunctor {Level.zero} Data.Maybe.functor using (_<$>_)
-open import Data.Vec using (Vec ; [] ; _∷_ ; map ; lookup ; toList ; tabulate)
+open import Data.Vec using (Vec ; [] ; _∷_ ; map ; lookup ; toList)
 open import Data.Vec.Properties using (map-cong ; map-∘ ; tabulate-∘)
 import Data.List.All
 open import Data.List.Any using (here ; there)
