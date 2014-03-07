@@ -111,31 +111,34 @@ theorem-1 : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)
 theorem-1 G {i} s = begin
   bff G i s (get s)
     ≡⟨ cong (bff G i s ∘ get) (sym (map-lookup-allFin s)) ⟩
-  bff G i s (get (map (denumerate s) (enumerate s)))
-    ≡⟨ cong (bff G i s) (free-theorem (denumerate s) (enumerate s)) ⟩
-  bff G i s (map (denumerate s) (get (enumerate s)))
+  bff G i s (get (map f t))
+    ≡⟨ cong (bff G i s) (free-theorem f t) ⟩
+  bff G i s (map f (get t))
     ≡⟨ refl ⟩
-  (h′↦r ∘ h↦h′) (assoc (get (enumerate s)) (map (denumerate s) (get (enumerate s))))
-    ≡⟨ cong (h′↦r ∘ h↦h′) (lemma-1 (denumerate s) (get (enumerate s))) ⟩
-  (h′↦r ∘ h↦h′ ∘ just) (restrict (denumerate s) (toList (get (enumerate s))))
-    ≡⟨ refl ⟩
-  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (reshape (delete-many (get (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G i)))
-    ≡⟨ cong (h′↦r ∘ Maybe.just ∘ union (restrict (denumerate s) (toList (get (enumerate s))))) (lemma-reshape-id (delete-many (get (enumerate s)) (fromFunc (denumerate s)))) ⟩
-  (h′↦r ∘ just) (union (restrict (denumerate s) (toList (get (enumerate s)))) (delete-many (get (enumerate s)) (fromFunc (denumerate s))))
-    ≡⟨ cong (h′↦r ∘ just) (lemma-disjoint-union (denumerate s) (get (enumerate s))) ⟩
-  (h′↦r ∘ just) (fromFunc (denumerate s))
-    ≡⟨ refl ⟩
-  just (map (flip lookupM (fromFunc (denumerate s))) (enumerate s))
-    ≡⟨ cong just (map-cong (lemma-lookupM-fromFunc (denumerate s)) (enumerate s)) ⟩
-  just (map (Maybe.just ∘ denumerate s) (enumerate s))
-    ≡⟨ cong just (map-∘ just (denumerate s) (enumerate s)) ⟩
-  just (map just (map (denumerate s) (enumerate s)))
-    ≡⟨ cong (Maybe.just ∘ map just) (map-lookup-allFin s) ⟩
-  just (map just s) ∎
+  h′↦r <$> (h↦h′ <$> (assoc (get t) (map f (get t))))
+    ≡⟨ cong (_<$>_ h′↦r ∘ _<$>_ h↦h′) (lemma-1 f (get t)) ⟩
+  (Maybe.just ∘ h′↦r ∘ h↦h′) (restrict f (toList (get t)))
+    ≡⟨ cong just (begin
+      h′↦r (union (restrict f (toList (get t))) (reshape g′ (|gl₁| i)))
+        ≡⟨ cong (h′↦r ∘ union (restrict f (toList (get t)))) (lemma-reshape-id g′) ⟩
+      h′↦r (union (restrict f (toList (get t))) g′)
+        ≡⟨ cong h′↦r (lemma-disjoint-union f (get t)) ⟩
+      h′↦r (fromFunc f)
+        ≡⟨ refl ⟩
+      map (flip lookupM (fromFunc f)) t
+        ≡⟨ map-cong (lemma-lookupM-fromFunc f) t ⟩
+      map (Maybe.just ∘ f) t
+        ≡⟨ map-∘ just f t ⟩
+      map just (map f t)
+        ≡⟨ cong (map just) (map-lookup-allFin s) ⟩
+      map just s ∎) ⟩ _ ∎
     where open ≡-Reasoning
           open Get G
-          h↦h′ = _<$>_ (flip union (reshape (delete-many (get (enumerate s)) (fromFunc (denumerate s))) (Get.|gl₁| G i)))
-          h′↦r = _<$>_ (flip map (enumerate s) ∘ flip lookupM)
+          t    = enumeratel (|gl₁| i)
+          f    = denumerate s
+          g′   = delete-many (get t) (fromFunc f)
+          h↦h′ = flip union (reshape g′ (|gl₁| i))
+          h′↦r = flip map t ∘ flip lookupM
 
 
 lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma ≡ just b → ∃ λ a → ma ≡ just a
