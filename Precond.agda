@@ -25,6 +25,7 @@ open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ;
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 open import Relation.Nullary using (yes ; no)
 
+open import Structures using (IsFunctor)
 open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty ; delete-many ; lemma-tabulate-∘ ; delete ; lemma-lookupM-delete ; lemma-lookupM-fromFunc ; reshape ; lemma-reshape-id)
 import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
@@ -32,8 +33,8 @@ import BFF
 import Bidir
 open Bidir (decSetoid deq) using (_in-domain-of_ ; lemma-assoc-domain)
 import GetTypes
-open GetTypes.PartialVecVec using (Get ; module Get)
-open BFF.PartialVecBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff ; enumeratel)
+open GetTypes.PartialShapeVec using (Get ; module Get)
+open BFF.PartialShapeBFF (decSetoid deq) using (assoc ; enumerate ; denumerate ; bff)
 
 lemma-maybe-just : {A : Set} → (a : A) → (ma : Maybe A) → maybe′ Maybe.just (just a) ma ≡ Maybe.just (maybe′ id a ma)
 lemma-maybe-just a (just x) = refl
@@ -62,31 +63,31 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.A
           maybe′ just (lookupM i (delete-many is (fromFunc g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (fromFunc g)) f≢i)
 
-assoc-enough : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → ∃ (λ h → assoc (Get.get G (enumeratel (Get.|gl₁| G j))) v ≡ just h) → ∃ λ u → bff G j s v ≡ just u
-assoc-enough G {i} j s v (h , p) = _ , cong (_<$>_ (flip map t ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (|gl₁| j)))) p
+assoc-enough : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Get.Container G Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → ∃ (λ h → assoc (Get.get G (enumerate (Get.ShapeT G) (Get.|gl₁| G j))) v ≡ just h) → ∃ λ u → bff G j s v ≡ just u
+assoc-enough G {i} j s v (h , p) = _ , cong (_<$>_ ((λ f → fmap f t) ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (arity (|gl₁| j))))) p
   where open Get G
-        g′ = delete-many (get (enumerate s)) (fromFunc (denumerate s))
-        t  = enumeratel (|gl₁| j)
+        g′ = delete-many (get (enumerate ShapeT (|gl₁| i))) (fromFunc (denumerate ShapeT s))
+        t  = enumerate ShapeT (|gl₁| j)
 
-assoc-enough′ : (G : Get) → {i : Get.|I| G} → (s : Vec Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G i)) → ∃ (λ h → assoc (Get.get G (enumeratel (Get.|gl₁| G i))) v ≡ just h) → ∃ λ u → bff G i s v ≡ just (map just u)
+assoc-enough′ : (G : Get) → {i : Get.|I| G} → (s : Get.Container G Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G i)) → ∃ (λ h → assoc (Get.get G (enumerate (Get.ShapeT G) (Get.|gl₁| G i))) v ≡ just h) → ∃ λ u → bff G i s v ≡ just (Get.fmap G just u)
 assoc-enough′ G {i} s v (h , p) = _ , (begin
   bff G i s v
     ≡⟨ proj₂ (assoc-enough G i s v (h , p)) ⟩
-  just (map (flip lookupM (union h (reshape g′ (|gl₁| i)))) t)
+  just (fmap (flip lookupM (union h (reshape g′ (arity (|gl₁| i))))) t)
     ≡⟨ cong just (begin _
-        ≡⟨ cong (flip map t ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
-      map (flip lookupM (union h g′)) t
-        ≡⟨ cong (flip map t ∘ flip lookupM) (proj₂ wp) ⟩
-      map (flip lookupM (fromFunc (proj₁ wp))) t
-        ≡⟨ map-cong (lemma-lookupM-fromFunc (proj₁ wp)) t ⟩
-      map (Maybe.just ∘ proj₁ wp) t
-        ≡⟨ map-∘ just (proj₁ wp) t ⟩
-      map Maybe.just (map (proj₁ wp) t) ∎) ⟩ _ ∎)
+        ≡⟨ cong ((λ f → fmap f t) ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
+      fmap (flip lookupM (union h g′)) t
+        ≡⟨ cong ((λ f → fmap f t) ∘ flip lookupM) (proj₂ wp) ⟩
+      fmap (flip lookupM (fromFunc (proj₁ wp))) t
+        ≡⟨ IsFunctor.cong (isFunctor (|gl₁| i)) (lemma-lookupM-fromFunc (proj₁ wp)) t ⟩
+      fmap (Maybe.just ∘ proj₁ wp) t
+        ≡⟨ IsFunctor.composition (isFunctor (|gl₁| i)) just (proj₁ wp) t ⟩
+      fmap Maybe.just (fmap (proj₁ wp) t) ∎) ⟩ _ ∎)
   where open Get G
-        s′ = enumerate s
-        g  = fromFunc (denumerate s)
+        s′ = enumerate ShapeT (|gl₁| i)
+        g  = fromFunc (denumerate ShapeT s)
         g′ = delete-many (get s′) g
-        t  = enumeratel (Get.|gl₁| G i)
+        t  = enumerate ShapeT (|gl₁| i)
         wp = lemma-union-delete-fromFunc (lemma-assoc-domain (get t) v h p)
 
 data All-different {A : Set} : List A → Set where
