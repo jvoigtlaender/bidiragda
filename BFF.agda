@@ -18,10 +18,10 @@ open import Generic using (sequenceV ; ≡-to-Π)
 open import Structures using (Shaped ; module Shaped)
 open import Instances using (VecShaped)
 import CheckInsert
-open import GetTypes using (VecVec-to-PartialVecVec ; PartialVecVec-to-PartialShapeVec)
+open import GetTypes using (VecVec-to-PartialVecVec ; PartialVecVec-to-PartialShapeVec ; PartialShapeVec-to-PartialShapeShape)
 
 module PartialShapeBFF (A : DecSetoid ℓ₀ ℓ₀) where
-  open GetTypes.PartialShapeVec public using (Get ; module Get)
+  open GetTypes.PartialShapeShape public using (Get ; module Get)
   open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
   open CheckInsert A
 
@@ -36,19 +36,19 @@ module PartialShapeBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate : {S : Set} {C : Set → S → Set} → (ShapeT : Shaped S C) → {α : Set} {s : S} → (c : C α s) → Fin (Shaped.arity ShapeT s) → α
   denumerate ShapeT c = flip lookupV (Shaped.content ShapeT c)
 
-  bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Get.Container G Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Get.Container G (Maybe Carrier) (Get.|gl₁| G j))
-  bff G {i} j s v = let s′ = enumerate ShapeT (|gl₁| i)
+  bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Get.SourceContainer G Carrier (Get.|gl₁| G i) → Get.ViewContainer G Carrier (Get.|gl₂| G j) → Maybe (Get.SourceContainer G (Maybe Carrier) (Get.|gl₁| G j))
+  bff G {i} j s v = let s′ = enumerate SourceShapeT (|gl₁| i)
                         t′ = get s′
-                        g  = fromFunc (denumerate ShapeT s)
-                        g′ = delete-many t′ g
-                        t  = enumerate ShapeT (|gl₁| j)
-                        h  = assoc (get t) v
-                        h′ = (flip union (reshape g′ (arity (|gl₁| j)))) <$> h
-                    in ((λ f → fmap f t) ∘ flip lookupM) <$> h′
+                        g  = fromFunc (denumerate SourceShapeT s)
+                        g′ = delete-many (Shaped.content ViewShapeT t′) g
+                        t  = enumerate SourceShapeT (|gl₁| j)
+                        h  = assoc (Shaped.content ViewShapeT (get t)) (Shaped.content ViewShapeT v)
+                        h′ = (flip union (reshape g′ (Shaped.arity SourceShapeT (|gl₁| j)))) <$> h
+                    in ((λ f → fmapS f t) ∘ flip lookupM) <$> h′
     where open Get G
 
-  sbff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Get.Container G Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Get.Container G Carrier (Get.|gl₁| G j))
-  sbff G j s v = bff G j s v >>= Get.sequence G
+  sbff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Get.SourceContainer G Carrier (Get.|gl₁| G i) → Get.ViewContainer G Carrier (Get.|gl₂| G j) → Maybe (Get.SourceContainer G Carrier (Get.|gl₁| G j))
+  sbff G j s v = bff G j s v >>= Shaped.sequence (Get.SourceShapeT G)
 
 module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open GetTypes.PartialVecVec public using (Get)
@@ -67,10 +67,10 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate = PartialShapeBFF.denumerate A VecShaped
 
   bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec (Maybe Carrier) (Get.|gl₁| G j))
-  bff G j s v = PartialShapeBFF.bff A (PartialVecVec-to-PartialShapeVec G) j s v
+  bff G j s v = PartialShapeBFF.bff A (PartialShapeVec-to-PartialShapeShape (PartialVecVec-to-PartialShapeVec G)) j s v
 
   sbff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec Carrier (Get.|gl₁| G j))
-  sbff  G j s v = PartialShapeBFF.sbff A (PartialVecVec-to-PartialShapeVec G) j s v
+  sbff  G j s v = PartialShapeBFF.sbff A (PartialShapeVec-to-PartialShapeShape (PartialVecVec-to-PartialShapeVec G)) j s v
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open GetTypes.VecVec public using (Get)
