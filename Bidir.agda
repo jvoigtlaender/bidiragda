@@ -181,17 +181,17 @@ lemma-just-sequenceV : {A : Set} {n : ℕ} → (v : Vec A n) → sequenceV (map 
 lemma-just-sequenceV []       = refl
 lemma-just-sequenceV (x ∷ xs) = cong (_<$>_ (_∷_ x)) (lemma-just-sequenceV xs)
 
-lemma-just-sequence : (G : Get) → {A : Set} {i : Get.|I| G} → (c : Get.Container G A (Get.|gl₁| G i)) → Get.sequence G (Get.fmap G just c) ≡ just c
-lemma-just-sequence G {i = i} c = begin
-  fill (|gl₁| i) <$> sequenceV (content (fmap just c))
-    ≡⟨ cong (_<$>_ (fill (|gl₁| i)) ∘ sequenceV) (fmap-content just c) ⟩
-  fill (|gl₁| i) <$> sequenceV (map just (content c))
-    ≡⟨ cong (_<$>_ (fill (|gl₁| i))) (lemma-just-sequenceV (content c)) ⟩
-  fill (|gl₁| i) <$> just (content c)
+lemma-just-sequence : {S : Set} {C : Set → S → Set} → (ShapeT : Shaped S C) → {A : Set} {s : S} → (c : C A s) → Shaped.sequence ShapeT (Shaped.fmap ShapeT just c) ≡ just c
+lemma-just-sequence ShapeT {s = s} c = begin
+  fill s <$> sequenceV (content (fmap just c))
+    ≡⟨ cong (_<$>_ (fill s) ∘ sequenceV) (fmap-content just c) ⟩
+  fill s <$> sequenceV (map just (content c))
+    ≡⟨ cong (_<$>_ (fill s)) (lemma-just-sequenceV (content c)) ⟩
+  fill s <$> just (content c)
     ≡⟨ cong just (content-fill c) ⟩
   just c ∎
   where open ≡-Reasoning
-        open Get G
+        open Shaped ShapeT
 
 lemma-sequenceV-successful : {A : Set} {n : ℕ} → (v : Vec (Maybe A) n) → {r : Vec A n} → sequenceV v ≡ just r → v ≡ map just r
 lemma-sequenceV-successful []             {r = []}       p = refl
@@ -200,16 +200,16 @@ lemma-sequenceV-successful (just x ∷ xs)                 () | nothing | _
 lemma-sequenceV-successful (just x ∷ xs)  {r = .x ∷ .ys} refl  | just ys | [ p′ ] = cong (_∷_ (just x)) (lemma-sequenceV-successful xs p′)
 lemma-sequenceV-successful (nothing ∷ xs)                ()
 
-lemma-sequence-successful : (G : Get) → {A : Set} {i : Get.|I| G} → (c : Get.Container G (Maybe A) (Get.|gl₁| G i)) → {r : Get.Container G A (Get.|gl₁| G i)} → Get.sequence G c ≡ just r → c ≡ Get.fmap G just r
-lemma-sequence-successful G {i = i} c {r} p = just-injective (sym (begin
-  fill (|gl₁| i) <$> (map just <$> (content <$> just r))
-    ≡⟨ cong (_<$>_ (fill (|gl₁| i)) ∘ _<$>_ (map just)) (begin
+lemma-sequence-successful : {S : Set} {C : Set → S → Set} → (ShapeT : Shaped S C) → {A : Set} {s : S} → (c : C (Maybe A) s) → {r : C A s} → Shaped.sequence ShapeT c ≡ just r → c ≡ Shaped.fmap ShapeT just r
+lemma-sequence-successful ShapeT {s = s} c {r} p = just-injective (sym (begin
+  fill s <$> (map just <$> (content <$> just r))
+    ≡⟨ cong (_<$>_ (fill s) ∘ _<$>_ (map just)) (begin
       content <$> just r
         ≡⟨ cong (_<$>_ content) (sym p) ⟩
-      content <$> (fill (|gl₁| i) <$> sequenceV (content c))
-        ≡⟨ sym (Functor.composition MaybeFunctor content (fill (|gl₁| i)) (sequenceV (content c))) ⟩
-      content ∘ fill (|gl₁| i) <$> sequenceV (content c)
-        ≡⟨ Functor.cong MaybeFunctor (fill-content (|gl₁| i)) (sequenceV (content c)) ⟩
+      content <$> (fill s <$> sequenceV (content c))
+        ≡⟨ sym (Functor.composition MaybeFunctor content (fill s) (sequenceV (content c))) ⟩
+      content ∘ fill s <$> sequenceV (content c)
+        ≡⟨ Functor.cong MaybeFunctor (fill-content s) (sequenceV (content c)) ⟩
       id <$> sequenceV (content c)
         ≡⟨ Functor.identity MaybeFunctor (sequenceV (content c)) ⟩
       sequenceV (content c)
@@ -217,27 +217,27 @@ lemma-sequence-successful G {i = i} c {r} p = just-injective (sym (begin
       sequenceV (map just (proj₁ wp))
         ≡⟨ lemma-just-sequenceV (proj₁ wp) ⟩
       just (proj₁ (lemma-<$>-just (sequenceV (content c)) p)) ∎) ⟩
-  fill (|gl₁| i) <$> (map just <$> just (proj₁ (lemma-<$>-just (sequenceV (content c)) p)))
-    ≡⟨ cong (_<$>_ (fill (|gl₁| i)) ∘ just) (sym (lemma-sequenceV-successful (content c) (proj₂ wp))) ⟩
-  fill (|gl₁| i) <$> just (content c)
+  fill s <$> (map just <$> just (proj₁ (lemma-<$>-just (sequenceV (content c)) p)))
+    ≡⟨ cong (_<$>_ (fill s) ∘ just) (sym (lemma-sequenceV-successful (content c) (proj₂ wp))) ⟩
+  fill s <$> just (content c)
     ≡⟨ cong just (content-fill c) ⟩
   just c ∎))
   where open ≡-Reasoning
-        open Get G
+        open Shaped ShapeT
         wp = lemma-<$>-just (sequenceV (content c)) p
 
 lemma-get-sequence : {A : Set} → (G : Get) → {i : Get.|I| G} {v : Get.Container G (Maybe A) (Get.|gl₁| G i)} {r : Get.Container G A (Get.|gl₁| G i)} → Get.sequence G v ≡ just r → Get.get G <$> Get.sequence G v ≡ sequenceV (Get.get G v)
 lemma-get-sequence G {v = v} {r = r} p = begin
   get <$> sequence v
-    ≡⟨ cong (_<$>_ get ∘ sequence) (lemma-sequence-successful G v p) ⟩
+    ≡⟨ cong (_<$>_ get ∘ sequence) (lemma-sequence-successful ShapeT v p) ⟩
   get <$> sequence (fmap just r)
-    ≡⟨ cong (_<$>_ get) (lemma-just-sequence G r) ⟩
+    ≡⟨ cong (_<$>_ get) (lemma-just-sequence ShapeT r) ⟩
   get <$> just r
     ≡⟨ sym (lemma-just-sequenceV (get r)) ⟩
   sequenceV (map just (get r))
     ≡⟨ cong sequenceV (sym (free-theorem just r)) ⟩
   sequenceV (get (fmap just r))
-    ≡⟨ cong (sequenceV ∘ get) (sym (lemma-sequence-successful G v p)) ⟩
+    ≡⟨ cong (sequenceV ∘ get) (sym (lemma-sequence-successful ShapeT v p)) ⟩
   sequenceV (get v) ∎
   where open ≡-Reasoning
         open Get G
@@ -279,9 +279,9 @@ theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = begin⟨ VecISetoid (MaybeSe
 theorem-2′ : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Get.Container G Carrier (Get.|gl₁| G i)) → (v : Vec Carrier (Get.|gl₂| G j)) → (u : Get.Container G Carrier (Get.|gl₁| G j)) → bff G j s v ≡ just (Get.fmap G just u) → VecISetoid A.setoid at _ ∋ Get.get G u ≈ v
 theorem-2′ G j s v u p = drop-just (begin
   get <$> just u
-    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence G u)) ⟩
+    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence ShapeT u)) ⟩
   get <$> sequence (fmap just u)
-    ≡⟨ lemma-get-sequence G (lemma-just-sequence G u) ⟩
+    ≡⟨ lemma-get-sequence G (lemma-just-sequence ShapeT u) ⟩
   sequenceV (get (fmap just u))
     ≈⟨ sequence-cong (theorem-2 G j s v (fmap just u) p) ⟩
   sequenceV (map just v)
