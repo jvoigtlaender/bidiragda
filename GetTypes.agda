@@ -12,6 +12,8 @@ open import Relation.Binary using (Setoid)
 open Injection using (to)
 
 open import Generic using (≡-to-Π)
+open import Structures using (Shaped ; module Shaped)
+open import Instances using (VecShaped)
 
 module ListList where
   record Get : Set₁ where
@@ -49,3 +51,36 @@ VecVec-to-PartialVecVec G = record
   ; get = get
   ; free-theorem = free-theorem
   } where open VecVec.Get G
+
+module PartialShapeVec where
+  record Get : Set₁ where
+    field
+      Shape : Set
+      Container : Set → Shape → Set
+      ShapeT : Shaped Shape Container
+
+      I : Setoid ℓ₀ ℓ₀
+      gl₁ : I ↪ EqSetoid Shape
+      gl₂ : I ⟶ EqSetoid ℕ
+
+    |I|   = Setoid.Carrier I
+    |gl₁| = _⟨$⟩_ (to gl₁)
+    |gl₂| = _⟨$⟩_ gl₂
+
+    open Shaped ShapeT using (fmap)
+
+    field
+      get : {A : Set} {i : |I|} → Container A (|gl₁| i) → Vec A (|gl₂| i)
+      free-theorem : {α β : Set} → (f : α → β) → {i : |I|} → get {_} {i} ∘ fmap f ≗ mapV f ∘ get
+
+    open Shaped ShapeT public
+
+PartialVecVec-to-PartialShapeVec : PartialVecVec.Get → PartialShapeVec.Get
+PartialVecVec-to-PartialShapeVec G = record
+  { ShapeT       = VecShaped
+  ; I            = I
+  ; gl₁          = gl₁
+  ; gl₂          = gl₂
+  ; get          = get
+  ; free-theorem = free-theorem
+  } where open PartialVecVec.Get G
