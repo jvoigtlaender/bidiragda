@@ -18,7 +18,7 @@ open import Generic using (sequenceV ; ≡-to-Π)
 open import Structures using (Shaped ; module Shaped)
 open import Instances using (VecShaped)
 import CheckInsert
-open import GetTypes using (VecVec-to-PartialVecVec ; PartialVecVec-to-PartialShapeVec ; PartialShapeVec-to-PartialShapeShape)
+open import GetTypes using (VecVec-to-PartialVecVec ; PartialVecVec-to-PartialShapeShape)
 
 module PartialShapeBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open GetTypes.PartialShapeShape public using (Get ; module Get)
@@ -67,10 +67,10 @@ module PartialVecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   denumerate = PartialShapeBFF.denumerate A VecShaped
 
   bff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec (Maybe Carrier) (Get.|gl₁| G j))
-  bff G j s v = PartialShapeBFF.bff A (PartialShapeVec-to-PartialShapeShape (PartialVecVec-to-PartialShapeVec G)) j s v
+  bff G j s v = PartialShapeBFF.bff A (PartialVecVec-to-PartialShapeShape G) j s v
 
   sbff : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G j) → Maybe (Vec Carrier (Get.|gl₁| G j))
-  sbff  G j s v = PartialShapeBFF.sbff A (PartialShapeVec-to-PartialShapeShape (PartialVecVec-to-PartialShapeVec G)) j s v
+  sbff  G j s v = PartialShapeBFF.sbff A (PartialVecVec-to-PartialShapeShape G) j s v
 
 module VecBFF (A : DecSetoid ℓ₀ ℓ₀) where
   open GetTypes.VecVec public using (Get)
