@@ -12,6 +12,8 @@ open import Relation.Binary using (Setoid)
 open Injection using (to)
 
 open import Generic using (≡-to-Π)
+open import Structures using (Shaped ; module Shaped)
+open import Instances using (VecShaped)
 
 module ListList where
   record Get : Set₁ where
@@ -49,3 +51,43 @@ VecVec-to-PartialVecVec G = record
   ; get = get
   ; free-theorem = free-theorem
   } where open VecVec.Get G
+
+module PartialShapeShape where
+  record Get : Set₁ where
+    field
+      SourceShape : Set
+      SourceContainer : Set → SourceShape → Set
+      SourceShapeT : Shaped SourceShape SourceContainer
+
+      ViewShape : Set
+      ViewContainer : Set → ViewShape → Set
+      ViewShapeT : Shaped ViewShape ViewContainer
+
+      I : Setoid ℓ₀ ℓ₀
+      gl₁ : I ↪ EqSetoid SourceShape
+      gl₂ : I ⟶ EqSetoid ViewShape
+
+    |I|   = Setoid.Carrier I
+    |gl₁| = _⟨$⟩_ (to gl₁)
+    |gl₂| = _⟨$⟩_ gl₂
+
+    open Shaped SourceShapeT using () renaming (fmap to fmapS)
+    open Shaped ViewShapeT using () renaming (fmap to fmapV)
+
+    field
+      get : {A : Set} {i : |I|} → SourceContainer A (|gl₁| i) → ViewContainer A (|gl₂| i)
+      free-theorem : {α β : Set} → (f : α → β) → {i : |I|} → get {_} {i} ∘ fmapS f ≗ fmapV f ∘ get
+
+    open Shaped SourceShapeT public using () renaming (fmap to fmapS)
+    open Shaped ViewShapeT public using () renaming (fmap to fmapV)
+
+PartialVecVec-to-PartialShapeShape : PartialVecVec.Get → PartialShapeShape.Get
+PartialVecVec-to-PartialShapeShape G = record
+  { SourceShapeT = VecShaped
+  ; ViewShapeT   = VecShaped
+  ; I            = I
+  ; gl₁          = gl₁
+  ; gl₂          = gl₂
+  ; get          = get
+  ; free-theorem = free-theorem
+  } where open PartialVecVec.Get G

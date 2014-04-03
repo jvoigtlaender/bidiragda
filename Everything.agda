@@ -2,6 +2,8 @@
 module Everything where
 
 import Generic
+import Structures
+import Instances
 import FinMap
 import CheckInsert
 import GetTypes
