@@ -26,7 +26,8 @@ MaybeFunctor = record
     ; identity = identity
     ; composition = composition
     } }
-  where _<$>_ = RawFunctor._<$>_ M.functor
+  where _<$>_ : {α β : Set} → (α → β) → Maybe α → Maybe β
+        _<$>_ = RawFunctor._<$>_ M.functor
 
         cong : {α β : Set} {g h : α → β} → g ≗ h → _<$>_ g ≗ _<$>_ h
         cong g≗h (M.just x) = P.cong M.just (g≗h x)
