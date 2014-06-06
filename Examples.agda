@@ -1,6 +1,6 @@
 module Examples where
 
-open import Data.Nat using (ℕ ; zero ; suc ; _+_ ; ⌈_/2⌉)
+open import Data.Nat using (ℕ ; zero ; suc ; _+_ ; ⌈_/2⌉ ; pred)
 open import Data.Nat.Properties using (cancel-+-left)
 import Algebra.Structures
 open Algebra.Structures.IsCommutativeSemiring Data.Nat.Properties.isCommutativeSemiring using (+-isCommutativeMonoid)
@@ -34,11 +34,8 @@ double' = assume-get id↪ (≡-to-Π g) f
 double'' : Get
 double'' = assume-get id↪ (≡-to-Π _) (λ v → v ++ v)
 
-drop-suc : {n m : ℕ} → suc n ≡ suc m → n ≡ m
-drop-suc refl = refl
-
 suc-injection : EqSetoid ℕ ↪ EqSetoid ℕ
-suc-injection = record { to = ≡-to-Π suc; injective = drop-suc }
+suc-injection = record { to = ≡-to-Π suc; injective = cong pred }
 
 tail' : Get
 tail' = assume-get suc-injection (≡-to-Π id) tail
