@@ -23,7 +23,7 @@ import Examples
 
 open DecSetoid A using (Carrier)
 open GetTypes.PartialVecVec public using (Get)
-open BFF.PartialVecBFF A public
+open BFF.PartialVecBFF A public using (sbff ; bff)
 
 bffsameshape : (G : Get) → {i : Get.|I| G} → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G i) → Maybe (Vec Carrier (Get.|gl₁| G i))
 bffsameshape G {i} = sbff G i
