@@ -4,12 +4,10 @@ open import Level using () renaming (zero to ℓ₀)
 open import Data.Nat using (ℕ)
 open import Data.List using (List ; map)
 open import Data.Vec using (Vec) renaming (map to mapV)
-open import Function using (_∘_)
+open import Function using (_∘_ ; id)
 open import Function.Equality using (_⟶_ ; _⟨$⟩_)
-open import Function.Injection using (module Injection) renaming (Injection to _↪_ ; id to id↪)
 open import Relation.Binary.PropositionalEquality using (_≗_) renaming (setoid to EqSetoid)
 open import Relation.Binary using (Setoid)
-open Injection using (to)
 
 open import Generic using (≡-to-Π)
 open import Structures using (Shaped ; module Shaped)
@@ -32,11 +30,11 @@ module PartialVecVec where
   record Get : Set₁ where
     field
       I : Setoid ℓ₀ ℓ₀
-      gl₁ : I ↪ EqSetoid ℕ
+      gl₁ : I ⟶ EqSetoid ℕ
       gl₂ : I ⟶ EqSetoid ℕ
 
     |I|   = Setoid.Carrier I
-    |gl₁| = _⟨$⟩_ (to gl₁)
+    |gl₁| = _⟨$⟩_ gl₁
     |gl₂| = _⟨$⟩_ gl₂
 
     field
@@ -46,7 +44,7 @@ module PartialVecVec where
 VecVec-to-PartialVecVec : VecVec.Get → PartialVecVec.Get
 VecVec-to-PartialVecVec G = record
   { I = EqSetoid ℕ
-  ; gl₁ = id↪
+  ; gl₁ = ≡-to-Π id
   ; gl₂ = ≡-to-Π getlen
   ; get = get
   ; free-theorem = free-theorem
@@ -64,11 +62,11 @@ module PartialShapeShape where
       ViewShapeT : Shaped ViewShape ViewContainer
 
       I : Setoid ℓ₀ ℓ₀
-      gl₁ : I ↪ EqSetoid SourceShape
+      gl₁ : I ⟶ EqSetoid SourceShape
       gl₂ : I ⟶ EqSetoid ViewShape
 
     |I|   = Setoid.Carrier I
-    |gl₁| = _⟨$⟩_ (to gl₁)
+    |gl₁| = _⟨$⟩_ gl₁
     |gl₂| = _⟨$⟩_ gl₂
 
     open Shaped SourceShapeT using () renaming (fmap to fmapS)
