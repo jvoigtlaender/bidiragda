@@ -67,7 +67,7 @@ lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → 
 lemma-lookupM-checkInsert i j x y h h' pl ph' with checkInsert j y h | insertionresult j y h
 lemma-lookupM-checkInsert i j x y h .h pl refl | ._ | same _ _ _ = pl
 lemma-lookupM-checkInsert i j x y h h' pl ph'  | ._ | new _ with i ≟ j
-lemma-lookupM-checkInsert i .i x y h h' pl ph' | ._ | new pl' | yes refl = lemma-just≢nothing pl pl'
+lemma-lookupM-checkInsert i .i x y h h' pl ph' | ._ | new pl' | yes refl = contradiction (trans (sym pl) pl') (λ ())
 lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i≢j = begin
   lookupM i (insert j y h)
     ≡⟨ sym (lemma-lookupM-insert-other i j y h i≢j) ⟩

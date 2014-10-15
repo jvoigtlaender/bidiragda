@@ -57,9 +57,6 @@ delete i m = m [ i ]≔ nothing
 delete-many : {A : Set} {n m : ℕ} → Vec (Fin n) m → FinMapMaybe n A → FinMapMaybe n A
 delete-many = flip (foldr (const _) delete)
 
-lemma-just≢nothing : {A Whatever : Set} {a : A} {ma : Maybe A} → ma ≡ just a → ma ≡ nothing  → Whatever
-lemma-just≢nothing refl ()
-
 lemma-insert-same : {n : ℕ} {A : Set} → (m : FinMapMaybe n A) → (f : Fin n) → (a : A) → lookupM f m ≡ just a → m ≡ insert f a m
 lemma-insert-same         []       ()      a p
 lemma-insert-same {suc n} (x ∷ xs) zero    a p = cong (flip _∷_ xs) p
@@ -80,7 +77,7 @@ lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (p ∘ cong suc)
 
 lemma-lookupM-restrict : {A : Set} {n : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : List (Fin n)) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
-lemma-lookupM-restrict i f []        a p = lemma-just≢nothing p (lemma-lookupM-empty i)
+lemma-lookupM-restrict i f []        a p = contradiction (trans (sym p) (lemma-lookupM-empty i)) (λ ())
 lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
 lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
    just (f i)
