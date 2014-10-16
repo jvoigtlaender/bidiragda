@@ -70,7 +70,7 @@ lemma-lookupM-checkInsert i j x y h h' pl ph'  | ._ | new _ with i ≟ j
 lemma-lookupM-checkInsert i .i x y h h' pl ph' | ._ | new pl' | yes refl = contradiction (trans (sym pl) pl') (λ ())
 lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i≢j = begin
   lookupM i (insert j y h)
-    ≡⟨ sym (lemma-lookupM-insert-other i j y h i≢j) ⟩
+    ≡⟨ lemma-lookupM-insert-other i j y h i≢j ⟩
   lookupM i h
     ≡⟨ pl ⟩
   just x ∎
@@ -78,7 +78,7 @@ lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i�
 
 lemma-lookupM-checkInsert i j x y h h' pl () | ._ | wrong _ _ _
 
-lemma-lookupM-checkInsert-other : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert j x h ≡ just h' → lookupM i h ≡ lookupM i h'
+lemma-lookupM-checkInsert-other : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert j x h ≡ just h' → lookupM i h' ≡ lookupM i h
 lemma-lookupM-checkInsert-other i j i≢j x h h' ph' with lookupM j h
 lemma-lookupM-checkInsert-other i j i≢j x h h' ph' | just y with deq x y
 lemma-lookupM-checkInsert-other i j i≢j x h .h refl | just y | yes x≈y = refl

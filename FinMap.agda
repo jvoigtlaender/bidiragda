@@ -70,7 +70,7 @@ lemma-lookupM-insert : {A : Set} {n : ℕ} → (i : Fin n) → (a : A) → (m : 
 lemma-lookupM-insert zero    a (x ∷ xs) = refl
 lemma-lookupM-insert (suc i) a (x ∷ xs) = lemma-lookupM-insert i a xs
 
-lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → i ≢ j → lookupM i m ≡ lookupM i (insert j a m)
+lemma-lookupM-insert-other : {A : Set} {n : ℕ} → (i j : Fin n) → (a : A) → (m : FinMapMaybe n A) → i ≢ j → lookupM i (insert j a m) ≡ lookupM i m
 lemma-lookupM-insert-other zero    zero    a m        p = contradiction refl p
 lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
@@ -87,7 +87,7 @@ lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
    just a ∎)
 lemma-lookupM-restrict i f (i' ∷ is) a p | no i≢i' = lemma-lookupM-restrict i f is a (begin
   lookupM i (restrict f is)
-    ≡⟨ lemma-lookupM-insert-other i i' (f i') (restrict f is) i≢i' ⟩
+    ≡⟨ sym (lemma-lookupM-insert-other i i' (f i') (restrict f is) i≢i') ⟩
   lookupM i (insert i' (f i') (restrict f is))
     ≡⟨ p ⟩
   just a ∎)
@@ -123,7 +123,7 @@ lemma-disjoint-union {n} {m} f t = lemma-tabulate-∘ (lemma-inner t)
           lemma-inner (.x ∷ ts) x | yes refl = cong (maybe′ just (lookupM x (delete-many (x ∷ ts) (fromFunc f)))) (lemma-lookupM-insert x (f x) (restrict f (toList ts)))
           lemma-inner (t ∷ ts) x | no ¬p = begin
             maybe′ just (lookupM x (delete-many (t ∷ ts) (fromFunc f))) (lookupM x (restrict f (toList (t ∷ ts))))
-              ≡⟨ cong (maybe′ just (lookupM x (delete-many (t ∷ ts) (fromFunc f)))) (sym (lemma-lookupM-insert-other x t (f t) (restrict f (toList ts)) ¬p)) ⟩
+              ≡⟨ cong (maybe′ just (lookupM x (delete-many (t ∷ ts) (fromFunc f)))) (lemma-lookupM-insert-other x t (f t) (restrict f (toList ts)) ¬p) ⟩
             maybe′ just (lookupM x (delete-many (t ∷ ts) (fromFunc f))) (lookupM x (restrict f (toList ts)))
               ≡⟨ cong (flip (maybe′ just) (lookupM x (restrict f (toList ts)))) (lemma-lookupM-delete (delete-many ts (fromFunc f)) ¬p) ⟩
             maybe′ just (lookupM x (delete-many ts (fromFunc f))) (lookupM x (restrict f (toList ts)))
