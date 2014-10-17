@@ -162,14 +162,14 @@ lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma �
 lemma-<$>-just (just x) f<$>ma≡just-b = x , refl
 lemma-<$>-just nothing  ()
 
-lemma-union-not-used : {m n n' : ℕ} {A : Set} (h : FinMapMaybe n A) → (h' : FinMapMaybe n' A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map (flip lookupM (union h (reshape h' n))) is ≡ map (flip lookupM h) is
+lemma-union-not-used : {m n : ℕ} {A : Set} (h h' : FinMapMaybe n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map (flip lookupM (union h h')) is ≡ map (flip lookupM h) is
 lemma-union-not-used         h h' []        p = refl
 lemma-union-not-used {n = n} h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
-      lookupM i (union h (reshape h' n))
-        ≡⟨ lookup∘tabulate (λ j → maybe′ just (lookupM j (reshape h' n)) (lookupM j h)) i ⟩
-      maybe′ just (lookupM i (reshape h' n)) (lookupM i h)
-        ≡⟨ cong (maybe′ just (lookupM i (reshape h' n))) px ⟩
-      maybe′ just (lookupM i (reshape h' n)) (just x)
+      lookupM i (union h h')
+        ≡⟨ lookup∘tabulate (λ j → maybe′ just (lookupM j h') (lookupM j h)) i ⟩
+      maybe′ just (lookupM i h') (lookupM i h)
+        ≡⟨ cong (maybe′ just (lookupM i h')) px ⟩
+      maybe′ just (lookupM i h') (just x)
         ≡⟨ sym px ⟩
       lookupM i h ∎)
   (lemma-union-not-used h h' is' p')
@@ -281,7 +281,7 @@ theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin⟨ VecISetoid 
   content (fmapV (flip lookupM (h↦h′ h)) (get t))
     ≡⟨ Shaped.fmap-content ViewShapeT (flip lookupM (h↦h′ h)) (get t) ⟩
   map (flip lookupM (h↦h′ h)) (content (get t))
-    ≡⟨ lemma-union-not-used h g′ (content (get t)) (lemma-assoc-domain (content (get t)) (content v) h ph) ⟩
+    ≡⟨ lemma-union-not-used h (reshape g′ (Shaped.arity SourceShapeT (|gl₁| j))) (content (get t)) (lemma-assoc-domain (content (get t)) (content v) h ph) ⟩
   map (flip lookupM h) (content (get t))
     ≈⟨ lemma-2 (content (get t)) (content v) h ph ⟩
   map just (content v)
