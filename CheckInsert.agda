@@ -7,8 +7,7 @@ open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
 open import Data.Fin.Props using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just) renaming (setoid to MaybeSetoid ; Eq to MaybeEq)
-open import Data.List using (List ; [] ; _∷_)
-open import Data.Vec using () renaming (_∷_ to _∷V_)
+open import Data.Vec using (Vec) renaming (_∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
 open import Relation.Nullary using (Dec ; yes ; no ; ¬_)
 open import Relation.Nullary.Negation using (contradiction)
@@ -57,7 +56,7 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') with deq x x'
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | yes q = contradiction q d
 lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
-lemma-checkInsert-restrict : {n : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : List (Fin n)) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷ is))
+lemma-checkInsert-restrict : {n m : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : Vec (Fin n) m) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷V is))
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
 lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = cong just (lemma-insert-same _ i (f i) (trans p (cong just (sym (lemma-lookupM-restrict i f is x p)))))
 lemma-checkInsert-restrict f i is | ._ | new _ = refl

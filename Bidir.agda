@@ -51,14 +51,14 @@ module SetoidReasoning where
  _≡⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → x ≡ y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
  _≡⟨_⟩_ {X} = EqR._≡⟨_⟩_ X
 
-lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f (toList is))
+lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f is)
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
   (assoc is′ (map f is′) >>= checkInsert i (f i))
     ≡⟨ cong (λ m → m >>= checkInsert i (f i)) (lemma-1 f is′) ⟩
-  checkInsert i (f i) (restrict f (toList is′))
-    ≡⟨ lemma-checkInsert-restrict f i (toList is′) ⟩
-  just (restrict f (toList (i ∷ is′))) ∎
+  checkInsert i (f i) (restrict f is′)
+    ≡⟨ lemma-checkInsert-restrict f i is′ ⟩
+  just (restrict f (i ∷ is′)) ∎
   where open ≡-Reasoning
 
 lemma-lookupM-checkInserted : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert i x h ≡ just h' → MaybeSetoid A.setoid ∋ lookupM i h' ≈ just x
@@ -134,11 +134,11 @@ theorem-1 G {i} s = begin
     ≡⟨ cong (_<$>_ h′↦r ∘ _<$>_ h↦h′ ∘ assoc (Shaped.content ViewShapeT (get t))) (Shaped.fmap-content ViewShapeT f (get t)) ⟩
   h′↦r <$> (h↦h′ <$> (assoc (Shaped.content ViewShapeT (get t)) (map f (Shaped.content ViewShapeT (get t)))))
     ≡⟨ cong (_<$>_ h′↦r ∘ _<$>_ h↦h′) (lemma-1 f (Shaped.content ViewShapeT (get t))) ⟩
-  (Maybe.just ∘ h′↦r ∘ h↦h′) (restrict f (toList (Shaped.content ViewShapeT (get t))))
+  (Maybe.just ∘ h′↦r ∘ h↦h′) (restrict f (Shaped.content ViewShapeT (get t)))
     ≡⟨ cong just (begin
-      h′↦r (union (restrict f (toList (Shaped.content ViewShapeT (get t)))) (reshape g′ (Shaped.arity SourceShapeT (|gl₁| i))))
-        ≡⟨ cong (h′↦r ∘ union (restrict f (toList (Shaped.content ViewShapeT (get t))))) (lemma-reshape-id g′) ⟩
-      h′↦r (union (restrict f (toList (Shaped.content ViewShapeT (get t)))) g′)
+      h′↦r (union (restrict f (Shaped.content ViewShapeT (get t))) (reshape g′ (Shaped.arity SourceShapeT (|gl₁| i))))
+        ≡⟨ cong (h′↦r ∘ union (restrict f (Shaped.content ViewShapeT (get t)))) (lemma-reshape-id g′) ⟩
+      h′↦r (union (restrict f (Shaped.content ViewShapeT (get t))) g′)
         ≡⟨ cong h′↦r (lemma-disjoint-union f (Shaped.content ViewShapeT (get t))) ⟩
       h′↦r (fromFunc f)
         ≡⟨ refl ⟩
