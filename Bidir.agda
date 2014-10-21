@@ -73,10 +73,10 @@ lemma-lookupM-checkInserted i x h .h refl | ._ | same x' x≈x' pl = begin
 lemma-lookupM-checkInserted i x h ._ refl | ._ | new _ = Setoid.reflexive (MaybeSetoid A.setoid) (lemma-lookupM-insert i x h)
 lemma-lookupM-checkInserted i x h h' () | ._ | wrong _ _ _
 
-_in-domain-of_ : {n : ℕ} {A : Set} → (is : List (Fin n)) → (FinMapMaybe n A) → Set
-_in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) is
+_in-domain-of_ : {m n : ℕ} {A : Set} → (is : Vec (Fin m) n) → (FinMapMaybe m A) → Set
+_in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) (toList is)
 
-lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (toList is) in-domain-of h
+lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → is in-domain-of h
 lemma-assoc-domain []         []         h ph = Data.List.All.[]
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
@@ -89,7 +89,7 @@ lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | 
     (lemma-assoc-domain is' xs' h' ph'))
 lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | wrong _ _ _
 
-lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → (h' : FinMapMaybe m Carrier) → checkInsert i x h' ≡ just h → {n : ℕ} → (js : Vec (Fin m) n) → (toList js) in-domain-of h' → map (flip lookupM h) js ≡ map (flip lookupM h') js
+lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → (h' : FinMapMaybe m Carrier) → checkInsert i x h' ≡ just h → {n : ℕ} → (js : Vec (Fin m) n) → js in-domain-of h' → map (flip lookupM h) js ≡ map (flip lookupM h') js
 lemma-map-lookupM-assoc i x h h' ph [] pj = refl
 lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (Data.List.All._∷_ (x' , pl) pj) = cong₂ _∷_
   (trans (lemma-lookupM-checkInsert j i x' x h' h pl ph) (sym pl))
@@ -162,7 +162,7 @@ lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma �
 lemma-<$>-just (just x) f<$>ma≡just-b = x , refl
 lemma-<$>-just nothing  ()
 
-lemma-union-not-used : {m n : ℕ} {A : Set} (h h' : FinMapMaybe n A) → (is : Vec (Fin n) m) → (toList is) in-domain-of h → map (flip lookupM (union h h')) is ≡ map (flip lookupM h) is
+lemma-union-not-used : {m n : ℕ} {A : Set} (h h' : FinMapMaybe n A) → (is : Vec (Fin n) m) → is in-domain-of h → map (flip lookupM (union h h')) is ≡ map (flip lookupM h) is
 lemma-union-not-used         h h' []        p = refl
 lemma-union-not-used {n = n} h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
       lookupM i (union h h')

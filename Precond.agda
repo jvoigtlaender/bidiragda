@@ -40,7 +40,7 @@ lemma-maybe-just : {A : Set} → (a : A) → (ma : Maybe A) → maybe′ Maybe.j
 lemma-maybe-just a (just x) = refl
 lemma-maybe-just a nothing = refl
 
-lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → (toList is) in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ fromFunc v
+lemma-union-delete-fromFunc : {m n : ℕ} {A : Set} {is : Vec (Fin n) m} {h : FinMapMaybe n A} {g : Fin n → A} → is in-domain-of h → ∃ λ v → union h (delete-many is (fromFunc g)) ≡ fromFunc v
 lemma-union-delete-fromFunc {is = []} {h = h} {g = g} p = _ , (lemma-tabulate-∘ (λ f → begin
       maybe′ just (lookupM f (fromFunc g)) (lookupM f h)
         ≡⟨ cong (flip (maybe′ just) (lookupM f h)) (lemma-lookupM-fromFunc g f) ⟩
