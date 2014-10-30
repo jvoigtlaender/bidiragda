@@ -58,16 +58,16 @@ lemma-checkInsert-wrong i x m x' d refl | .(just x') | no ¬q = refl
 
 lemma-checkInsert-restrict : {n m : ℕ} → (f : Fin n → Carrier) → (i : Fin n) → (is : Vec (Fin n) m) → checkInsert i (f i) (restrict f is) ≡ just (restrict f (i ∷V is))
 lemma-checkInsert-restrict f i is with checkInsert i (f i) (restrict f is) | insertionresult i (f i) (restrict f is)
-lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = cong just (lemma-insert-same _ i (f i) (trans p (cong just (sym (lemma-lookupM-restrict i f is x p)))))
+lemma-checkInsert-restrict f i is | ._ | same x fi≈x p = cong just (lemma-insert-same _ i (trans p (cong just (sym (lemma-lookupM-restrict i f is p)))))
 lemma-checkInsert-restrict f i is | ._ | new _ = refl
-lemma-checkInsert-restrict f i is | ._ | wrong x fi≉x p = contradiction (Setoid.reflexive A.setoid (lemma-lookupM-restrict i f is x p)) fi≉x
+lemma-checkInsert-restrict f i is | ._ | wrong x fi≉x p = contradiction (Setoid.reflexive A.setoid (lemma-lookupM-restrict i f is p)) fi≉x
 
-lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (x y : Carrier) → (h h' : FinMapMaybe n Carrier) → lookupM i h ≡ just x → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
-lemma-lookupM-checkInsert i j x y h h' pl ph' with checkInsert j y h | insertionresult j y h
-lemma-lookupM-checkInsert i j x y h .h pl refl | ._ | same _ _ _ = pl
-lemma-lookupM-checkInsert i j x y h h' pl ph'  | ._ | new _ with i ≟ j
-lemma-lookupM-checkInsert i .i x y h h' pl ph' | ._ | new pl' | yes refl = contradiction (trans (sym pl) pl') (λ ())
-lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i≢j = begin
+lemma-lookupM-checkInsert : {n : ℕ} → (i j : Fin n) → (h : FinMapMaybe n Carrier) → {x : Carrier} → lookupM i h ≡ just x → (y : Carrier) → {h' : FinMapMaybe n Carrier} → checkInsert j y h ≡ just h' → lookupM i h' ≡ just x
+lemma-lookupM-checkInsert i j h pl y ph' with checkInsert j y h | insertionresult j y h
+lemma-lookupM-checkInsert i j h pl y refl | ._ | same _ _ _ = pl
+lemma-lookupM-checkInsert i j h pl y ph'  | ._ | new _ with i ≟ j
+lemma-lookupM-checkInsert i .i h pl y ph' | ._ | new pl' | yes refl = contradiction (trans (sym pl) pl') (λ ())
+lemma-lookupM-checkInsert i j h {x} pl y refl | ._ | new _ | no i≢j = begin
   lookupM i (insert j y h)
     ≡⟨ lemma-lookupM-insert-other i j y h i≢j ⟩
   lookupM i h
@@ -75,11 +75,11 @@ lemma-lookupM-checkInsert i j x y h .(insert j y h) pl refl | ._ | new _ | no i�
   just x ∎
   where open Relation.Binary.PropositionalEquality.≡-Reasoning
 
-lemma-lookupM-checkInsert i j x y h h' pl () | ._ | wrong _ _ _
+lemma-lookupM-checkInsert i j h pl y () | ._ | wrong _ _ _
 
-lemma-lookupM-checkInsert-other : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert j x h ≡ just h' → lookupM i h' ≡ lookupM i h
-lemma-lookupM-checkInsert-other i j i≢j x h h' ph' with lookupM j h
-lemma-lookupM-checkInsert-other i j i≢j x h h' ph' | just y with deq x y
-lemma-lookupM-checkInsert-other i j i≢j x h .h refl | just y | yes x≈y = refl
-lemma-lookupM-checkInsert-other i j i≢j x h h' () | just y | no x≉y
-lemma-lookupM-checkInsert-other i j i≢j x h .(insert j x h) refl | nothing = lemma-lookupM-insert-other i j x h i≢j
+lemma-lookupM-checkInsert-other : {n : ℕ} → (i j : Fin n) → i ≢ j → (x : Carrier) → (h : FinMapMaybe n Carrier) → {h' : FinMapMaybe n Carrier} → checkInsert j x h ≡ just h' → lookupM i h' ≡ lookupM i h
+lemma-lookupM-checkInsert-other i j i≢j x h ph' with lookupM j h
+lemma-lookupM-checkInsert-other i j i≢j x h ph' | just y with deq x y
+lemma-lookupM-checkInsert-other i j i≢j x h refl | just y | yes x≈y = refl
+lemma-lookupM-checkInsert-other i j i≢j x h () | just y | no x≉y
+lemma-lookupM-checkInsert-other i j i≢j x h refl | nothing = lemma-lookupM-insert-other i j x h i≢j

@@ -88,21 +88,21 @@ assoc-enough′ G {i} s v (h , p) = _ , (begin
         g  = fromFunc (denumerate SourceShapeT s)
         g′ = delete-many (Shaped.content ViewShapeT (get s′)) g
         t  = enumerate SourceShapeT (|gl₁| i)
-        wp = lemma-union-delete-fromFunc (lemma-assoc-domain (Shaped.content ViewShapeT (get t)) (Shaped.content ViewShapeT v) h p)
+        wp = lemma-union-delete-fromFunc (lemma-assoc-domain (Shaped.content ViewShapeT (get t)) (Shaped.content ViewShapeT v) p)
 
 data All-different {A : Set} : List A → Set where
   different-[] : All-different []
   different-∷  : {x : A} {xs : List A} → x ∉ xs → All-different xs → All-different (x ∷ xs)
 
-lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
-lemma-∉-lookupM-assoc i []         []         .empty refl i∉is = lemma-lookupM-empty i
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is with assoc is' xs' | inspect (assoc is') xs'
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h () i∉is | nothing | [ ph' ]
-lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') h ph i∉is | just h' | [ ph' ] = begin
+lemma-∉-lookupM-assoc : {m n : ℕ} → (i : Fin n) → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → {h : FinMapMaybe n Carrier} → assoc is xs ≡ just h → (i ∉ toList is) → lookupM i h ≡ nothing
+lemma-∉-lookupM-assoc i []         []         refl i∉is = lemma-lookupM-empty i
+lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') ph i∉is with assoc is' xs' | inspect (assoc is') xs'
+lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') () i∉is | nothing | [ ph' ]
+lemma-∉-lookupM-assoc i (i' ∷ is') (x' ∷ xs') {h} ph i∉is | just h' | [ ph' ] = begin
   lookupM i h
-    ≡⟨ lemma-lookupM-checkInsert-other i i' (i∉is ∘ here) x' h' h ph ⟩
+    ≡⟨ lemma-lookupM-checkInsert-other i i' (i∉is ∘ here) x' h' ph ⟩
   lookupM i h'
-    ≡⟨ lemma-∉-lookupM-assoc i is' xs' h' ph' (i∉is ∘ there) ⟩
+    ≡⟨ lemma-∉-lookupM-assoc i is' xs' ph' (i∉is ∘ there) ⟩
   nothing ∎
 
 different-assoc : {m n : ℕ} → (u : Vec (Fin n) m) → (v : Vec Carrier m) → All-different (toList u) → ∃ λ h → assoc u v ≡ just h
@@ -114,5 +114,5 @@ different-assoc (u ∷ us) (v ∷ vs) (different-∷ u∉us diff-us) | h , p' = 
   (assoc us vs >>= checkInsert u v)
     ≡⟨ cong (flip _>>=_ (checkInsert u v)) p' ⟩
   checkInsert u v h
-    ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs h p' u∉us) ⟩
+    ≡⟨ lemma-checkInsert-new u v h (lemma-∉-lookupM-assoc u us vs p' u∉us) ⟩
   just (insert u v h) ∎)

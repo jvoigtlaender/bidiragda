@@ -61,39 +61,39 @@ lemma-1 f (i ∷ is′) = begin
   just (restrict f (i ∷ is′)) ∎
   where open ≡-Reasoning
 
-lemma-lookupM-checkInserted : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h h' : FinMapMaybe n Carrier) → checkInsert i x h ≡ just h' → MaybeSetoid A.setoid ∋ lookupM i h' ≈ just x
-lemma-lookupM-checkInserted i x h h' p with checkInsert i x h | insertionresult i x h
-lemma-lookupM-checkInserted i x h .h refl | ._ | same x' x≈x' pl = begin
+lemma-lookupM-checkInserted : {n : ℕ} → (i : Fin n) → (x : Carrier) → (h : FinMapMaybe n Carrier) → {h' : FinMapMaybe n Carrier} → checkInsert i x h ≡ just h' → MaybeSetoid A.setoid ∋ lookupM i h' ≈ just x
+lemma-lookupM-checkInserted i x h p with checkInsert i x h | insertionresult i x h
+lemma-lookupM-checkInserted i x h refl | ._ | same x' x≈x' pl = begin
   lookupM i h
     ≡⟨ pl ⟩
   just x'
     ≈⟨ MaybeEq.just (Setoid.sym A.setoid x≈x') ⟩
   just x ∎
   where open EqR (MaybeSetoid A.setoid)
-lemma-lookupM-checkInserted i x h ._ refl | ._ | new _ = Setoid.reflexive (MaybeSetoid A.setoid) (lemma-lookupM-insert i x h)
-lemma-lookupM-checkInserted i x h h' () | ._ | wrong _ _ _
+lemma-lookupM-checkInserted i x h refl | ._ | new _ = Setoid.reflexive (MaybeSetoid A.setoid) (lemma-lookupM-insert i x h)
+lemma-lookupM-checkInserted i x h () | ._ | wrong _ _ _
 
 _in-domain-of_ : {m n : ℕ} {A : Set} → (is : Vec (Fin m) n) → (FinMapMaybe m A) → Set
 _in-domain-of_ is h = All (λ i → ∃ λ x → lookupM i h ≡ just x) (toList is)
 
-lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is xs ≡ just h → is in-domain-of h
-lemma-assoc-domain []         []         h ph = Data.List.All.[]
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph with assoc is' xs' | inspect (assoc is') xs'
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | nothing | [ ph' ]
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h ph | just h' | [ ph' ] with checkInsert i' x' h' | inspect (checkInsert i' x') h' | insertionresult i' x' h'
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') .h refl | just h | [ ph' ] | ._ | _ | same x _ pl = All._∷_ (x , pl) (lemma-assoc-domain is' xs' h ph')
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ._ refl | just h' | [ ph' ] | ._ | [ cI≡ ] | new _ = All._∷_
+lemma-assoc-domain : {m n : ℕ} → (is : Vec (Fin n) m) → (xs : Vec Carrier m) → {h : FinMapMaybe n Carrier} → assoc is xs ≡ just h → is in-domain-of h
+lemma-assoc-domain []         []         ph = Data.List.All.[]
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ph with assoc is' xs' | inspect (assoc is') xs'
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') () | nothing | [ ph' ]
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') ph | just h' | [ ph' ] with checkInsert i' x' h' | inspect (checkInsert i' x') h' | insertionresult i' x' h'
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') refl | just h | [ ph' ] | ._ | _ | same x _ pl = All._∷_ (x , pl) (lemma-assoc-domain is' xs' ph')
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') refl | just h' | [ ph' ] | ._ | [ cI≡ ] | new _ = All._∷_
   (x' , lemma-lookupM-insert i' x' h')
   (Data.List.All.map
-    (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' (proj₁ p) x' h' (insert i' x' h') (proj₂ p) cI≡)
-    (lemma-assoc-domain is' xs' h' ph'))
-lemma-assoc-domain (i' ∷ is') (x' ∷ xs') h () | just h' | [ ph' ] | ._ | _ | wrong _ _ _
+    (λ {i} p → proj₁ p , lemma-lookupM-checkInsert i i' h' (proj₂ p) x' cI≡)
+    (lemma-assoc-domain is' xs' ph'))
+lemma-assoc-domain (i' ∷ is') (x' ∷ xs') () | just h' | [ ph' ] | ._ | _ | wrong _ _ _
 
-lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → (h' : FinMapMaybe m Carrier) → checkInsert i x h' ≡ just h → {n : ℕ} → (js : Vec (Fin m) n) → js in-domain-of h' → map (flip lookupM h) js ≡ map (flip lookupM h') js
-lemma-map-lookupM-assoc i x h h' ph [] pj = refl
-lemma-map-lookupM-assoc i x h h' ph (j ∷ js) (Data.List.All._∷_ (x' , pl) pj) = cong₂ _∷_
-  (trans (lemma-lookupM-checkInsert j i x' x h' h pl ph) (sym pl))
-  (lemma-map-lookupM-assoc i x h h' ph js pj)
+lemma-map-lookupM-assoc : {m : ℕ} → (i : Fin m) → (x : Carrier) → (h : FinMapMaybe m Carrier) → {h' : FinMapMaybe m Carrier} → checkInsert i x h ≡ just h' → {n : ℕ} → (js : Vec (Fin m) n) → js in-domain-of h → map (flip lookupM h') js ≡ map (flip lookupM h) js
+lemma-map-lookupM-assoc i x h ph [] pj = refl
+lemma-map-lookupM-assoc i x h ph (j ∷ js) (Data.List.All._∷_ (x' , pl) pj) = cong₂ _∷_
+  (trans (lemma-lookupM-checkInsert j i h pl x ph) (sym pl))
+  (lemma-map-lookupM-assoc i x h ph js pj)
 
 lemma-2 : {m n : ℕ} → (is : Vec (Fin n) m) → (v : Vec Carrier m) → (h : FinMapMaybe n Carrier) → assoc is v ≡ just h → VecISetoid (MaybeSetoid A.setoid) at _ ∋ map (flip lookupM h) is ≈ map just v
 lemma-2 []       []       h p = ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))
@@ -101,9 +101,9 @@ lemma-2 (i ∷ is) (x ∷ xs) h p with assoc is xs | inspect (assoc is) xs
 lemma-2 (i ∷ is) (x ∷ xs) h () | nothing | _
 lemma-2 (i ∷ is) (x ∷ xs) h p | just h' | [ ir ] = begin
   lookupM i h ∷ map (flip lookupM h) is
-    ≈⟨ VecEq._∷-cong_ (lemma-lookupM-checkInserted i x h' h p) (ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))) ⟩
+    ≈⟨ VecEq._∷-cong_ (lemma-lookupM-checkInserted i x h' p) (ISetoid.refl (VecISetoid (MaybeSetoid A.setoid))) ⟩
   just x ∷ map (flip lookupM h) is
-    ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc i x h h' p is (lemma-assoc-domain is xs h' ir)) ⟩
+    ≡⟨  cong (_∷_ (just x)) (lemma-map-lookupM-assoc i x h' p is (lemma-assoc-domain is xs ir)) ⟩
   just x ∷ map (flip lookupM h') is
     ≈⟨ VecEq._∷-cong_ (Setoid.refl (MaybeSetoid A.setoid)) (lemma-2 is xs h' ir) ⟩
   just x ∷ map just xs ∎
@@ -281,7 +281,7 @@ theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin⟨ VecISetoid 
   content (fmapV (flip lookupM (h↦h′ h)) (get t))
     ≡⟨ Shaped.fmap-content ViewShapeT (flip lookupM (h↦h′ h)) (get t) ⟩
   map (flip lookupM (h↦h′ h)) (content (get t))
-    ≡⟨ lemma-union-not-used h (reshape g′ (Shaped.arity SourceShapeT (|gl₁| j))) (content (get t)) (lemma-assoc-domain (content (get t)) (content v) h ph) ⟩
+    ≡⟨ lemma-union-not-used h (reshape g′ (Shaped.arity SourceShapeT (|gl₁| j))) (content (get t)) (lemma-assoc-domain (content (get t)) (content v) ph) ⟩
   map (flip lookupM h) (content (get t))
     ≈⟨ lemma-2 (content (get t)) (content v) h ph ⟩
   map just (content v)

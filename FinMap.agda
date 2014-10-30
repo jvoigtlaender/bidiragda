@@ -56,10 +56,10 @@ delete i m = m [ i ]≔ nothing
 delete-many : {A : Set} {n m : ℕ} → Vec (Fin n) m → FinMapMaybe n A → FinMapMaybe n A
 delete-many = flip (foldr (const _) delete)
 
-lemma-insert-same : {n : ℕ} {A : Set} → (m : FinMapMaybe n A) → (f : Fin n) → (a : A) → lookupM f m ≡ just a → m ≡ insert f a m
-lemma-insert-same         []       ()      a p
-lemma-insert-same {suc n} (x ∷ xs) zero    a p = cong (flip _∷_ xs) p
-lemma-insert-same         (x ∷ xs) (suc i) a p = cong (_∷_ x) (lemma-insert-same xs i a p)
+lemma-insert-same : {n : ℕ} {A : Set} → (m : FinMapMaybe n A) → (f : Fin n) → {a : A} → lookupM f m ≡ just a → m ≡ insert f a m
+lemma-insert-same         []       ()      p
+lemma-insert-same {suc n} (x ∷ xs) zero    p = cong (flip _∷_ xs) p
+lemma-insert-same         (x ∷ xs) (suc i) p = cong (_∷_ x) (lemma-insert-same xs i p)
 
 lemma-lookupM-empty : {A : Set} {n : ℕ} → (i : Fin n) → lookupM {A} i empty ≡ nothing
 lemma-lookupM-empty zero    = refl
@@ -75,16 +75,16 @@ lemma-lookupM-insert-other zero    (suc j) a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) zero    a (x ∷ xs) p = refl
 lemma-lookupM-insert-other (suc i) (suc j) a (x ∷ xs) p = lemma-lookupM-insert-other i j a xs (p ∘ cong suc)
 
-lemma-lookupM-restrict : {A : Set} {n m : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : Vec (Fin n) m) → (a : A) → lookupM i (restrict f is) ≡ just a → f i ≡ a
-lemma-lookupM-restrict i f []        a p = contradiction (trans (sym p) (lemma-lookupM-empty i)) (λ ())
-lemma-lookupM-restrict i f (i' ∷ is) a p with i ≟ i'
-lemma-lookupM-restrict i f (.i ∷ is) a p | yes refl = just-injective (begin
+lemma-lookupM-restrict : {A : Set} {n m : ℕ} → (i : Fin n) → (f : Fin n → A) → (is : Vec (Fin n) m) → {a : A} → lookupM i (restrict f is) ≡ just a → f i ≡ a
+lemma-lookupM-restrict i f []            p = contradiction (trans (sym p) (lemma-lookupM-empty i)) (λ ())
+lemma-lookupM-restrict i f (i' ∷ is)     p with i ≟ i'
+lemma-lookupM-restrict i f (.i ∷ is) {a} p | yes refl = just-injective (begin
    just (f i)
      ≡⟨ sym (lemma-lookupM-insert i (f i) (restrict f is)) ⟩
    lookupM i (insert i (f i) (restrict f is))
      ≡⟨ p ⟩
    just a ∎)
-lemma-lookupM-restrict i f (i' ∷ is) a p | no i≢i' = lemma-lookupM-restrict i f is a (begin
+lemma-lookupM-restrict i f (i' ∷ is) {a} p | no i≢i' = lemma-lookupM-restrict i f is (begin
   lookupM i (restrict f is)
     ≡⟨ sym (lemma-lookupM-insert-other i i' (f i') (restrict f is) i≢i') ⟩
   lookupM i (insert i' (f i') (restrict f is))
