@@ -4,7 +4,7 @@ module Precond (Carrier : Set) (deq : Decidable {A = Carrier} _≡_) where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin ; zero ; suc)
-open import Data.Fin.Props using (_≟_)
+open import Data.Fin.Properties using (_≟_)
 open import Data.List using (List ; [] ; _∷_)
 open import Level using () renaming (zero to ℓ₀)
 import Category.Monad

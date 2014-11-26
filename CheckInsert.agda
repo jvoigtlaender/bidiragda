@@ -5,7 +5,7 @@ module CheckInsert (A : DecSetoid ℓ₀ ℓ₀) where
 
 open import Data.Nat using (ℕ)
 open import Data.Fin using (Fin)
-open import Data.Fin.Props using (_≟_)
+open import Data.Fin.Properties using (_≟_)
 open import Data.Maybe using (Maybe ; nothing ; just) renaming (setoid to MaybeSetoid ; Eq to MaybeEq)
 open import Data.Vec using (Vec) renaming (_∷_ to _∷V_)
 open import Data.Vec.Equality using () renaming (module Equality to VecEq)
