@@ -9,22 +9,19 @@ open import Data.Product using (∃ ; _,_ ; proj₁ ; proj₂)
 open import Function using (_∘_ ; flip ; const)
 open import Relation.Binary.Core using (_≡_)
 open import Relation.Binary.PropositionalEquality using (_≗_ ; sym ; cong ; refl ; subst ; trans ; proof-irrelevance ; module ≡-Reasoning)
-open import Relation.Binary.HeterogeneousEquality using (module ≅-Reasoning ; _≅_ ; ≅-to-≡ ; ≡-to-≅ ; ≡-subst-removable) renaming (refl to het-refl ; sym to het-sym ; cong to het-cong ; reflexive to het-reflexive)
+open import Relation.Binary.HeterogeneousEquality as H using (module ≅-Reasoning ; _≅_ ; ≅-to-≡ ; ≡-to-≅ ; ≡-subst-removable) renaming (refl to het-refl ; sym to het-sym ; cong to het-cong ; reflexive to het-reflexive)
 
 import FreeTheorems
 open import Generic using (length-replicate ; toList-fromList ; toList-subst)
 open FreeTheorems.ListList using (get-type) renaming (free-theorem to free-theoremL ; Get to GetL ; module Get to GetL)
 open FreeTheorems.VecVec using () renaming (get-type to getV-type ; Get to GetV ; module Get to GetV)
 
-ind-cong : {I : Set} → (X Y : I → Set) → (f : {i : I} → X i → Y i) → {i j : I} → (i ≡ j) → {x : X i} → {y : X j} → x ≅ y → f x ≅ f y
-ind-cong X Y f refl het-refl = het-refl
-
 getVec-to-getList : {getlen : ℕ → ℕ} → (getV-type getlen) → get-type
 getVec-to-getList get = toList ∘ get ∘ fromList
 
 fromList∘map : {α β : Set} → (f : α → β) → (l : List α) → fromList (map f l) ≅ mapV f (fromList l)
 fromList∘map f []       = het-refl
-fromList∘map f (x ∷ xs) = ind-cong (Vec _) (Vec _ ∘ suc) (_∷V_ (f x)) (length-map f xs) (fromList∘map f xs)
+fromList∘map f (x ∷ xs) = H.cong₂ (λ n → _∷V_ {n = n} (f x)) (H.reflexive (length-map f xs)) (fromList∘map f xs)
 
 toList∘map : {α β : Set} {n : ℕ} → (f : α → β) → (v : Vec α n) → toList (mapV f v) ≡ map f (toList v)
 toList∘map f []V       = refl
@@ -37,7 +34,7 @@ GetV-to-GetL getrecord = record { get = toList ∘ get ∘ fromList; free-theore
         ft : {α β : Set} → (f : α → β) → (xs : List α) → toList (get (fromList (map f xs))) ≡ map f (toList (get (fromList xs)))
         ft f xs = begin
           toList (get (fromList (map f xs)))
-            ≡⟨ ≅-to-≡ (ind-cong (Vec _) (const (List _)) (toList ∘ get) (length-map f xs) (fromList∘map f xs)) ⟩
+            ≅⟨ H.cong₂ {B = Vec _} (λ n → toList ∘ get) (het-reflexive (length-map f xs)) (fromList∘map f xs) ⟩
           toList (get (mapV f (fromList xs)))
             ≡⟨ cong toList (free-theorem f (fromList xs)) ⟩
           toList (mapV f (get (fromList xs)))
@@ -107,7 +104,7 @@ private
       fromList (map f (get (toList v)))
         ≅⟨ fromList∘map f (get (toList v)) ⟩
       mapV f (fromList (get (toList v)))
-        ≅⟨ ind-cong (Vec _) (Vec _) (mapV f) (length-property v) (het-sym (≡-subst-removable (Vec _) (length-property v) (fromList (get (toList v))))) ⟩
+        ≅⟨ H.cong₂ (λ n → mapV {n = n} f) (H.reflexive (length-property v)) (H.sym (≡-subst-removable (Vec _) (length-property v) (fromList (get (toList v))))) ⟩
       mapV f (subst (Vec _) (length-property v) (fromList (get (toList v)))) ∎)
       where open ≅-Reasoning
 
@@ -156,10 +153,10 @@ vec-len {_} {n} _ = n
 
 fromList-toList : {A : Set} {n : ℕ} → (v : Vec A n) → fromList (toList v) ≅ v
 fromList-toList []V       = het-refl
-fromList-toList (x ∷V xs) = ind-cong (Vec _) (Vec _ ∘ suc) (_∷V_ x) (length-toList xs) (fromList-toList xs)
+fromList-toList (x ∷V xs) = H.cong₂ (λ n → _∷V_ {n = n} x) (het-reflexive (length-toList xs)) (fromList-toList xs)
 
 get-commut-2 : {getlen : ℕ → ℕ} → (get : getV-type getlen) → {B : Set} {n : ℕ} → (toList ∘ get {B} {n}) ≗ (getVec-to-getList get) ∘ toList
-get-commut-2 get {B} v = ≅-to-≡ (ind-cong (Vec _) (const (List _)) (toList ∘ get) (sym (length-toList v)) (het-sym (fromList-toList v)))
+get-commut-2 get {B} v = sym (≅-to-≡ (H.cong₂ (λ n → toList ∘ get {n = n}) (H.reflexive (length-toList v)) (fromList-toList v)))
 
 get-trafo-2-getlen : {getlen : ℕ → ℕ} → (get : getV-type getlen) → proj₁ (getList-to-getVec (getVec-to-getList get)) ≗ getlen
 get-trafo-2-getlen {getlen} get n = begin
@@ -179,7 +176,7 @@ get-trafo-2-get-≅ {getlen} get v = begin
   fromList (toList (get (fromList (toList v))))
     ≅⟨ fromList-toList (get (fromList (toList v))) ⟩
   get (fromList (toList v))
-    ≅⟨ ind-cong (Vec _) (Vec _ ∘ getlen) get (length-toList v) (fromList-toList v) ⟩
+    ≅⟨ H.cong₂ (λ n → get {n = n}) (H.reflexive (length-toList v)) (fromList-toList v) ⟩
   get v ∎
   where open ≅-Reasoning
 
