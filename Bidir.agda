@@ -37,20 +37,6 @@ open BFF.PartialShapeBFF A using (assoc ; enumerate ; denumerate ; bff)
 open Setoid using () renaming (_≈_ to _∋_≈_)
 open module A = DecSetoid A using (Carrier) renaming (_≟_ to deq)
 
-module SetoidReasoning where
- infix 1 begin⟨_⟩_
- infixr 2 _≈⟨_⟩_ _≡⟨_⟩_
- infix 2 _∎
- begin⟨_⟩_ : (X : Setoid ℓ₀ ℓ₀) → {x y : Setoid.Carrier X} → EqR._IsRelatedTo_ X x y → X ∋ x ≈ y
- begin⟨_⟩_ X p = EqR.begin_ X p
- _∎ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → EqR._IsRelatedTo_ X x x
- _∎ {X} = EqR._∎ X
- _≈⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → X ∋ x ≈ y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
- _≈⟨_⟩_ {X} = EqR._≈⟨_⟩_ X
-
- _≡⟨_⟩_ : {X : Setoid ℓ₀ ℓ₀} → (x : Setoid.Carrier X) → {y z : Setoid.Carrier X} → x ≡ y → EqR._IsRelatedTo_ X y z → EqR._IsRelatedTo_ X x z
- _≡⟨_⟩_ {X} = EqR._≡⟨_⟩_ X
-
 lemma-1 : {m n : ℕ} → (f : Fin n → Carrier) → (is : Vec (Fin n) m) → assoc is (map f is) ≡ just (restrict f is)
 lemma-1 f []        = refl
 lemma-1 f (i ∷ is′) = begin
@@ -270,7 +256,7 @@ sequence-cong ShapeT α (shape≈ , content≈) | .nothing  | .nothing  | nothin
 theorem-2 : (G : Get) → {i : Get.|I| G} → (j : Get.|I| G) → (s : Get.SourceContainer G Carrier (Get.|gl₁| G i)) → (v : Get.ViewContainer G Carrier (Get.|gl₂| G j)) → (u : Get.SourceContainer G (Maybe Carrier) (Get.|gl₁| G j)) → bff G j s v ≡ just u → ShapedISetoid (EqSetoid _) (Get.ViewShapeT G) (MaybeSetoid A.setoid) at _ ∋ Get.get G u ≈ Get.fmapV G just v
 theorem-2 G {i} j s v u p with (lemma-<$>-just ((flip union (reshape (delete-many (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.|gl₁| G i)))) (fromFunc (denumerate (Get.SourceShapeT G) s))) (Shaped.arity (Get.SourceShapeT G) (Get.|gl₁| G j)))) <$> (assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.|gl₁| G j)))) (Shaped.content (Get.ViewShapeT G) v))) p)
 theorem-2 G {i} j s v u p | h′ , ph′ with (lemma-<$>-just (assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.|gl₁| G j)))) (Shaped.content (Get.ViewShapeT G) v)) ph′)
-theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin⟨ VecISetoid (MaybeSetoid A.setoid) at _ ⟩
+theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin
   content (get u)
     ≡⟨ cong content (just-injective (trans (cong (_<$>_ get) (sym p))
                                            (cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph))) ⟩
@@ -287,7 +273,7 @@ theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin⟨ VecISetoid 
   map just (content v)
     ≡⟨ sym (Shaped.fmap-content ViewShapeT just v) ⟩
   content (fmapV just v) ∎)
-    where open SetoidReasoning
+    where open EqR (VecISetoid (MaybeSetoid A.setoid) at _)
           open Get G
           open Shaped ViewShapeT using (content)
           s′   = enumerate SourceShapeT (|gl₁| i)
