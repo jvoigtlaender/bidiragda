@@ -24,13 +24,13 @@ open DecSetoid A using (Carrier)
 open GetTypes.PartialVecVec public using (Get)
 open BFF.PartialVecBFF A public using (sbff ; bff)
 
-bffsameshape : (G : Get) → {i : Get.|I| G} → Vec Carrier (Get.|gl₁| G i) → Vec Carrier (Get.|gl₂| G i) → Maybe (Vec Carrier (Get.|gl₁| G i))
+bffsameshape : (G : Get) → {i : Get.I G} → Vec Carrier (Get.gl₁ G i) → Vec Carrier (Get.gl₂ G i) → Maybe (Vec Carrier (Get.gl₁ G i))
 bffsameshape G {i} = sbff G i
 
-bffplug : (G : Get) → (Get.|I| G → ℕ → Maybe (Get.|I| G)) → {i : Get.|I| G} → {m : ℕ} → Vec Carrier (Get.|gl₁| G i) → Vec Carrier m → Maybe (∃ λ j → Vec (Maybe Carrier) (Get.|gl₁| G j))
+bffplug : (G : Get) → (Get.I G → ℕ → Maybe (Get.I G)) → {i : Get.I G} → {m : ℕ} → Vec Carrier (Get.gl₁ G i) → Vec Carrier m → Maybe (∃ λ j → Vec (Maybe Carrier) (Get.gl₁ G j))
 bffplug G sput {i} {m} s v with sput i m
 ...                        | nothing = nothing
-...                        | just j with Get.|gl₂| G j ≟ m
+...                        | just j with Get.gl₂ G j ≟ m
 ...                                 | no gl₂j≢m  = nothing
 bffplug G sput {i}     s v | just j | yes refl with bff G j s v
 ...                                            | nothing = nothing
@@ -39,7 +39,7 @@ bffplug G sput {i}     s v | just j | yes refl with bff G j s v
 _SimpleRightInvOf_ : {A B : Set} → (A → B) → (B → A) → Set
 f SimpleRightInvOf g = ≡-to-Π f RightInverseOf ≡-to-Π g
 
-bffinv : (G : Get) → (nelteg : ℕ → Get.I G) → nelteg SimpleRightInvOf Get.gl₂ G → {i : Get.|I| G} → {m : ℕ} → Vec Carrier (Get.|gl₁| G i) → Vec Carrier m → Maybe (Vec (Maybe Carrier) (Get.|gl₁| G (nelteg m)))
+bffinv : (G : Get) → (nelteg : ℕ → Get.I G) → nelteg SimpleRightInvOf Get.gl₂ G → {i : Get.I G} → {m : ℕ} → Vec Carrier (Get.gl₁ G i) → Vec Carrier m → Maybe (Vec (Maybe Carrier) (Get.gl₁ G (nelteg m)))
 bffinv G nelteg inv {m = m} s v = bff G (nelteg m) s (subst (Vec Carrier) (sym (inv m)) v)
 
 module InvExamples where

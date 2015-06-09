@@ -29,14 +29,8 @@ module PartialVecVec where
       I : Set
       gl₁ : I → ℕ
       gl₂ : I → ℕ
-
-    |I|   = I
-    |gl₁| = gl₁
-    |gl₂| = gl₂
-
-    field
-      get : {A : Set} {i : |I|} → Vec A (|gl₁| i) → Vec A (|gl₂| i)
-      free-theorem : {α β : Set} → (f : α → β) → {i : |I|} → get {_} {i} ∘ mapV f ≗ mapV f ∘ get
+      get : {A : Set} {i : I} → Vec A (gl₁ i) → Vec A (gl₂ i)
+      free-theorem : {α β : Set} → (f : α → β) → {i : I} → get {_} {i} ∘ mapV f ≗ mapV f ∘ get
 
 VecVec-to-PartialVecVec : VecVec.Get → PartialVecVec.Get
 VecVec-to-PartialVecVec G = record
@@ -62,16 +56,12 @@ module PartialShapeShape where
       gl₁ : I → SourceShape
       gl₂ : I → ViewShape
 
-    |I|   = I
-    |gl₁| = gl₁
-    |gl₂| = gl₂
-
     open Shaped SourceShapeT using () renaming (fmap to fmapS)
     open Shaped ViewShapeT using () renaming (fmap to fmapV)
 
     field
-      get : {A : Set} {i : |I|} → SourceContainer A (|gl₁| i) → ViewContainer A (|gl₂| i)
-      free-theorem : {α β : Set} → (f : α → β) → {i : |I|} → get {_} {i} ∘ fmapS f ≗ fmapV f ∘ get
+      get : {A : Set} {i : I} → SourceContainer A (gl₁ i) → ViewContainer A (gl₂ i)
+      free-theorem : {α β : Set} → (f : α → β) → {i : I} → get {_} {i} ∘ fmapS f ≗ fmapV f ∘ get
 
     open Shaped SourceShapeT public using () renaming (fmap to fmapS)
     open Shaped ViewShapeT public using () renaming (fmap to fmapV)
