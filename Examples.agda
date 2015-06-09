@@ -6,9 +6,8 @@ import Algebra.Structures
 open import Data.List using (List ; length) renaming ([] to []L ; _∷_ to _∷L_)
 open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_ ; tail ; take ; drop)
 open import Function using (id)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong) renaming (setoid to EqSetoid)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong)
 
-open import Generic using (≡-to-Π)
 open import Structures using (Shaped)
 import GetTypes
 import FreeTheorems
@@ -17,10 +16,10 @@ open GetTypes.PartialVecVec using (Get)
 open FreeTheorems.PartialVecVec using (assume-get)
 
 reverse' : Get
-reverse' = assume-get (≡-to-Π id) (≡-to-Π id) reverse
+reverse' = assume-get id id reverse
 
 double' : Get
-double' = assume-get (≡-to-Π id) (≡-to-Π g) f
+double' = assume-get id g f
   where g : ℕ → ℕ
         g zero = zero
         g (suc n) = suc (suc (g n))
@@ -29,19 +28,19 @@ double' = assume-get (≡-to-Π id) (≡-to-Π g) f
         f (x ∷ v) = x ∷ x ∷ f v
 
 double'' : Get
-double'' = assume-get (≡-to-Π id) (≡-to-Π _) (λ v → v ++ v)
+double'' = assume-get id _ (λ v → v ++ v)
 
 tail' : Get
-tail' = assume-get (≡-to-Π suc) (≡-to-Π id) tail
+tail' = assume-get suc id tail
 
 take' : ℕ → Get
-take' n = assume-get (≡-to-Π (_+_ n)) (≡-to-Π _) (take n)
+take' n = assume-get (_+_ n) _ (take n)
 
 drop' : ℕ → Get
-drop' n = assume-get (≡-to-Π (_+_ n)) (≡-to-Π _) (drop n)
+drop' n = assume-get (_+_ n) _ (drop n)
 
 sieve' : Get
-sieve' = assume-get (≡-to-Π id) (≡-to-Π _) f
+sieve' = assume-get id _ f
   where f : {A : Set} {n : ℕ} → Vec A n → Vec A ⌈ n /2⌉
         f []           = []
         f (x ∷ [])     = x ∷ []
@@ -58,7 +57,7 @@ intersperse s (x ∷ [])    = x ∷ []
 intersperse s (x ∷ y ∷ v) = x ∷ s ∷ intersperse s (y ∷ v)
 
 intersperse' : Get
-intersperse' = assume-get (≡-to-Π suc) (≡-to-Π intersperse-len) f
+intersperse' = assume-get suc intersperse-len f
   where f : {A : Set} {n : ℕ} → Vec A (suc n) → Vec A (intersperse-len n)
         f (s ∷ v)        = intersperse s v
 

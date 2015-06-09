@@ -5,11 +5,8 @@ open import Data.Nat using (ℕ)
 open import Data.List using (List ; map)
 open import Data.Vec using (Vec) renaming (map to mapV)
 open import Function using (_∘_ ; id)
-open import Function.Equality using (_⟶_ ; _⟨$⟩_)
-open import Relation.Binary.PropositionalEquality using (_≗_) renaming (setoid to EqSetoid)
-open import Relation.Binary using (Setoid)
+open import Relation.Binary.PropositionalEquality using (_≗_)
 
-open import Generic using (≡-to-Π)
 open import Structures using (Shaped ; module Shaped)
 open import Instances using (VecShaped)
 
@@ -29,13 +26,13 @@ module VecVec where
 module PartialVecVec where
   record Get : Set₁ where
     field
-      I : Setoid ℓ₀ ℓ₀
-      gl₁ : I ⟶ EqSetoid ℕ
-      gl₂ : I ⟶ EqSetoid ℕ
+      I : Set
+      gl₁ : I → ℕ
+      gl₂ : I → ℕ
 
-    |I|   = Setoid.Carrier I
-    |gl₁| = _⟨$⟩_ gl₁
-    |gl₂| = _⟨$⟩_ gl₂
+    |I|   = I
+    |gl₁| = gl₁
+    |gl₂| = gl₂
 
     field
       get : {A : Set} {i : |I|} → Vec A (|gl₁| i) → Vec A (|gl₂| i)
@@ -43,9 +40,9 @@ module PartialVecVec where
 
 VecVec-to-PartialVecVec : VecVec.Get → PartialVecVec.Get
 VecVec-to-PartialVecVec G = record
-  { I = EqSetoid ℕ
-  ; gl₁ = ≡-to-Π id
-  ; gl₂ = ≡-to-Π getlen
+  { I = ℕ
+  ; gl₁ = id
+  ; gl₂ = getlen
   ; get = get
   ; free-theorem = free-theorem
   } where open VecVec.Get G
@@ -61,13 +58,13 @@ module PartialShapeShape where
       ViewContainer : Set → ViewShape → Set
       ViewShapeT : Shaped ViewShape ViewContainer
 
-      I : Setoid ℓ₀ ℓ₀
-      gl₁ : I ⟶ EqSetoid SourceShape
-      gl₂ : I ⟶ EqSetoid ViewShape
+      I : Set
+      gl₁ : I → SourceShape
+      gl₂ : I → ViewShape
 
-    |I|   = Setoid.Carrier I
-    |gl₁| = _⟨$⟩_ gl₁
-    |gl₂| = _⟨$⟩_ gl₂
+    |I|   = I
+    |gl₁| = gl₁
+    |gl₂| = gl₂
 
     open Shaped SourceShapeT using () renaming (fmap to fmapS)
     open Shaped ViewShapeT using () renaming (fmap to fmapV)
