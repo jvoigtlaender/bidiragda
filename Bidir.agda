@@ -214,21 +214,25 @@ lemma-sequence-successful ShapeT {s = s} c {r} p = just-injective (sym (begin
         open Shaped ShapeT
         wp = lemma-<$>-just (sequenceV (content c)) p
 
-lemma-get-sequence : {A : Set} → (G : Get) → {i : Get.I G} {v : Get.SourceContainer G (Maybe A) (Get.gl₁ G i)} {r : Get.SourceContainer G A (Get.gl₁ G i)} → Shaped.sequence (Get.SourceShapeT G) v ≡ just r → Get.get G <$> Shaped.sequence (Get.SourceShapeT G) v ≡ Shaped.sequence (Get.ViewShapeT G) (Get.get G v)
-lemma-get-sequence G {v = v} {r = r} p = begin
-  get <$> Shaped.sequence SourceShapeT v
-    ≡⟨ cong (_<$>_ get ∘ Shaped.sequence SourceShapeT) (lemma-sequence-successful SourceShapeT v p) ⟩
-  get <$> Shaped.sequence SourceShapeT (fmapS just r)
-    ≡⟨ cong (_<$>_ get) (lemma-just-sequence SourceShapeT r) ⟩
-  get <$> just r
-    ≡⟨ sym (lemma-just-sequence ViewShapeT (get r)) ⟩
-  Shaped.sequence ViewShapeT (fmapV just (get r))
-    ≡⟨ cong (Shaped.sequence ViewShapeT) (sym (free-theorem just r)) ⟩
-  Shaped.sequence ViewShapeT (get (fmapS just r))
-    ≡⟨ cong (Shaped.sequence ViewShapeT ∘ get) (sym (lemma-sequence-successful SourceShapeT v p)) ⟩
-  Shaped.sequence ViewShapeT (get v) ∎
-  where open ≡-Reasoning
-        open Get G
+module _ (G : Get) where
+  open ≡-Reasoning
+  open Get G
+  open Shaped SourceShapeT using () renaming (sequence to sequenceSource)
+  open Shaped ViewShapeT using () renaming (sequence to sequenceView)
+
+  lemma-get-sequence : {A : Set} → {i : I} {v : SourceContainer (Maybe A) (gl₁ i)} {r : SourceContainer A (gl₁ i)} → sequenceSource v ≡ just r → get <$> sequenceSource v ≡ sequenceView (get v)
+  lemma-get-sequence {v = v} {r = r} p = begin
+    get <$> sequenceSource v
+      ≡⟨ cong (_<$>_ get ∘ sequenceSource) (lemma-sequence-successful SourceShapeT v p) ⟩
+    get <$> sequenceSource (fmapS just r)
+      ≡⟨ cong (_<$>_ get) (lemma-just-sequence SourceShapeT r) ⟩
+    get <$> just r
+      ≡⟨ sym (lemma-just-sequence ViewShapeT (get r)) ⟩
+    sequenceView (fmapV just (get r))
+      ≡⟨ cong sequenceView (sym (free-theorem just r)) ⟩
+    sequenceView (get (fmapS just r))
+      ≡⟨ cong (sequenceView ∘ get) (sym (lemma-sequence-successful SourceShapeT v p)) ⟩
+    sequenceView (get v) ∎
 
 sequenceV-cong : {S : Setoid ℓ₀ ℓ₀} {n : ℕ} {m₁ m₂ : Setoid.Carrier (VecISetoid (MaybeSetoid S) at n)} → VecISetoid (MaybeSetoid S) at _ ∋ m₁ ≈ m₂ → MaybeSetoid (VecISetoid S at n) ∋ sequenceV m₁ ≈ sequenceV m₂
 sequenceV-cong {S}                                       VecEq.[]-cong = Setoid.refl (MaybeSetoid (VecISetoid S at _))
@@ -253,46 +257,51 @@ sequence-cong ShapeT α {s} (shape≈ , content≈) | .(just x) | .(just y) | ju
         open Shaped ShapeT
 sequence-cong ShapeT α (shape≈ , content≈) | .nothing  | .nothing  | nothing = nothing
 
-theorem-2 : (G : Get) → {i : Get.I G} → (j : Get.I G) → (s : Get.SourceContainer G Carrier (Get.gl₁ G i)) → (v : Get.ViewContainer G Carrier (Get.gl₂ G j)) → (u : Get.SourceContainer G (Maybe Carrier) (Get.gl₁ G j)) → bff G j s v ≡ just u → ShapedISetoid (EqSetoid _) (Get.ViewShapeT G) (MaybeSetoid A.setoid) at _ ∋ Get.get G u ≈ Get.fmapV G just v
-theorem-2 G {i} j s v u p with (lemma-<$>-just ((flip union (reshape (delete-many (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.gl₁ G i)))) (fromFunc (denumerate (Get.SourceShapeT G) s))) (Shaped.arity (Get.SourceShapeT G) (Get.gl₁ G j)))) <$> (assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.gl₁ G j)))) (Shaped.content (Get.ViewShapeT G) v))) p)
-theorem-2 G {i} j s v u p | h′ , ph′ with (lemma-<$>-just (assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.gl₁ G j)))) (Shaped.content (Get.ViewShapeT G) v)) ph′)
-theorem-2 G {i} j s v u p | h′ , ph′ | h , ph = refl , (begin
-  content (get u)
-    ≡⟨ cong content (just-injective (trans (cong (_<$>_ get) (sym p))
-                                           (cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph))) ⟩
-  content (get (h′↦r (h↦h′ h)))
-    ≡⟨ refl ⟩
-  content (get (fmapS (flip lookupM (h↦h′ h)) t))
-    ≡⟨ cong content (free-theorem (flip lookupM (h↦h′ h)) t) ⟩
-  content (fmapV (flip lookupM (h↦h′ h)) (get t))
-    ≡⟨ Shaped.fmap-content ViewShapeT (flip lookupM (h↦h′ h)) (get t) ⟩
-  map (flip lookupM (h↦h′ h)) (content (get t))
-    ≡⟨ lemma-union-not-used h (reshape g′ (Shaped.arity SourceShapeT (gl₁ j))) (content (get t)) (lemma-assoc-domain (content (get t)) (content v) ph) ⟩
-  map (flip lookupM h) (content (get t))
-    ≈⟨ lemma-2 (content (get t)) (content v) h ph ⟩
-  map just (content v)
-    ≡⟨ sym (Shaped.fmap-content ViewShapeT just v) ⟩
-  content (fmapV just v) ∎)
-    where open EqR (VecISetoid (MaybeSetoid A.setoid) at _)
-          open Get G
-          open Shaped ViewShapeT using (content)
-          s′   = enumerate SourceShapeT (gl₁ i)
-          g    = fromFunc (denumerate SourceShapeT s)
-          g′   = delete-many (Shaped.content ViewShapeT (get s′)) g
-          t    = enumerate SourceShapeT (gl₁ j)
-          h↦h′ = flip union (reshape g′ (Shaped.arity SourceShapeT (gl₁ j)))
-          h′↦r = (λ f → fmapS f t) ∘ flip lookupM
+module _ (G : Get) where
+  open Get G
+  open Shaped SourceShapeT using () renaming (arity to arityS)
+  open Shaped ViewShapeT using () renaming (content to contentV)
 
-theorem-2′ : (G : Get) → {i : Get.I G} → (j : Get.I G) → (s : Get.SourceContainer G Carrier (Get.gl₁ G i)) → (v : Get.ViewContainer G Carrier (Get.gl₂ G j)) → (u : Get.SourceContainer G Carrier (Get.gl₁ G j)) → bff G j s v ≡ just (Get.fmapS G just u) → ShapedISetoid (EqSetoid _) (Get.ViewShapeT G) A.setoid at _ ∋ Get.get G u ≈ v
-theorem-2′ G j s v u p = drop-just (begin
-  get <$> just u
-    ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence SourceShapeT u)) ⟩
-  get <$> Shaped.sequence SourceShapeT (fmapS just u)
-    ≡⟨ lemma-get-sequence G (lemma-just-sequence SourceShapeT u) ⟩
-  Shaped.sequence ViewShapeT (get (fmapS just u))
-    ≈⟨ sequence-cong ViewShapeT A.setoid (theorem-2 G j s v (fmapS just u) p) ⟩
-  Shaped.sequence ViewShapeT (fmapV just v)
-    ≡⟨ lemma-just-sequence ViewShapeT v ⟩
-  just v ∎)
-  where open Get G
-        open EqR (MaybeSetoid (ShapedISetoid (EqSetoid _) ViewShapeT A.setoid at _))
+  theorem-2 : {i : I} → (j : I) → (s : SourceContainer Carrier (gl₁ i)) → (v : ViewContainer Carrier (gl₂ j)) → (u : SourceContainer (Maybe Carrier) (gl₁ j)) → bff G j s v ≡ just u → ShapedISetoid (EqSetoid _) ViewShapeT (MaybeSetoid A.setoid) at _ ∋ get u ≈ Get.fmapV G just v
+  theorem-2 {i} j s v u p with lemma-<$>-just ((flip union (reshape (delete-many (contentV (get (enumerate SourceShapeT (gl₁ i)))) (fromFunc (denumerate SourceShapeT s))) (arityS (gl₁ j)))) <$> assoc (contentV (get (enumerate SourceShapeT (gl₁ j)))) (contentV v)) p
+  theorem-2 {i} j s v u p | h′ , ph′ with lemma-<$>-just (assoc (contentV (get (enumerate SourceShapeT (gl₁ j)))) (contentV v)) ph′
+  theorem-2 {i} j s v u p | h′ , ph′ | h , ph = refl , (begin
+    contentV (get u)
+      ≡⟨ cong contentV (just-injective (trans (cong (_<$>_ get) (sym p))
+                                              (cong (_<$>_ get ∘ _<$>_ h′↦r ∘ _<$>_ h↦h′) ph))) ⟩
+    contentV (get (h′↦r (h↦h′ h)))
+      ≡⟨ refl ⟩
+    contentV (get (fmapS (flip lookupM (h↦h′ h)) t))
+      ≡⟨ cong contentV (free-theorem (flip lookupM (h↦h′ h)) t) ⟩
+    contentV (fmapV (flip lookupM (h↦h′ h)) (get t))
+      ≡⟨ Shaped.fmap-content ViewShapeT (flip lookupM (h↦h′ h)) (get t) ⟩
+    map (flip lookupM (h↦h′ h)) (contentV (get t))
+      ≡⟨ lemma-union-not-used h (reshape g′ (arityS (gl₁ j))) (contentV (get t)) (lemma-assoc-domain (contentV (get t)) (contentV v) ph) ⟩
+    map (flip lookupM h) (contentV (get t))
+      ≈⟨ lemma-2 (contentV (get t)) (contentV v) h ph ⟩
+    map just (contentV v)
+      ≡⟨ sym (Shaped.fmap-content ViewShapeT just v) ⟩
+    contentV (fmapV just v) ∎)
+      where open EqR (VecISetoid (MaybeSetoid A.setoid) at _)
+            s′   = enumerate SourceShapeT (gl₁ i)
+            g    = fromFunc (denumerate SourceShapeT s)
+            g′   = delete-many (contentV (get s′)) g
+            t    = enumerate SourceShapeT (gl₁ j)
+            h↦h′ = flip union (reshape g′ (arityS (gl₁ j)))
+            h′↦r = (λ f → fmapS f t) ∘ flip lookupM
+
+module _ (G : Get) where
+  open Get G
+
+  theorem-2′ : {i : I} → (j : I) → (s : SourceContainer Carrier (gl₁ i)) → (v : ViewContainer Carrier (gl₂ j)) → (u : SourceContainer Carrier (gl₁ j)) → bff G j s v ≡ just (Get.fmapS G just u) → ShapedISetoid (EqSetoid _) ViewShapeT A.setoid at _ ∋ get u ≈ v
+  theorem-2′ j s v u p = drop-just (begin
+    get <$> just u
+      ≡⟨ cong (_<$>_ get) (sym (lemma-just-sequence SourceShapeT u)) ⟩
+    get <$> Shaped.sequence SourceShapeT (fmapS just u)
+      ≡⟨ lemma-get-sequence G (lemma-just-sequence SourceShapeT u) ⟩
+    Shaped.sequence ViewShapeT (get (fmapS just u))
+      ≈⟨ sequence-cong ViewShapeT A.setoid (theorem-2 G j s v (fmapS just u) p) ⟩
+    Shaped.sequence ViewShapeT (fmapV just v)
+      ≡⟨ lemma-just-sequence ViewShapeT v ⟩
+    just v ∎)
+    where open EqR (MaybeSetoid (ShapedISetoid (EqSetoid _) ViewShapeT A.setoid at _))

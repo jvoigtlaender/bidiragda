@@ -25,7 +25,7 @@ open import Relation.Binary.PropositionalEquality using (refl ; cong ; inspect ;
 open Relation.Binary.PropositionalEquality.≡-Reasoning using (begin_ ; _≡⟨_⟩_ ; _∎)
 open import Relation.Nullary using (yes ; no)
 
-open import Structures using (IsFunctor ; Shaped)
+open import Structures using (IsFunctor ; module Shaped ; Shaped)
 open import FinMap using (FinMapMaybe ; lookupM ; union ; fromFunc ; empty ; insert ; lemma-lookupM-empty ; delete-many ; lemma-tabulate-∘ ; delete ; lemma-lookupM-delete ; lemma-lookupM-fromFunc ; reshape ; lemma-reshape-id)
 import CheckInsert
 open CheckInsert (decSetoid deq) using (checkInsert ; lemma-checkInsert-new ; lemma-lookupM-checkInsert-other)
@@ -63,32 +63,38 @@ lemma-union-delete-fromFunc {n = n} {is = i ∷ is} {h = h} {g = g} (Data.List.A
           maybe′ just (lookupM i (delete-many is (fromFunc g))) (lookup i h) ∎
         inner f | no f≢i = cong (flip (maybe′ just) (lookup f h)) (lemma-lookupM-delete (delete-many is (fromFunc g)) f≢i)
 
-assoc-enough : (G : Get) → {i : Get.I G} → (j : Get.I G) → (s : Get.SourceContainer G Carrier (Get.gl₁ G i)) → (v : Get.ViewContainer G Carrier (Get.gl₂ G j)) → ∃ (λ h → assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.gl₁ G j)))) (Shaped.content (Get.ViewShapeT G) v) ≡ just h) → ∃ λ u → bff G j s v ≡ just u
-assoc-enough G {i} j s v (h , p) = _ , cong (_<$>_ ((λ f → fmapS f t) ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (Shaped.arity SourceShapeT (gl₁ j))))) p
-  where open Get G
-        g′ = delete-many (Shaped.content ViewShapeT (get (enumerate SourceShapeT (gl₁ i)))) (fromFunc (denumerate SourceShapeT s))
-        t  = enumerate SourceShapeT (gl₁ j)
+module _ (G : Get) where
+  open Get G
+  open Shaped ViewShapeT using () renaming (content to contentV)
 
-assoc-enough′ : (G : Get) → {i : Get.I G} → (s : Get.SourceContainer G Carrier (Get.gl₁ G i)) → (v : Get.ViewContainer G Carrier (Get.gl₂ G i)) → ∃ (λ h → assoc (Shaped.content (Get.ViewShapeT G) (Get.get G (enumerate (Get.SourceShapeT G) (Get.gl₁ G i)))) (Shaped.content (Get.ViewShapeT G) v) ≡ just h) → ∃ λ u → bff G i s v ≡ just (Get.fmapS G just u)
-assoc-enough′ G {i} s v (h , p) = _ , (begin
-  bff G i s v
-    ≡⟨ proj₂ (assoc-enough G i s v (h , p)) ⟩
-  just (fmapS (flip lookupM (union h (reshape g′ (Shaped.arity SourceShapeT (gl₁ i))))) t)
-    ≡⟨ cong just (begin _
-        ≡⟨ cong ((λ f → fmapS f t) ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
-      fmapS (flip lookupM (union h g′)) t
-        ≡⟨ cong ((λ f → fmapS f t) ∘ flip lookupM) (proj₂ wp) ⟩
-      fmapS (flip lookupM (fromFunc (proj₁ wp))) t
-        ≡⟨ IsFunctor.cong (Shaped.isFunctor SourceShapeT (gl₁ i)) (lemma-lookupM-fromFunc (proj₁ wp)) t ⟩
-      fmapS (Maybe.just ∘ proj₁ wp) t
-        ≡⟨ IsFunctor.composition (Shaped.isFunctor SourceShapeT (gl₁ i)) just (proj₁ wp) t ⟩
-      fmapS Maybe.just (fmapS (proj₁ wp) t) ∎) ⟩ _ ∎)
-  where open Get G
-        s′ = enumerate SourceShapeT (gl₁ i)
-        g  = fromFunc (denumerate SourceShapeT s)
-        g′ = delete-many (Shaped.content ViewShapeT (get s′)) g
-        t  = enumerate SourceShapeT (gl₁ i)
-        wp = lemma-union-delete-fromFunc (lemma-assoc-domain (Shaped.content ViewShapeT (get t)) (Shaped.content ViewShapeT v) p)
+  assoc-enough : {i : I} → (j : I) → (s : SourceContainer Carrier (gl₁ i)) → (v : ViewContainer Carrier (gl₂ j)) → ∃ (λ h → assoc (contentV (get (enumerate SourceShapeT (gl₁ j)))) (contentV v) ≡ just h) → ∃ λ u → bff G j s v ≡ just u
+  assoc-enough {i} j s v (h , p) = _ , cong (_<$>_ ((λ f → fmapS f t) ∘ flip lookupM) ∘ _<$>_ (flip union (reshape g′ (Shaped.arity SourceShapeT (gl₁ j))))) p
+    where g′ = delete-many (contentV (get (enumerate SourceShapeT (gl₁ i)))) (fromFunc (denumerate SourceShapeT s))
+          t  = enumerate SourceShapeT (gl₁ j)
+
+module _ (G : Get) where
+  open Get G
+  open Shaped ViewShapeT using () renaming (content to contentV)
+
+  assoc-enough′ : {i : I} → (s : SourceContainer Carrier (gl₁ i)) → (v : ViewContainer Carrier (gl₂ i)) → ∃ (λ h → assoc (contentV (get (enumerate SourceShapeT (gl₁ i)))) (contentV v) ≡ just h) → ∃ λ u → bff G i s v ≡ just (fmapS just u)
+  assoc-enough′ {i} s v (h , p) = _ , (begin
+    bff G i s v
+      ≡⟨ proj₂ (assoc-enough G i s v (h , p)) ⟩
+    just (fmapS (flip lookupM (union h (reshape g′ (Shaped.arity SourceShapeT (gl₁ i))))) t)
+      ≡⟨ cong just (begin _
+          ≡⟨ cong ((λ f → fmapS f t) ∘ flip lookupM ∘ union h) (lemma-reshape-id g′) ⟩
+        fmapS (flip lookupM (union h g′)) t
+          ≡⟨ cong ((λ f → fmapS f t) ∘ flip lookupM) (proj₂ wp) ⟩
+        fmapS (flip lookupM (fromFunc (proj₁ wp))) t
+          ≡⟨ IsFunctor.cong (Shaped.isFunctor SourceShapeT (gl₁ i)) (lemma-lookupM-fromFunc (proj₁ wp)) t ⟩
+        fmapS (Maybe.just ∘ proj₁ wp) t
+          ≡⟨ IsFunctor.composition (Shaped.isFunctor SourceShapeT (gl₁ i)) just (proj₁ wp) t ⟩
+        fmapS Maybe.just (fmapS (proj₁ wp) t) ∎) ⟩ _ ∎)
+    where s′ = enumerate SourceShapeT (gl₁ i)
+          g  = fromFunc (denumerate SourceShapeT s)
+          g′ = delete-many (contentV (get s′)) g
+          t  = enumerate SourceShapeT (gl₁ i)
+          wp = lemma-union-delete-fromFunc (lemma-assoc-domain (contentV (get t)) (contentV v) p)
 
 data All-different {A : Set} : List A → Set where
   different-[] : All-different []
