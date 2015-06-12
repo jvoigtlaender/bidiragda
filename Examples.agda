@@ -1,19 +1,25 @@
 module Examples where
 
+open import Data.Maybe using (just ; nothing)
 open import Data.Nat using (ℕ ; zero ; suc ; _+_ ; ⌈_/2⌉)
 open import Data.Nat.Properties using (cancel-+-left)
 import Algebra.Structures
 open import Data.List using (List ; length) renaming ([] to []L ; _∷_ to _∷L_)
-open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_ ; tail ; take ; drop)
+open import Data.Vec using (Vec ; [] ; _∷_ ; reverse ; _++_ ; tail ; take ; drop ; map)
 open import Function using (id)
+import Relation.Binary
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong)
 
 open import Structures using (Shaped)
 import GetTypes
 import FreeTheorems
+import BFF
 
 open GetTypes.PartialVecVec using (Get)
 open FreeTheorems.PartialVecVec using (assume-get)
+open BFF.PartialVecBFF using (bff)
+
+ℕ-decSetoid = Relation.Binary.DecTotalOrder.Eq.decSetoid Data.Nat.decTotalOrder
 
 reverse' : Get
 reverse' = assume-get id id reverse
@@ -33,6 +39,9 @@ double'' = assume-get id _ (λ v → v ++ v)
 tail' : Get
 tail' = assume-get suc id tail
 
+tail-example : bff ℕ-decSetoid tail' 2 (8 ∷ 5 ∷ []) (3 ∷ 1 ∷ []) ≡ just (just 8 ∷ just 3 ∷ just 1 ∷ [])
+tail-example = refl
+
 take' : ℕ → Get
 take' n = assume-get (_+_ n) _ (take n)
 
@@ -45,6 +54,9 @@ sieve' = assume-get id _ f
         f []           = []
         f (x ∷ [])     = x ∷ []
         f (x ∷ _ ∷ xs) = x ∷ f xs
+
+sieve-example : bff ℕ-decSetoid sieve' 4 (0 ∷ 2 ∷ []) (1 ∷ 3 ∷ []) ≡ just (just 1 ∷ just 2 ∷ just 3 ∷ nothing ∷ [])
+sieve-example = refl
 
 intersperse-len : ℕ → ℕ
 intersperse-len zero          = zero
@@ -60,6 +72,12 @@ intersperse' : Get
 intersperse' = assume-get suc intersperse-len f
   where f : {A : Set} {n : ℕ} → Vec A (suc n) → Vec A (intersperse-len n)
         f (s ∷ v)        = intersperse s v
+
+intersperse-neg-example : bff ℕ-decSetoid intersperse' 3 (0 ∷ []) (1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ []) ≡ nothing
+intersperse-neg-example = refl
+
+intersperse-pos-example : bff ℕ-decSetoid intersperse' 3 (0 ∷ []) (1 ∷ 2 ∷ 3 ∷ 2 ∷ 5 ∷ []) ≡ just (map just (2 ∷ 1 ∷ 3 ∷ 5 ∷ []))
+intersperse-pos-example = refl
 
 data PairVec (α : Set) (β : Set) : List α → Set where
   []P : PairVec α β []L
