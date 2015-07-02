@@ -148,17 +148,15 @@ lemma-<$>-just : {A B : Set} {f : A → B} {b : B} (ma : Maybe A) → f <$> ma �
 lemma-<$>-just (just x) f<$>ma≡just-b = x , refl
 lemma-<$>-just nothing  ()
 
-lemma-union-not-used : {m n : ℕ} {A : Set} (h h' : FinMapMaybe n A) → (is : Vec (Fin n) m) → is in-domain-of h → map (flip lookupM (union h h')) is ≡ map (flip lookupM h) is
-lemma-union-not-used         h h' []        p = refl
-lemma-union-not-used {n = n} h h' (i ∷ is') (Data.List.All._∷_ (x , px) p') = cong₂ _∷_ (begin
-      lookupM i (union h h')
-        ≡⟨ lookup∘tabulate (λ j → maybe′ just (lookupM j h') (lookupM j h)) i ⟩
-      maybe′ just (lookupM i h') (lookupM i h)
-        ≡⟨ cong (maybe′ just (lookupM i h')) px ⟩
-      maybe′ just (lookupM i h') (just x)
-        ≡⟨ sym px ⟩
-      lookupM i h ∎)
-  (lemma-union-not-used h h' is' p')
+lemma-union-not-used : {n : ℕ} → {A : Set} → (h h′ : FinMapMaybe n A) → (i : Fin n) → ∃ (λ x → lookupM i h ≡ just x) → lookupM i (union h h′) ≡ lookupM i h
+lemma-union-not-used h h′ i (x , px) = begin
+  lookupM i (union h h′)
+    ≡⟨ lookup∘tabulate (λ j → maybe′ just (lookupM j h′) (lookupM j h)) i ⟩
+  maybe′ just (lookupM i h′) (lookupM i h)
+    ≡⟨ cong (maybe′ just (lookupM i h′)) px ⟩
+  maybe′ just (lookupM i h′) (just x)
+    ≡⟨ sym px ⟩
+  lookupM i h ∎
   where open ≡-Reasoning
 
 lemma->>=-just : {A B : Set} (ma : Maybe A) {f : A → Maybe B} {b : B} → (ma >>= f) ≡ just b → ∃ λ a → ma ≡ just a
@@ -276,7 +274,7 @@ module _ (G : Get) where
     contentV (fmapV (flip lookupM (h↦h′ h)) (get t))
       ≡⟨ Shaped.fmap-content ViewShapeT (flip lookupM (h↦h′ h)) (get t) ⟩
     map (flip lookupM (h↦h′ h)) (contentV (get t))
-      ≡⟨ lemma-union-not-used h (reshape g′ (arityS (gl₁ j))) (contentV (get t)) (lemma-assoc-domain (contentV (get t)) (contentV v) ph) ⟩
+      ≡⟨ lemma-exchange-maps (lemma-union-not-used h (reshape g′ (arityS (gl₁ j)))) (lemma-assoc-domain (contentV (get t)) (contentV v) ph) ⟩
     map (flip lookupM h) (contentV (get t))
       ≈⟨ lemma-2 (contentV (get t)) (contentV v) h ph ⟩
     map just (contentV v)

@@ -157,3 +157,7 @@ lemma-disjoint-union {n} f t = lemma-tabulate-∘ inner
           maybe′ just (lookupM x (fromFunc f)) nothing
             ≡⟨ lemma-lookupM-fromFunc f x ⟩
           just (f x) ∎
+
+lemma-exchange-maps : {n m : ℕ} → {A : Set} → {h h′ : FinMapMaybe n A} → {P : Fin n → Set} → (∀ j → P j → lookupM j h ≡ lookupM j h′) → {is : Vec (Fin n) m} → All P (toList is) → mapV (flip lookupM h) is ≡ mapV (flip lookupM h′) is
+lemma-exchange-maps h≈h′ {[]}     All.[]         = refl
+lemma-exchange-maps h≈h′ {i ∷ is} (pi All.∷ pis) = cong₂ _∷_ (h≈h′ i pi) (lemma-exchange-maps h≈h′ pis)
